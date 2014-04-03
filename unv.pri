@@ -2,6 +2,7 @@ OUTPUT_DIR = $$(OUTPUT_DIR)
 isEmpty(OUTPUT_DIR):OUTPUT_DIR=$$PWD/build
 
 QT += core
+QT -= gui
 
 CONFIG += qt warn_on
 

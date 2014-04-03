@@ -239,13 +239,13 @@ void Lexer::print() const
 {
     QTextStream out(stdout);
     print(out);
+    out << "\n";
 }
 
 void Lexer::print(QTextStream& stream) const
 {
     foreach (Token tok, m_tokens)
         stream << textForToken(tok);
-    stream << "\n";
 }
 
 void Lexer::printTokens() const
