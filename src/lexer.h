@@ -53,12 +53,17 @@ enum TokenType {
     Undefined
 };
 
+struct SourcePosition {
+    int line;
+    int column;
+};
+
 struct Token {
-    Token(TokenType t, unsigned s, unsigned e)
+    Token(TokenType t, const SourcePosition& s, const SourcePosition& e)
     { type = t; start = s; end = e; }
     TokenType type;
-    unsigned start;
-    unsigned end;
+    SourcePosition start;
+    SourcePosition end;
 };
 
 class Lexer {
@@ -74,14 +79,13 @@ public:
 
 private:
     void clear();
-    int currentLine() const;
-    int currentColumn() const;
     void newline();
     void advance(int i);
     QChar current() const;
     QChar look(int) const;
-    int indexForPosition(int line, int column);
-    int consumeChar();
+    SourcePosition sourcePosition() const;
+    int indexForPosition(const SourcePosition&) const;
+    SourcePosition consumeChar();
     bool consumeString(const QString&);
     bool consumeComment();
     bool consumeIdentifier();
