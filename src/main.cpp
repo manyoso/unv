@@ -12,10 +12,11 @@ int main(int argc, char** argv)
         QFile file(f);
         if (file.open(QFile::ReadOnly)) {
             QTextStream in(&file);
-            Lexer lexer(in.readAll());
-            lexer.lex();
-            lexer.print();
-            lexer.printTokens();
+            SourceBuffer buffer(in.readAll(), file.fileName());
+            Lexer lexer;
+            lexer.lex(&buffer);
+            buffer.print();
+            buffer.printTokens();
         }
     }
 }

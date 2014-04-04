@@ -1,69 +1,64 @@
 #include "lexer.h"
 
-Lexer::Lexer(const QString& text)
-    : m_text(text)
-{
-    clear();
-}
+Lexer::Lexer()
+    : m_index(0)
+    , m_column(1)
+    , m_source(0)
+{ }
 
 Lexer::~Lexer()
 {
-    clear();
+    m_source = 0;
 }
 
-void Lexer::clear()
+void Lexer::lex(SourceBuffer* source)
 {
+    m_source = source;
     m_index = 0;
     m_column = 1;
-    m_tokens.clear();
-    m_lineInfo.clear();
-}
 
-void Lexer::lex()
-{
-    clear();
-    while (m_index < m_text.size()) {
+    while (m_index < m_source->size()) {
         const QChar ch = current();
-        SourcePosition pos = sourcePosition();
+        TokenPosition pos = tokenPosition();
         switch (ch.unicode()) {
         /* whitespace*/
-        case ' ': m_tokens.append(Token(Whitespace, pos, consumeChar())); break;
-        case '\t': m_tokens.append(Token(Tab, pos, consumeChar())); break;
-        case '\n': m_tokens.append(Token(Newline, pos, pos)); newline(); break;
+        case ' ': m_source->appendToken(Token(Whitespace, pos, consumeChar())); break;
+        case '\t': m_source->appendToken(Token(Tab, pos, consumeChar())); break;
+        case '\n': m_source->appendToken(Token(Newline, pos, pos)); newline(); break;
         /* punctuators */
-//        case '~': m_tokens.append(Token(Tilda, pos, pos)); break;
-//        case '!': m_tokens.append(Token(Bang, pos, pos)); break;
-//        case '@': m_tokens.append(Token(At, pos, pos)); break;
-//        case '#': m_tokens.append(Token(Hash, pos, pos)); break;
-//        case '$': m_tokens.append(Token(Dollar, pos, pos)); break;
-//        case '%': m_tokens.append(Token(Percent, pos, pos)); break;
-//        case '^': m_tokens.append(Token(Cap, pos, pos)); break;
-//        case '&': m_tokens.append(Token(Ampersand, pos, pos)); break;
-//        case '*': m_tokens.append(Token(Star, pos, pos)); break;
-        case '(': m_tokens.append(Token(OpenParenthesis, pos, pos)); break;
-        case ')': m_tokens.append(Token(CloseParenthesis, pos, pos)); break;
-//        case '_': m_tokens.append(Token(Underscore, pos, pos)); break;
-//        case '+': m_tokens.append(Token(Plus, pos, pos)); break;
-//        case '{': m_tokens.append(Token(OpenCurly, pos, pos)); break;
-//        case '}': m_tokens.append(Token(ClosedCurly, pos, pos)); break;
-//        case '|': m_tokens.append(Token(Pipe, pos, pos)); break;
-        case ':': m_tokens.append(Token(Colon, pos, pos)); break;
-//        case '"': m_tokens.append(Token(DoubleQuote, pos, pos)); break;
-//        case '<': m_tokens.append(Token(LessThan, pos, pos)); break;
-//        case '>': m_tokens.append(Token(GreaterThan, pos, pos)); break;
-//        case '?': m_tokens.append(Token(QuestionMark, pos, pos)); break;
-//        case '-': m_tokens.append(Token(Minus, pos, pos)); break;
-//        case '=': m_tokens.append(Token(Equals, pos, pos)); break;
-//        case '[': m_tokens.append(Token(OpenSquare, pos, pos)); break;
-//        case ']': m_tokens.append(Token(ClosedSquare, pos, pos)); break;
-//        case '\\': m_tokens.append(Token(BackSlash, pos, pos)); break;
-//        case ';': m_tokens.append(Token(SemiColon, pos, pos)); break;
-//        case '\'': m_tokens.append(Token(SingleQuote, pos, pos)); break;
-//        case ',': m_tokens.append(Token(Comma, pos, pos)); break;
-//        case '.': m_tokens.append(Token(Period, pos, pos)); break;
+//        case '~': m_source->appendToken(Token(Tilda, pos, pos)); break;
+//        case '!': m_source->appendToken(Token(Bang, pos, pos)); break;
+//        case '@': m_source->appendToken(Token(At, pos, pos)); break;
+//        case '#': m_source->appendToken(Token(Hash, pos, pos)); break;
+//        case '$': m_source->appendToken(Token(Dollar, pos, pos)); break;
+//        case '%': m_source->appendToken(Token(Percent, pos, pos)); break;
+//        case '^': m_source->appendToken(Token(Cap, pos, pos)); break;
+//        case '&': m_source->appendToken(Token(Ampersand, pos, pos)); break;
+//        case '*': m_source->appendToken(Token(Star, pos, pos)); break;
+        case '(': m_source->appendToken(Token(OpenParenthesis, pos, pos)); break;
+        case ')': m_source->appendToken(Token(CloseParenthesis, pos, pos)); break;
+//        case '_': m_source->appendToken(Token(Underscore, pos, pos)); break;
+//        case '+': m_source->appendToken(Token(Plus, pos, pos)); break;
+//        case '{': m_source->appendToken(Token(OpenCurly, pos, pos)); break;
+//        case '}': m_source->appendToken(Token(ClosedCurly, pos, pos)); break;
+//        case '|': m_source->appendToken(Token(Pipe, pos, pos)); break;
+        case ':': m_source->appendToken(Token(Colon, pos, pos)); break;
+//        case '"': m_source->appendToken(Token(DoubleQuote, pos, pos)); break;
+//        case '<': m_source->appendToken(Token(LessThan, pos, pos)); break;
+//        case '>': m_source->appendToken(Token(GreaterThan, pos, pos)); break;
+//        case '?': m_source->appendToken(Token(QuestionMark, pos, pos)); break;
+//        case '-': m_source->appendToken(Token(Minus, pos, pos)); break;
+//        case '=': m_source->appendToken(Token(Equals, pos, pos)); break;
+//        case '[': m_source->appendToken(Token(OpenSquare, pos, pos)); break;
+//        case ']': m_source->appendToken(Token(ClosedSquare, pos, pos)); break;
+//        case '\\': m_source->appendToken(Token(BackSlash, pos, pos)); break;
+//        case ';': m_source->appendToken(Token(SemiColon, pos, pos)); break;
+//        case '\'': m_source->appendToken(Token(SingleQuote, pos, pos)); break;
+//        case ',': m_source->appendToken(Token(Comma, pos, pos)); break;
+//        case '.': m_source->appendToken(Token(Period, pos, pos)); break;
         case '/':
             if (look(1) == '*' && consumeComment()) {
-                m_tokens.append(Token(Comment, pos, sourcePosition()));
+                m_source->appendToken(Token(Comment, pos, tokenPosition()));
                 break;
             }
         /*
@@ -76,42 +71,42 @@ void Lexer::lex()
          */
         case 'f':
             if (consumeString("alse")) {
-                m_tokens.append(Token(False, pos, sourcePosition()));
+                m_source->appendToken(Token(False, pos, tokenPosition()));
                 break;
             } else if (consumeIdentifier()) {
-                m_tokens.append(Token(Identifier, pos, sourcePosition()));
+                m_source->appendToken(Token(Identifier, pos, tokenPosition()));
                 break;
             }
         case 'p':
             if (consumeString("oint")) {
-                m_tokens.append(Token(Point, pos, sourcePosition()));
+                m_source->appendToken(Token(Point, pos, tokenPosition()));
                 break;
             } else if (consumeIdentifier()) {
-                m_tokens.append(Token(Identifier, pos, sourcePosition()));
+                m_source->appendToken(Token(Identifier, pos, tokenPosition()));
                 break;
             }
         case 's':
             if (consumeString("pace")) {
-                m_tokens.append(Token(Space, pos, sourcePosition()));
+                m_source->appendToken(Token(Space, pos, tokenPosition()));
                 break;
             } else if (consumeIdentifier()) {
-                m_tokens.append(Token(Identifier, pos, sourcePosition()));
+                m_source->appendToken(Token(Identifier, pos, tokenPosition()));
                 break;
             }
         case 't':
             if (consumeString("rue")) {
-                m_tokens.append(Token(True, pos, sourcePosition()));
+                m_source->appendToken(Token(True, pos, tokenPosition()));
                 break;
             } else if (consumeIdentifier()) {
-                m_tokens.append(Token(Identifier, pos, sourcePosition()));
+                m_source->appendToken(Token(Identifier, pos, tokenPosition()));
                 break;
             }
         case 'u':
             if (consumeString("niverse")) {
-                m_tokens.append(Token(Universe, pos, sourcePosition()));
+                m_source->appendToken(Token(Universe, pos, tokenPosition()));
                 break;
             } else if (consumeIdentifier()) {
-                m_tokens.append(Token(Identifier, pos, sourcePosition()));
+                m_source->appendToken(Token(Identifier, pos, tokenPosition()));
                 break;
             }
         /* identifier */
@@ -127,12 +122,12 @@ void Lexer::lex()
         case 'S': case 'T': case 'U': case 'V': case 'W': case 'X':
         case 'Y': case 'Z':
             if (consumeIdentifier()) {
-                m_tokens.append(Token(Identifier, pos, sourcePosition()));
+                m_source->appendToken(Token(Identifier, pos, tokenPosition()));
                 break;
             }
         case '0': case '1': case '2': case '3': case '4':
         case '5': case '6': case '7': case '8': case '9':
-        default: m_tokens.append(Token(Undefined, pos, pos)); break;
+        default: m_source->appendToken(Token(Undefined, pos, pos)); break;
         } // end of switch
         advance(1);
     }
@@ -140,7 +135,7 @@ void Lexer::lex()
 
 void Lexer::newline()
 {
-    m_lineInfo.append(m_index + 1);
+    m_source->appendNewline(m_index + 1);
     m_column = 0;
 }
 
@@ -153,44 +148,37 @@ void Lexer::advance(int i)
 QChar Lexer::current() const
 {
     Q_ASSERT(m_index >= 0);
-    Q_ASSERT(m_index < m_text.size());
+    Q_ASSERT(m_index < m_source->size());
     return look(0);
 }
 
 QChar Lexer::look(int i) const
 {
     int index = m_index + i;
-    if (index < 0 || index >= m_text.size())
+    if (index < 0 || index >= m_source->size())
         return QChar();
-    return m_text.at(index);
+    return m_source->at(index);
 }
 
-SourcePosition Lexer::sourcePosition() const
+TokenPosition Lexer::tokenPosition() const
 {
-    SourcePosition pos;
-    pos.line = m_lineInfo.count() + 1;
+    TokenPosition pos;
+    pos.line = m_source->newlineCount() + 1;
     pos.column = m_column;
     return pos;
 }
 
-int Lexer::indexForPosition(const SourcePosition& pos) const
+TokenPosition Lexer::consumeChar()
 {
-    int line = pos.line - 1;
-    int column = pos.column - 1;
-    return !line ? column : m_lineInfo.at(line - 1) + column;
-}
-
-SourcePosition Lexer::consumeChar()
-{
-    const QChar ch = m_text.at(m_index);
-    while (m_index + 1 < m_text.size() && m_text.at(m_index + 1) == ch)
+    const QChar ch = m_source->at(m_index);
+    while (m_index + 1 < m_source->size() && m_source->at(m_index + 1) == ch)
         advance(1);
-    return sourcePosition();
+    return tokenPosition();
 }
 
 bool Lexer::consumeString(const QString& string)
 {
-    if (m_text.midRef(m_index + 1, string.length()) == string) {
+    if (m_source->text(m_index + 1, string.length()) == string) {
         advance(string.length());
         return true;
     }
@@ -200,14 +188,14 @@ bool Lexer::consumeString(const QString& string)
 bool Lexer::consumeComment()
 {
     advance(2);
-    while (m_index < m_text.size()) {
+    while (m_index < m_source->size()) {
         advance(1);
         if (look(-1) == '\n')
             newline();
         if (look(-1) == '*' && look(0) == '/')
             break;
     }
-    return m_index < m_text.size();
+    return m_index < m_source->size();
 }
 
 bool Lexer::consumeIdentifier()
@@ -227,97 +215,10 @@ bool Lexer::consumeIdentifier()
         << '0' << '1' << '2' << '3' << '4'
         << '5' << '6' << '7' << '8' << '9';
 
-    while (m_index < m_text.size()) {
+    while (m_index < m_source->size()) {
         if (!allowedChars.contains(look(1)))
             break;
         advance(1);
     }
-    return m_index < m_text.size();
-}
-
-void Lexer::print() const
-{
-    QTextStream out(stdout);
-    print(out);
-    out << "\n";
-}
-
-void Lexer::print(QTextStream& stream) const
-{
-    foreach (Token tok, m_tokens)
-        stream << textForToken(tok);
-}
-
-void Lexer::printTokens() const
-{
-    QTextStream out(stdout);
-    printTokens(out);
-}
-
-void Lexer::printTokens(QTextStream& stream) const
-{
-    foreach (Token tok, m_tokens) {
-
-        QString range = QString("start(line:%1|column:%2), end(line:%3|column%4)")
-            .arg(QString::number(tok.start.line))
-            .arg(QString::number(tok.start.column))
-            .arg(QString::number(tok.end.line))
-            .arg(QString::number(tok.end.column));
-
-        switch (tok.type) {
-        case Whitespace: stream << "Whitespace"; break;
-        case Tab: stream << "Tab"; break;
-        case Newline: stream << "Newline: " << range << "\n"; continue;
-//        case Tilda: stream << "Tilda"; break;
-//        case Bang: stream << "Bang"; break;
-//        case At: stream << "At"; break;
-//        case Hash: stream << "Hash"; break;
-//        case Dollar: stream << "Dollar"; break;
-//        case Percent: stream << "Percent"; break;
-//        case Cap: stream << "Cap"; break;
-//        case Ampersand: stream << "Ampersand"; break;
-//        case Star: stream << "Star"; break;
-        case OpenParenthesis: stream << "OpenParenthesis"; break;
-        case CloseParenthesis: stream << "CloseParenthesis"; break;
-//        case Underscore: stream << "Underscore"; break;
-//        case Plus: stream << "Plus"; break;
-//        case OpenCurly: stream << "OpenCurly"; break;
-//        case ClosedCurly: stream << "ClosedCurly"; break;
-//        case Pipe: stream << "Pipe"; break;
-        case Colon: stream << "Colon"; break;
-//        case DoubleQuote: stream << "DoubleQuote"; break;
-//        case LessThan: stream << "LessThan"; break;
-//        case GreaterThan: stream << "GreaterThan"; break;
-//        case QuestionMark: stream << "QuestionMark"; break;
-//        case Minus: stream << "Minus"; break;
-//        case Equals: stream << "Equals"; break;
-//        case OpenSquare: stream << "OpenSquare"; break;
-//        case ClosedSquare: stream << "ClosedSquare"; break;
-//        case BackSlash: stream << "BackSlash"; break;
-//        case SemiColon: stream << "SemiColon"; break;
-//        case SingleQuote: stream << "SingleQuote"; break;
-//        case Comma: stream << "Comma"; break;
-//        case Period: stream << "Period"; break;
-//        case Slash: stream << "Slash"; break;
-        case Comment: stream << "Comment: " << range << "\n"; continue;
-        case False: stream << "False"; break;
-        case Point: stream << "Point"; break;
-        case Space: stream << "Space"; break;
-        case True: stream << "True"; break;
-        case Universe: stream << "Universe"; break;
-        case Identifier: stream << "Identifier"; break;
-        case Undefined: stream << "Undefined"; break;
-        default:
-            Q_ASSERT(false); // should never be reached
-            break;
-        }
-        stream << ": " << range << " '" << textForToken(tok) << "'\n";
-    }
-}
-
-QString Lexer::textForToken(const Token& tok) const
-{
-    int start = indexForPosition(tok.start);
-    int end = indexForPosition(tok.end);
-    return m_text.mid(start, end - start + 1);
+    return m_index < m_source->size();
 }

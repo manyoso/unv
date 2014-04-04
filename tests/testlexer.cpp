@@ -13,11 +13,12 @@ void TestLexer::testExamples()
         if (file.open(QFile::ReadOnly)) {
             QTextStream in(&file);
             QString fileText = in.readAll();
-            Lexer lexer(in.readAll());
-            lexer.lex();
+            SourceBuffer buffer(fileText, file.fileName());
+            Lexer lexer;
+            lexer.lex(&buffer);
             QString lexText;
             QTextStream stream(&lexText);
-            lexer.print(stream);
+            buffer.print(stream);
             QCOMPARE(fileText, lexText);
         }
     }
