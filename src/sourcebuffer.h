@@ -18,8 +18,8 @@ public:
     QString text(int pos, int n) const
     { return m_source.mid(pos, n); }
 
-    int size() const
-    { return m_source.size(); }
+    int count() const
+    { return m_source.count(); }
 
     int indexForPosition(const TokenPosition& pos) const
     {
@@ -28,14 +28,14 @@ public:
         return !line ? column : m_lineInfo.at(line - 1) + column;
     }
 
-    void appendToken(const Token& token)
-    { m_tokens.append(token); }
-
     void appendNewline(int index)
     { m_lineInfo.append(index); }
 
     int newlineCount() const
     { return m_lineInfo.count(); }
+
+    void appendToken(const Token& token)
+    { m_tokens.append(token); }
 
     QString textForToken(const Token& tok) const
     {
@@ -43,6 +43,12 @@ public:
         int end = indexForPosition(tok.end);
         return m_source.mid(start, end - start + 1);
     }
+
+    Token tokenAt(int index) const
+    { return m_tokens.at(index); }
+
+    int tokenCount() const
+    { return m_tokens.count(); }
 
     void print() const
     {

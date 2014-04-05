@@ -54,11 +54,15 @@ enum TokenType {
 };
 
 struct TokenPosition {
+    TokenPosition()
+    { line = -1; column = -1; }
     int line;
     int column;
 };
 
 struct Token {
+    Token()
+    { type = Undefined; }
     Token(TokenType t, const TokenPosition& s, const TokenPosition& e)
     { type = t; start = s; end = e; }
     TokenType type;

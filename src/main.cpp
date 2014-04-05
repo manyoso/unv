@@ -1,6 +1,7 @@
 #include <QtCore>
 
 #include "lexer.h"
+#include "parser.h"
 
 int main(int argc, char** argv)
 {
@@ -13,10 +14,15 @@ int main(int argc, char** argv)
         if (file.open(QFile::ReadOnly)) {
             QTextStream in(&file);
             SourceBuffer buffer(in.readAll(), file.fileName());
+
             Lexer lexer;
             lexer.lex(&buffer);
+
             buffer.print();
             buffer.printTokens();
+
+            Parser parser;
+            parser.parse(&buffer);
         }
     }
 }

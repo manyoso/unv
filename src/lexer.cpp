@@ -1,7 +1,7 @@
 #include "lexer.h"
 
 Lexer::Lexer()
-    : m_index(0)
+    : m_index(-1)
     , m_column(1)
     , m_source(0)
 { }
@@ -14,10 +14,11 @@ Lexer::~Lexer()
 void Lexer::lex(SourceBuffer* source)
 {
     m_source = source;
-    m_index = 0;
+    m_index = -1;
     m_column = 1;
 
-    while (m_index < m_source->size()) {
+    while (m_index < m_source->count() - 1) {
+        advance(1);
         const QChar ch = current();
         TokenPosition pos = tokenPosition();
         switch (ch.unicode()) {
@@ -129,7 +130,6 @@ void Lexer::lex(SourceBuffer* source)
         case '5': case '6': case '7': case '8': case '9':
         default: m_source->appendToken(Token(Undefined, pos, pos)); break;
         } // end of switch
-        advance(1);
     }
 }
 
@@ -148,14 +148,15 @@ void Lexer::advance(int i)
 QChar Lexer::current() const
 {
     Q_ASSERT(m_index >= 0);
-    Q_ASSERT(m_index < m_source->size());
+    Q_ASSERT(m_index < m_source->count());
     return look(0);
 }
 
 QChar Lexer::look(int i) const
 {
     int index = m_index + i;
-    if (index < 0 || index >= m_source->size())
+    Q_ASSERT(index >= 0);
+    if (index >= m_source->count())
         return QChar();
     return m_source->at(index);
 }
@@ -171,7 +172,7 @@ TokenPosition Lexer::tokenPosition() const
 TokenPosition Lexer::consumeChar()
 {
     const QChar ch = m_source->at(m_index);
-    while (m_index + 1 < m_source->size() && m_source->at(m_index + 1) == ch)
+    while (m_index + 1 < m_source->count() && m_source->at(m_index + 1) == ch)
         advance(1);
     return tokenPosition();
 }
@@ -188,14 +189,14 @@ bool Lexer::consumeString(const QString& string)
 bool Lexer::consumeComment()
 {
     advance(2);
-    while (m_index < m_source->size()) {
+    while (m_index < m_source->count()) {
         advance(1);
         if (look(-1) == '\n')
             newline();
         if (look(-1) == '*' && look(0) == '/')
             break;
     }
-    return m_index < m_source->size();
+    return m_index < m_source->count();
 }
 
 bool Lexer::consumeIdentifier()
@@ -215,10 +216,10 @@ bool Lexer::consumeIdentifier()
         << '0' << '1' << '2' << '3' << '4'
         << '5' << '6' << '7' << '8' << '9';
 
-    while (m_index < m_source->size()) {
+    while (m_index < m_source->count()) {
         if (!allowedChars.contains(look(1)))
             break;
         advance(1);
     }
-    return m_index < m_source->size();
+    return m_index < m_source->count();
 }
