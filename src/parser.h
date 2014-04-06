@@ -25,7 +25,6 @@ private:
     void advance(int i);
     Token current() const;
     Token look(int) const;
-    void error(const Token&, const QString&) const;
 
     void parseWhitespace(const Token&);
     void parseTab(const Token&);

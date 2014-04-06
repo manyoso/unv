@@ -47,7 +47,7 @@ void Parser::parse(SourceBuffer* source)
             break;
         }
         default:
-            error(tok, "unexpected token when parsing translation unit"); break;
+            m_source->error(tok, "unexpected token when parsing translation unit"); break;
         }
     }
 }
@@ -77,37 +77,12 @@ Token Parser::look(int i) const
     return m_source->tokenAt(index);
 }
 
-void Parser::error(const Token& tok, const QString& str) const
-{
-    QString location = m_source->name()
-        + ":" + QString::number(tok.start.line)
-        + ":" + QString::number(tok.start.column)
-#ifdef Q_OS_UNIX
-        + "\033[91m error\033[39m: " + str;
-#else
-        + " error: " + str;
-#endif
-    QString context = m_source->lineForToken(tok);
-    context.replace('\n', QChar());
-    QString caret(tok.start.column - 1, ' ');
-    context.replace('\t', ' ');
-    caret.replace('\t', ' ');
-#ifdef Q_OS_UNIX
-    caret += "\033[92m" + QString(tok.end.column - tok.start.column + 1, '^') + "\033[39m";
-#else
-    caret += QString(tok.end.column - tok.start.column + 1, '^');
-#endif
-
-    QTextStream out(stderr);
-    out << location << '\n' << context << '\n' << caret << '\n';
-}
-
 void Parser::parseWhitespace(const Token& tok)
 {
     if (m_indentation == Unset)
         m_indentation = Spaces;
     else if (m_indentation == Tabs)
-        error(tok, "unexpected ' ' when already using '\\t' for indentation");
+        m_source->error(tok, "unexpected ' ' when already using '\\t' for indentation");
 }
 
 void Parser::parseTab(const Token& tok)
@@ -115,5 +90,5 @@ void Parser::parseTab(const Token& tok)
     if (m_indentation == Unset)
         m_indentation = Tabs;
     else if (m_indentation == Spaces)
-        error(tok, "unexpected '\\t' when already using ' ' for indentation");
+        m_source->error(tok, "unexpected '\\t' when already using ' ' for indentation");
 }

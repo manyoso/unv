@@ -1,0 +1,27 @@
+/*
+ * Verbose example of calculating fibonacci in unv syntax.
+ * http://en.wikipedia.org/wiki/Fibonacci_number
+ */
+alias Int _builtin_int32_
+
+/*
+ * Unnecessary verbosity:
+ * 1) The parenthesis and arrow are unnecessary for arity zero
+ * 2) The construct line is unnecessary for pure functions
+ * 3) 'apply:' is unnecessary if the construct line is omitted
+ */
+type main : () -> Int
+    construct: return this
+    apply: return fib(n)
+
+/*
+ * Unnecessary verbosity:
+ * 2) The construct line is unnecessary for pure functions
+ * 3) 'apply:' is unnecessary if the construct line is omitted
+ */
+type fibonacci : (Int n) -> Int
+    construct: return this
+    apply:
+        if (n = 0) return 0
+        if (n = 1) return 1
+        return n = n - 1 + n - 2;

@@ -7,6 +7,11 @@
 
 class SourceBuffer {
 public:
+    enum ErrorType {
+        Error,
+        Fatal
+    };
+
     SourceBuffer(const QString& source, const QString& name = "")
     { m_source = source; m_name = name; }
 
@@ -128,12 +133,41 @@ public:
             case True: stream << "True"; break;
             case Universe: stream << "Universe"; break;
             case Identifier: stream << "Identifier"; break;
-            case Undefined: stream << "Undefined"; break;
             default:
                 Q_ASSERT(false); // should never be reached
                 break;
             }
             stream << ": " << range << " '" << textForToken(tok) << "'\n";
+        }
+    }
+
+    void error(const Token& tok, const QString& str, ErrorType type = Error) const
+    {
+        QString err = type == Error ? "error" : "fatal error";
+        QString location = name()
+            + ":" + QString::number(tok.start.line)
+            + ":" + QString::number(tok.start.column)
+#ifdef Q_OS_UNIX
+            + "\033[91m " + err + "\033[39m: " + str;
+#else
+            + " " + err + ": " + str;
+#endif
+        QString context = lineForToken(tok);
+        context.replace('\n', QChar());
+        QString caret(tok.start.column - 1, ' ');
+        context.replace('\t', ' ');
+        caret.replace('\t', ' ');
+#ifdef Q_OS_UNIX
+        caret += "\033[92m" + QString(tok.end.column - tok.start.column + 1, '^') + "\033[39m";
+#else
+        caret += QString(tok.end.column - tok.start.column + 1, '^');
+#endif
+
+        QTextStream out(stderr);
+        out << location << '\n' << context << '\n' << caret << '\n';
+        if (type == Fatal) {
+            out.flush();
+            exit(-1);
         }
     }
 

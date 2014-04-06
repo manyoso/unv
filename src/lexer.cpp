@@ -128,7 +128,11 @@ void Lexer::lex(SourceBuffer* source)
             }
         case '0': case '1': case '2': case '3': case '4':
         case '5': case '6': case '7': case '8': case '9':
-        default: m_source->appendToken(Token(Undefined, pos, pos)); break;
+        default:
+            m_source->error(Token(Undefined, pos, pos),
+                            "unexpected characters when tokenizing file",
+                            SourceBuffer::Fatal);
+            break;
         } // end of switch
     }
 }
