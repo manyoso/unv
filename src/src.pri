@@ -12,4 +12,3 @@ SOURCES += $$PWD/ast.cpp \
            $$PWD/parser.cpp \
 
 LIBS += $$system(llvm-config --ldflags --libs core)
-QMAKE_CXXFLAGS += $$system(llvm-config --cppflags core)

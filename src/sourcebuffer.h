@@ -18,6 +18,13 @@ public:
     QString text(int pos, int n) const
     { return m_source.mid(pos, n); }
 
+    QString lineForToken(const Token& tok) const
+    {
+        int start = m_lineInfo.at(tok.start.line - 2);
+        int end = tok.start.line - 1 >= m_lineInfo.count() ? m_source.count() - 1 : m_lineInfo.at(tok.start.line - 1);
+        return m_source.mid(start, end);
+    }
+
     int count() const
     { return m_source.count(); }
 

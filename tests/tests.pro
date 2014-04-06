@@ -4,7 +4,7 @@ include($$PWD/../src/src.pri)
 TEMPLATE = app
 TARGET = unvtests
 DESTDIR = $$OUTPUT_DIR/bin
-CONFIG += qtestlib
+QT += testlib
 
 DEPENDPATH += .
 INCLUDEPATH += .

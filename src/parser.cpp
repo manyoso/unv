@@ -79,19 +79,17 @@ Token Parser::look(int i) const
 
 void Parser::error(const Token& tok, const QString& str) const
 {
-    static int contextLength = 20;
-    QString tokenText = m_source->textForToken(tok);
-    int padding = qMax(0, contextLength - tokenText.length() / 2);
-    int index = m_source->indexForPosition(tok.start) - padding;
     QString location = m_source->name()
         + ":" + QString::number(tok.start.line)
         + ":" + QString::number(tok.start.column)
-        + " error: " + str + "\n";
-    QString context = "  " + m_source->text(index, contextLength) + "\n";
-    QString caret = QString(qMin(padding, 1), ' ') + "^\n";
+        + " error: " + str;
+    QString context = m_source->lineForToken(tok);
+    QString caret(tok.start.column - 1, ' ');
+    caret += QString(tok.end.column - tok.start.column + 1, '^');
 
+    // TODO: Print in color to the output
     QTextStream out(stderr);
-    out << location << context << caret;
+    out << location << '\n' << context << '\n' << caret << '\n';
 }
 
 void Parser::parseWhitespace(const Token& tok)

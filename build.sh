@@ -23,5 +23,5 @@ fi
 
 mkdir -p $BUILDDIR
 cd $BUILDDIR
-qmake $SCRIPTDIR/$BASENAME.pro
+qmake -qt5 -spec linux-clang $SCRIPTDIR/$BASENAME.pro
 make
