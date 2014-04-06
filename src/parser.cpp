@@ -85,6 +85,8 @@ void Parser::error(const Token& tok, const QString& str) const
         + " error: " + str;
     QString context = m_source->lineForToken(tok);
     QString caret(tok.start.column - 1, ' ');
+    context.replace('\t', ' ');
+    caret.replace('\t', ' ');
     caret += QString(tok.end.column - tok.start.column + 1, '^');
 
     // TODO: Print in color to the output
