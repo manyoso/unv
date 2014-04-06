@@ -82,14 +82,21 @@ void Parser::error(const Token& tok, const QString& str) const
     QString location = m_source->name()
         + ":" + QString::number(tok.start.line)
         + ":" + QString::number(tok.start.column)
+#ifdef Q_OS_UNIX
+        + "\033[91m error\033[39m: " + str;
+#else
         + " error: " + str;
+#endif
     QString context = m_source->lineForToken(tok);
     QString caret(tok.start.column - 1, ' ');
     context.replace('\t', ' ');
     caret.replace('\t', ' ');
+#ifdef Q_OS_UNIX
+    caret += "\033[92m" + QString(tok.end.column - tok.start.column + 1, '^') + "\033[39m";
+#else
     caret += QString(tok.end.column - tok.start.column + 1, '^');
+#endif
 
-    // TODO: Print in color to the output
     QTextStream out(stderr);
     out << location << '\n' << context << '\n' << caret << '\n';
 }
