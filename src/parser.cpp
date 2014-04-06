@@ -88,6 +88,7 @@ void Parser::error(const Token& tok, const QString& str) const
         + " error: " + str;
 #endif
     QString context = m_source->lineForToken(tok);
+    context.replace('\n', QChar());
     QString caret(tok.start.column - 1, ' ');
     context.replace('\t', ' ');
     caret.replace('\t', ' ');

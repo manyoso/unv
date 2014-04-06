@@ -22,7 +22,7 @@ public:
     {
         int start = m_lineInfo.at(tok.start.line - 2);
         int end = tok.start.line - 1 >= m_lineInfo.count() ? m_source.count() - 1 : m_lineInfo.at(tok.start.line - 1);
-        return m_source.mid(start, end);
+        return m_source.mid(start, end - start + 1);
     }
 
     int count() const
