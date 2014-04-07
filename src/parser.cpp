@@ -13,6 +13,7 @@ Parser::~Parser()
 void Parser::clear()
 {
     m_index = -1;
+    m_spacesForIndent = 0;
     m_scope = 0;
     m_indentation = Unset;
     m_source = 0;
@@ -34,30 +35,6 @@ void Parser::parse(SourceBuffer* source)
             parseTypeDecl();
         else
             m_source->error(tok, "unexpected token when parsing translation unit");
-#if 0
-        const Token& tok = current();
-
-        switch (tok.type) {
-        case Whitespace:
-            parseLeadingWhitespace(tok); break;
-        case Tab:
-            parseLeadingTab(tok); break;
-        case Newline:
-        {
-            const Token& next = look(1);
-            switch (next.type) {
-            case Whitespace:
-                parseLeadingWhitespace(next); break;
-            case Tab:
-                parseLeadingTab(next); break;
-            default: break;
-            }
-            break;
-        }
-        default:
-            m_source->error(tok, "unexpected token when parsing translation unit"); break;
-        }
-#endif
     }
 }
 
@@ -93,7 +70,7 @@ Token Parser::look(int i) const
     return m_source->tokenAt(index);
 }
 
-bool Parser::expect(Token tok, TokenType type)
+bool Parser::expect(Token tok, TokenType type) const
 {
     if (tok.type == type)
         return true;
@@ -101,20 +78,25 @@ bool Parser::expect(Token tok, TokenType type)
     return false;
 }
 
-void Parser::parseLeadingWhitespace(const Token& tok)
+bool Parser::checkLeadingWhitespace(const Token& tok)
 {
-    if (m_indentation == Unset)
-        m_indentation = Spaces;
-    else if (m_indentation == Tabs)
+    if (m_indentation == Tabs) {
         m_source->error(tok, "unexpected ' ' when already using '\\t' for indentation");
+        return false;
+    }
+    m_indentation = Spaces;
+    m_spacesForIndent = tok.end.column - tok.start.column;
+    return true;
 }
 
-void Parser::parseLeadingTab(const Token& tok)
+bool Parser::checkLeadingTab(const Token& tok)
 {
-    if (m_indentation == Unset)
-        m_indentation = Tabs;
-    else if (m_indentation == Spaces)
+    if (m_indentation == Spaces) {
         m_source->error(tok, "unexpected '\\t' when already using ' ' for indentation");
+        return false;
+    }
+    m_indentation = Tabs;
+    return true;
 }
 
 // alias foo bar
@@ -175,21 +157,9 @@ void Parser::parseTypeDecl()
     if (!expect(tok, Colon))
         return;
 
-    tok = advance(1);
-    if (!expect(tok, Whitespace))
-        return;
-
-    tok = advance(1);
-    if (!expect(tok, OpenParenthesis))
-        return;
-
-    tok = advance(1);
-    if (!expect(tok, CloseParenthesis))
-        return;
-
-    tok = advance(1);
-    if (!expect(tok, Whitespace))
-        return;
+    QList<TypeDeclArg*> args;
+    if (look(1).type == Whitespace && look(2).type == OpenParenthesis)
+        args = parseTypeDeclArgs();
 
     tok = advance(1);
     if (!expect(tok, Minus))
@@ -213,8 +183,45 @@ void Parser::parseTypeDecl()
     if (!expect(tok, Newline))
         return;
 
+    parseTypeStatement();
+
     TypeDecl* decl = new TypeDecl;
     decl->type = type;
     decl->returnType = returnType;
     m_source->translationUnit()->typeDecl.append(decl);
+}
+
+QList<TypeDeclArg*> Parser::parseTypeDeclArgs()
+{
+    QList<TypeDeclArg*> args;
+    Token tok = advance(3);
+    if (!expect(tok, CloseParenthesis))
+        return args;
+
+    tok = advance(1);
+    if (!expect(tok, Whitespace))
+        return args;
+
+    return args;
+}
+
+void Parser::parseTypeStatement()
+{
+    m_context = "type statement";
+    parseIndentation();
+}
+
+void Parser::parseIndentation()
+{
+    Token tok = look(1);
+    if (tok.type == Whitespace && !checkLeadingWhitespace(tok))
+        return;
+    else if (tok.type == Tab && !checkLeadingTab(tok))
+        return;
+    else
+        return;
+
+    m_scope++;
+    advance(1);
+    parseIndentation();
 }

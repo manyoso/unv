@@ -26,16 +26,19 @@ private:
     Token current() const;
     Token look(int) const;
 
-    bool expect(Token tok, TokenType t);
-
-    void parseLeadingWhitespace(const Token&);
-    void parseLeadingTab(const Token&);
+    bool expect(Token tok, TokenType t) const;
+    bool checkLeadingWhitespace(const Token&);
+    bool checkLeadingTab(const Token&);
 
     void parseAliasDecl();
     void parseTypeDecl();
+    QList<TypeDeclArg*> parseTypeDeclArgs();
+    void parseTypeStatement();
+    void parseIndentation();
 
 private:
     int m_index;
+    int m_spacesForIndent;
     unsigned m_scope;
     Indentation m_indentation;
     SourceBuffer* m_source;
