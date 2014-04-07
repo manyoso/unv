@@ -22,6 +22,7 @@ private:
     bool consumeString(const QString&);
     bool consumeComment();
     bool consumeIdentifier();
+    TokenPosition consumeDigits();
 
 private:
     int m_index;

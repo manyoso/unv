@@ -39,24 +39,24 @@ void Lexer::lex(SourceBuffer* source)
         case '(': m_source->appendToken(Token(OpenParenthesis, pos, pos)); break;
         case ')': m_source->appendToken(Token(CloseParenthesis, pos, pos)); break;
 //        case '_': m_source->appendToken(Token(Underscore, pos, pos)); break;
-//        case '+': m_source->appendToken(Token(Plus, pos, pos)); break;
+        case '+': m_source->appendToken(Token(Plus, pos, pos)); break;
 //        case '{': m_source->appendToken(Token(OpenCurly, pos, pos)); break;
 //        case '}': m_source->appendToken(Token(ClosedCurly, pos, pos)); break;
 //        case '|': m_source->appendToken(Token(Pipe, pos, pos)); break;
         case ':': m_source->appendToken(Token(Colon, pos, pos)); break;
 //        case '"': m_source->appendToken(Token(DoubleQuote, pos, pos)); break;
-//        case '<': m_source->appendToken(Token(LessThan, pos, pos)); break;
-//        case '>': m_source->appendToken(Token(GreaterThan, pos, pos)); break;
+        case '<': m_source->appendToken(Token(LessThan, pos, pos)); break;
+        case '>': m_source->appendToken(Token(GreaterThan, pos, pos)); break;
 //        case '?': m_source->appendToken(Token(QuestionMark, pos, pos)); break;
-//        case '-': m_source->appendToken(Token(Minus, pos, pos)); break;
-//        case '=': m_source->appendToken(Token(Equals, pos, pos)); break;
+        case '-': m_source->appendToken(Token(Minus, pos, pos)); break;
+        case '=': m_source->appendToken(Token(Equals, pos, pos)); break;
 //        case '[': m_source->appendToken(Token(OpenSquare, pos, pos)); break;
 //        case ']': m_source->appendToken(Token(ClosedSquare, pos, pos)); break;
 //        case '\\': m_source->appendToken(Token(BackSlash, pos, pos)); break;
 //        case ';': m_source->appendToken(Token(SemiColon, pos, pos)); break;
 //        case '\'': m_source->appendToken(Token(SingleQuote, pos, pos)); break;
-//        case ',': m_source->appendToken(Token(Comma, pos, pos)); break;
-//        case '.': m_source->appendToken(Token(Period, pos, pos)); break;
+        case ',': m_source->appendToken(Token(Comma, pos, pos)); break;
+        case '.': m_source->appendToken(Token(Period, pos, pos)); break;
         case '/':
             if (look(1) == '*' && consumeComment()) {
                 m_source->appendToken(Token(Comment, pos, tokenPosition()));
@@ -70,6 +70,25 @@ void Lexer::lex(SourceBuffer* source)
          *  true
          *  universe
          */
+        case 'a':
+            if (consumeString("lias")) {
+                m_source->appendToken(Token(Alias, pos, tokenPosition()));
+                break;
+            } else if (consumeString("pply")) {
+                m_source->appendToken(Token(Apply, pos, tokenPosition()));
+                break;
+            } else if (consumeIdentifier()) {
+                m_source->appendToken(Token(Identifier, pos, tokenPosition()));
+                break;
+            }
+        case 'c':
+            if (consumeString("onstruct")) {
+                m_source->appendToken(Token(Construct, pos, tokenPosition()));
+                break;
+            } else if (consumeIdentifier()) {
+                m_source->appendToken(Token(Identifier, pos, tokenPosition()));
+                break;
+            }
         case 'f':
             if (consumeString("alse")) {
                 m_source->appendToken(Token(False, pos, tokenPosition()));
@@ -78,17 +97,9 @@ void Lexer::lex(SourceBuffer* source)
                 m_source->appendToken(Token(Identifier, pos, tokenPosition()));
                 break;
             }
-        case 'p':
-            if (consumeString("oint")) {
-                m_source->appendToken(Token(Point, pos, tokenPosition()));
-                break;
-            } else if (consumeIdentifier()) {
-                m_source->appendToken(Token(Identifier, pos, tokenPosition()));
-                break;
-            }
-        case 's':
-            if (consumeString("pace")) {
-                m_source->appendToken(Token(Space, pos, tokenPosition()));
+        case 'r':
+            if (consumeString("eturn")) {
+                m_source->appendToken(Token(Return, pos, tokenPosition()));
                 break;
             } else if (consumeIdentifier()) {
                 m_source->appendToken(Token(Identifier, pos, tokenPosition()));
@@ -98,13 +109,8 @@ void Lexer::lex(SourceBuffer* source)
             if (consumeString("rue")) {
                 m_source->appendToken(Token(True, pos, tokenPosition()));
                 break;
-            } else if (consumeIdentifier()) {
-                m_source->appendToken(Token(Identifier, pos, tokenPosition()));
-                break;
-            }
-        case 'u':
-            if (consumeString("niverse")) {
-                m_source->appendToken(Token(Universe, pos, tokenPosition()));
+            } else if (consumeString("ype")) {
+                m_source->appendToken(Token(Type, pos, tokenPosition()));
                 break;
             } else if (consumeIdentifier()) {
                 m_source->appendToken(Token(Identifier, pos, tokenPosition()));
@@ -112,9 +118,9 @@ void Lexer::lex(SourceBuffer* source)
             }
         /* identifier */
         case '_':
-        case 'a': case 'b': case 'c': case 'd': case 'e': /*case 'f':*/
+        /*case 'a':*/ case 'b': /*case 'c':*/ case 'd': case 'e': /*case 'f':*/
         case 'g': case 'h': case 'i': case 'j': case 'k': case 'l':
-        case 'm': case 'n': case 'o': /*case 'p':*/ case 'q': case 'r':
+        case 'm': case 'n': case 'o': /*case 'p':*/ case 'q': /*case 'r':*/
         /*case 's': case 't': case 'u':*/ case 'v': case 'w': case 'x':
         case 'y': case 'z':
         case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
@@ -128,9 +134,10 @@ void Lexer::lex(SourceBuffer* source)
             }
         case '0': case '1': case '2': case '3': case '4':
         case '5': case '6': case '7': case '8': case '9':
+            m_source->appendToken(Token(Digits, pos, consumeDigits())); break;
         default:
             m_source->error(Token(Undefined, pos, pos),
-                            "unexpected characters when tokenizing file",
+                            "unexpected character when tokenizing file",
                             SourceBuffer::Fatal);
             break;
         } // end of switch
@@ -227,3 +234,17 @@ bool Lexer::consumeIdentifier()
     }
     return m_index < m_source->count();
 }
+
+TokenPosition Lexer::consumeDigits()
+{
+    static QList<QChar> allowedChars = QList<QChar>()
+        << '0' << '1' << '2' << '3' << '4'
+        << '5' << '6' << '7' << '8' << '9';
+    while (m_index < m_source->count()) {
+        if (!allowedChars.contains(look(1)))
+            break;
+        advance(1);
+    }
+    return tokenPosition();
+}
+

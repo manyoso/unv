@@ -26,7 +26,16 @@ public:
     QString lineForToken(const Token& tok) const
     {
         int start = m_lineInfo.at(tok.start.line - 2);
-        int end = tok.start.line - 1 >= m_lineInfo.count() ? m_source.count() - 1 : m_lineInfo.at(tok.start.line - 1);
+        int end = 0;
+        if (tok.start.line - 1 >= m_lineInfo.count()) {
+            int newline = m_source.indexOf('\n', start);
+            if (newline != -1)
+                end = newline - 1;
+            else
+                end = m_source.count() - 1;
+        } else {
+            end = m_lineInfo.at(tok.start.line - 1);
+        }
         return m_source.mid(start, end - start + 1);
     }
 
@@ -107,32 +116,35 @@ public:
             case OpenParenthesis: stream << "OpenParenthesis"; break;
             case CloseParenthesis: stream << "CloseParenthesis"; break;
     //        case Underscore: stream << "Underscore"; break;
-    //        case Plus: stream << "Plus"; break;
+            case Plus: stream << "Plus"; break;
     //        case OpenCurly: stream << "OpenCurly"; break;
     //        case ClosedCurly: stream << "ClosedCurly"; break;
     //        case Pipe: stream << "Pipe"; break;
             case Colon: stream << "Colon"; break;
     //        case DoubleQuote: stream << "DoubleQuote"; break;
-    //        case LessThan: stream << "LessThan"; break;
-    //        case GreaterThan: stream << "GreaterThan"; break;
+            case LessThan: stream << "LessThan"; break;
+            case GreaterThan: stream << "GreaterThan"; break;
     //        case QuestionMark: stream << "QuestionMark"; break;
-    //        case Minus: stream << "Minus"; break;
-    //        case Equals: stream << "Equals"; break;
+            case Minus: stream << "Minus"; break;
+            case Equals: stream << "Equals"; break;
     //        case OpenSquare: stream << "OpenSquare"; break;
     //        case ClosedSquare: stream << "ClosedSquare"; break;
     //        case BackSlash: stream << "BackSlash"; break;
     //        case SemiColon: stream << "SemiColon"; break;
     //        case SingleQuote: stream << "SingleQuote"; break;
-    //        case Comma: stream << "Comma"; break;
-    //        case Period: stream << "Period"; break;
+            case Comma: stream << "Comma"; break;
+            case Period: stream << "Period"; break;
     //        case Slash: stream << "Slash"; break;
             case Comment: stream << "Comment: " << range << "\n"; continue;
+            case Alias: stream << "Alias: "; break;
+            case Apply: stream << "Apply: "; break;
+            case Construct: stream << "Construct: "; break;
             case False: stream << "False"; break;
-            case Point: stream << "Point"; break;
-            case Space: stream << "Space"; break;
+            case Return: stream << "Return"; break;
             case True: stream << "True"; break;
-            case Universe: stream << "Universe"; break;
+            case Type: stream << "Type"; break;
             case Identifier: stream << "Identifier"; break;
+            case Digits: stream << "Digits"; break;
             default:
                 Q_ASSERT(false); // should never be reached
                 break;
