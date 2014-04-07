@@ -28,20 +28,18 @@ void Parser::parse(SourceBuffer* source)
         const Token& tok = current();
 
         switch (tok.type) {
-        case Comment:
-            continue;
         case Whitespace:
-            parseWhitespace(tok); break;
+            parseLeadingWhitespace(tok); break;
         case Tab:
-            parseTab(tok); break;
+            parseLeadingTab(tok); break;
         case Newline:
         {
             const Token& next = look(1);
             switch (next.type) {
             case Whitespace:
-                parseWhitespace(next); break;
+                parseLeadingWhitespace(next); break;
             case Tab:
-                parseTab(next); break;
+                parseLeadingTab(next); break;
             default: break;
             }
             break;
@@ -56,9 +54,14 @@ void Parser::newline()
 {
 }
 
-void Parser::advance(int i)
+void Parser::advance(int i, bool skipComments)
 {
     m_index += i;
+    if (!skipComments)
+        return;
+
+    while (current().type == Comment)
+        m_index++;
 }
 
 Token Parser::current() const
@@ -77,7 +80,7 @@ Token Parser::look(int i) const
     return m_source->tokenAt(index);
 }
 
-void Parser::parseWhitespace(const Token& tok)
+void Parser::parseLeadingWhitespace(const Token& tok)
 {
     if (m_indentation == Unset)
         m_indentation = Spaces;
@@ -85,10 +88,18 @@ void Parser::parseWhitespace(const Token& tok)
         m_source->error(tok, "unexpected ' ' when already using '\\t' for indentation");
 }
 
-void Parser::parseTab(const Token& tok)
+void Parser::parseLeadingTab(const Token& tok)
 {
     if (m_indentation == Unset)
         m_indentation = Tabs;
     else if (m_indentation == Spaces)
         m_source->error(tok, "unexpected '\\t' when already using ' ' for indentation");
+}
+
+void Parser::parseAliasDecl()
+{
+}
+
+void Parser::parseTypeDecl()
+{
 }

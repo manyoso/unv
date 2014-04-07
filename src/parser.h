@@ -22,12 +22,15 @@ private:
 
     void clear();
     void newline();
-    void advance(int i);
+    void advance(int i, bool skipComments = true);
     Token current() const;
     Token look(int) const;
 
-    void parseWhitespace(const Token&);
-    void parseTab(const Token&);
+    void parseLeadingWhitespace(const Token&);
+    void parseLeadingTab(const Token&);
+
+    void parseAliasDecl();
+    void parseTypeDecl();
 
 private:
     int m_index;
