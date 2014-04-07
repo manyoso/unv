@@ -14,7 +14,7 @@ public:
 
 private:
     void newline();
-    void advance(int i);
+    QChar advance(int i);
     QChar current() const;
     QChar look(int) const;
     TokenPosition tokenPosition() const;

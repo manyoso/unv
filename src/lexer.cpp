@@ -15,11 +15,10 @@ void Lexer::lex(SourceBuffer* source)
 {
     m_source = source;
     m_index = -1;
-    m_column = 1;
+    m_column = 0;
 
     while (m_index < m_source->count() - 1) {
-        advance(1);
-        const QChar ch = current();
+        const QChar ch = advance(1);
         TokenPosition pos = tokenPosition();
         switch (ch.unicode()) {
         /* whitespace*/
@@ -150,10 +149,11 @@ void Lexer::newline()
     m_column = 0;
 }
 
-void Lexer::advance(int i)
+QChar Lexer::advance(int i)
 {
     m_index += i;
     m_column += i;
+    return current();
 }
 
 QChar Lexer::current() const

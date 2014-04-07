@@ -22,9 +22,11 @@ private:
 
     void clear();
     void newline();
-    void advance(int i, bool skipComments = true);
+    Token advance(int i, bool skipComments = true);
     Token current() const;
     Token look(int) const;
+
+    bool expect(Token tok, TokenType t);
 
     void parseLeadingWhitespace(const Token&);
     void parseLeadingTab(const Token&);
@@ -37,6 +39,7 @@ private:
     unsigned m_scope;
     Indentation m_indentation;
     SourceBuffer* m_source;
+    QString m_context;
 };
 
 #endif // parser_h
