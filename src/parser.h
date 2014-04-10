@@ -32,7 +32,8 @@ private:
 
     void parseAliasDecl();
     void parseFuncDecl();
-    QList<FuncDeclArg*> parseFuncDeclArgs();
+    QList<QSharedPointer<FuncDeclArg> > parseFuncDeclArgs();
+    FuncDeclArg* parseFuncDeclArg();
     FuncStmt* parseFuncStatement();
     bool parseIndent(unsigned expect);
     Expr* parseExpr();

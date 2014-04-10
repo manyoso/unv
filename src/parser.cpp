@@ -164,7 +164,7 @@ void Parser::parseFuncDecl()
     if (!expect(tok, Colon))
         return;
 
-    QList<FuncDeclArg*> args;
+    QList<QSharedPointer<FuncDeclArg> > args;
     if (look(1).type == Whitespace && look(2).type == OpenParenthesis)
         args = parseFuncDeclArgs();
 
@@ -201,10 +201,16 @@ void Parser::parseFuncDecl()
     m_source->translationUnit()->funcDecl.append(QSharedPointer<FuncDecl>(decl));
 }
 
-QList<FuncDeclArg*> Parser::parseFuncDeclArgs()
+QList<QSharedPointer<FuncDeclArg> > Parser::parseFuncDeclArgs()
 {
-    QList<FuncDeclArg*> args;
+    QList<QSharedPointer<FuncDeclArg> > args;
     Token tok = advance(3);
+    if (tok.type == Identifier) {
+        while(FuncDeclArg* arg = parseFuncDeclArg())
+            args.append(QSharedPointer<FuncDeclArg>(arg));
+    }
+
+    tok = current();
     if (!expect(tok, CloseParenthesis))
         return args;
 
@@ -213,6 +219,40 @@ QList<FuncDeclArg*> Parser::parseFuncDeclArgs()
         return args;
 
     return args;
+}
+
+FuncDeclArg* Parser::parseFuncDeclArg()
+{
+    m_context = "function declaration argument";
+
+    Token tok = current();
+    if (tok.type == Comma) {
+        tok = advance(1);
+        if (!expect(tok, Whitespace))
+            return 0;
+    } else if (tok.type == CloseParenthesis)
+        return 0;
+
+    if (!expect(tok, Identifier))
+        return 0;
+
+    Token name = tok;
+
+    tok = advance(1);
+    if (!expect(tok, Colon))
+        return 0;
+
+    tok = advance(1);
+    if (!expect(tok, Identifier))
+        return 0;
+
+    advance(1);
+
+    Token type = tok;
+    FuncDeclArg* arg = new FuncDeclArg;
+    arg->name = name;
+    arg->type = type;
+    return arg;
 }
 
 FuncStmt* Parser::parseFuncStatement()
