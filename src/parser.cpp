@@ -13,9 +13,9 @@ Parser::~Parser()
 void Parser::clear()
 {
     m_index = -1;
-    m_spacesForIndent = 0;
+    m_originalSpacesForIndent = 0;
     m_scope = 0;
-    m_indentation = Unset;
+    m_indent = Unset;
     m_source = 0;
 }
 
@@ -25,14 +25,13 @@ void Parser::parse(SourceBuffer* source)
     m_source = source;
 
     while (m_index < m_source->tokenCount() - 1) {
-        advance(1);
-        Token tok = current();
+        Token tok = advance(1);
         if (tok.type == Newline)
             continue;
         if (tok.type == Alias)
             parseAliasDecl();
-        else if (tok.type == Type)
-            parseTypeDecl();
+        else if (tok.type == Function)
+            parseFuncDecl();
         else
             m_source->error(tok, "unexpected token when parsing translation unit");
     }
@@ -80,22 +79,30 @@ bool Parser::expect(Token tok, TokenType type) const
 
 bool Parser::checkLeadingWhitespace(const Token& tok)
 {
-    if (m_indentation == Tabs) {
+    if (m_indent == Tabs) {
         m_source->error(tok, "unexpected ' ' when already using '\\t' for indentation");
         return false;
     }
-    m_indentation = Spaces;
-    m_spacesForIndent = tok.end.column - tok.start.column;
+    m_indent = Spaces;
+    int spacesForIndent = tok.end.column - tok.start.column + 1;
+    if (!m_originalSpacesForIndent) {
+        m_originalSpacesForIndent = spacesForIndent;
+    } else if (spacesForIndent % m_originalSpacesForIndent != 0) {
+        m_source->error(tok, "number of spaces in indentation level is not divisable by " + QString::number(m_originalSpacesForIndent));
+        return false;
+    }
+    m_scope = spacesForIndent / m_originalSpacesForIndent;
     return true;
 }
 
 bool Parser::checkLeadingTab(const Token& tok)
 {
-    if (m_indentation == Spaces) {
+    if (m_indent == Spaces) {
         m_source->error(tok, "unexpected '\\t' when already using ' ' for indentation");
         return false;
     }
-    m_indentation = Tabs;
+    m_indent = Tabs;
+    m_scope = tok.end.column - tok.start.column + 1;
     return true;
 }
 
@@ -131,13 +138,13 @@ void Parser::parseAliasDecl()
     AliasDecl* decl = new AliasDecl;
     decl->alias = alias;
     decl->type = type;
-    m_source->translationUnit()->aliasDecl.append(decl);
+    m_source->translationUnit()->aliasDecl.append(QSharedPointer<AliasDecl>(decl));
 }
 
-// type foo : (foo:Foo?, bar:Bar?, ...)? ->? Baz
-void Parser::parseTypeDecl()
+// function foo : (foo:Foo?, bar:Bar?, ...)? ->? Baz
+void Parser::parseFuncDecl()
 {
-    m_context = "type declaration";
+    m_context = "function declaration";
 
     Token tok = advance(1);
     if (!expect(tok, Whitespace))
@@ -157,9 +164,9 @@ void Parser::parseTypeDecl()
     if (!expect(tok, Colon))
         return;
 
-    QList<TypeDeclArg*> args;
+    QList<FuncDeclArg*> args;
     if (look(1).type == Whitespace && look(2).type == OpenParenthesis)
-        args = parseTypeDeclArgs();
+        args = parseFuncDeclArgs();
 
     tok = advance(1);
     if (!expect(tok, Minus))
@@ -183,17 +190,20 @@ void Parser::parseTypeDecl()
     if (!expect(tok, Newline))
         return;
 
-    parseTypeStatement();
+    FuncStmt* stmt = parseFuncStatement();
+    if (!stmt)
+        return;
 
-    TypeDecl* decl = new TypeDecl;
-    decl->type = type;
+    FuncDecl* decl = new FuncDecl;
+    decl->name = type;
+    decl->stmt = QSharedPointer<FuncStmt>(stmt);
     decl->returnType = returnType;
-    m_source->translationUnit()->typeDecl.append(decl);
+    m_source->translationUnit()->funcDecl.append(QSharedPointer<FuncDecl>(decl));
 }
 
-QList<TypeDeclArg*> Parser::parseTypeDeclArgs()
+QList<FuncDeclArg*> Parser::parseFuncDeclArgs()
 {
-    QList<TypeDeclArg*> args;
+    QList<FuncDeclArg*> args;
     Token tok = advance(3);
     if (!expect(tok, CloseParenthesis))
         return args;
@@ -205,23 +215,102 @@ QList<TypeDeclArg*> Parser::parseTypeDeclArgs()
     return args;
 }
 
-void Parser::parseTypeStatement()
+FuncStmt* Parser::parseFuncStatement()
 {
-    m_context = "type statement";
-    parseIndentation();
+    m_context = "function statement";
+    if (!parseIndent(1))
+        return 0;
+
+    Expr* expr = parseExpr();
+    if (!expr)
+        return 0;
+
+    FuncStmt* stmt = new FuncStmt;
+    stmt->expr = QSharedPointer<Expr>(expr);
+    return stmt;
 }
 
-void Parser::parseIndentation()
+bool Parser::parseIndent(unsigned expected)
 {
-    Token tok = look(1);
+    Token tok = advance(1);
     if (tok.type == Whitespace && !checkLeadingWhitespace(tok))
-        return;
+        return false;
     else if (tok.type == Tab && !checkLeadingTab(tok))
-        return;
-    else
-        return;
+        return false;
 
-    m_scope++;
-    advance(1);
-    parseIndentation();
+    if (m_scope != expected) {
+        m_source->error(tok, "indentation level is incorrect");
+        return false;
+    }
+
+    return true;
+}
+
+Expr* Parser::parseExpr()
+{
+    m_context = "expression";
+
+    Token tok = advance(1);
+    switch (tok.type) {
+    case Identifier:
+        return parseFuncCallExpr();
+    case Digits:
+        return parseVarExpr();
+    case Return:
+        return parseReturnExpr();
+    default:
+        return 0;
+    };
+}
+
+VarExpr* Parser::parseVarExpr()
+{
+    m_context = "variable expression";
+
+    Token digits = current();
+
+    VarExpr* varExpr = new VarExpr;
+    varExpr->var = digits;
+    return varExpr;
+}
+
+ReturnExpr* Parser::parseReturnExpr()
+{
+    m_context = "return expression";
+
+    Token tok = advance(1);
+    if (!expect(tok, Whitespace))
+        return 0;
+
+    Expr* expr = parseExpr();
+    if (!expr)
+        return 0;
+
+    ReturnExpr* returnExpr = new ReturnExpr;
+    returnExpr->expr = QSharedPointer<Expr>(expr);
+    return returnExpr;
+}
+
+FuncCallExpr* Parser::parseFuncCallExpr()
+{
+    m_context = "function call expression";
+
+    Token callee = current();
+
+    Token tok = advance(1);
+    if (!expect(tok, OpenParenthesis))
+        return 0;
+
+    QList<QSharedPointer<Expr> > args;
+    while(Expr* expr = parseExpr())
+        args.append(QSharedPointer<Expr>(expr));
+
+    tok = current();
+    if (!expect(tok, CloseParenthesis))
+        return 0;
+
+    FuncCallExpr* funcCallExpr = new FuncCallExpr;
+    funcCallExpr->callee = callee;
+    funcCallExpr->args = args;
+    return funcCallExpr;
 }

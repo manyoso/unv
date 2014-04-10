@@ -14,7 +14,7 @@ public:
     void parse(SourceBuffer* source);
 
 private:
-    enum Indentation {
+    enum Indent {
         Spaces,
         Tabs,
         Unset
@@ -31,16 +31,20 @@ private:
     bool checkLeadingTab(const Token&);
 
     void parseAliasDecl();
-    void parseTypeDecl();
-    QList<TypeDeclArg*> parseTypeDeclArgs();
-    void parseTypeStatement();
-    void parseIndentation();
+    void parseFuncDecl();
+    QList<FuncDeclArg*> parseFuncDeclArgs();
+    FuncStmt* parseFuncStatement();
+    bool parseIndent(unsigned expect);
+    Expr* parseExpr();
+    VarExpr* parseVarExpr();
+    ReturnExpr* parseReturnExpr();
+    FuncCallExpr* parseFuncCallExpr();
 
 private:
     int m_index;
-    int m_spacesForIndent;
+    int m_originalSpacesForIndent;
     unsigned m_scope;
-    Indentation m_indentation;
+    Indent m_indent;
     SourceBuffer* m_source;
     QString m_context;
 };

@@ -7,14 +7,16 @@
 
 // forward declarations
 struct AliasDecl;
-struct TypeDeclArg;
-struct TypeDecl;
+struct Expr;
+struct FuncCallExpr;
+struct FuncDeclArg;
+struct FuncDecl;
+struct FuncStmt;
+struct VarExpr;
 
 struct TranslationUnit {
-    ~TranslationUnit()
-    { qDeleteAll(aliasDecl); qDeleteAll(typeDecl); }
-    QList<AliasDecl*> aliasDecl;
-    QList<TypeDecl*> typeDecl;
+    QList<QSharedPointer<AliasDecl> > aliasDecl;
+    QList<QSharedPointer<FuncDecl> > funcDecl;
 };
 
 struct AliasDecl {
@@ -22,17 +24,37 @@ struct AliasDecl {
     Token alias;
 };
 
-struct TypeDeclArg {
+struct Expr {
+    Token type;
+};
+
+struct FuncCallExpr : public Expr {
+    Token callee;
+    QList<QSharedPointer<Expr> > args;
+};
+
+struct ReturnExpr : public Expr {
+    QSharedPointer<Expr> expr;
+};
+
+struct FuncDeclArg {
     Token name;
     Token type;
 };
 
-struct TypeDecl {
-    ~TypeDecl()
-    { qDeleteAll(args); }
-    Token type;
-    QList<TypeDeclArg*> args;
+struct FuncStmt {
+    QSharedPointer<Expr> expr;
+};
+
+struct FuncDecl {
+    Token name;
+    QList<QSharedPointer<FuncDeclArg> > args;
+    QSharedPointer<FuncStmt> stmt;
     Token returnType;
+};
+
+struct VarExpr : public Expr {
+    Token var;
 };
 
 #endif // ast_h

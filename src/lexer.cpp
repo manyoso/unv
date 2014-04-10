@@ -73,17 +73,6 @@ void Lexer::lex(SourceBuffer* source)
             if (consumeString("lias")) {
                 m_source->appendToken(Token(Alias, pos, tokenPosition()));
                 break;
-            } else if (consumeString("pply")) {
-                m_source->appendToken(Token(Apply, pos, tokenPosition()));
-                break;
-            } else if (consumeIdentifier()) {
-                m_source->appendToken(Token(Identifier, pos, tokenPosition()));
-                break;
-            }
-        case 'c':
-            if (consumeString("onstruct")) {
-                m_source->appendToken(Token(Construct, pos, tokenPosition()));
-                break;
             } else if (consumeIdentifier()) {
                 m_source->appendToken(Token(Identifier, pos, tokenPosition()));
                 break;
@@ -91,6 +80,9 @@ void Lexer::lex(SourceBuffer* source)
         case 'f':
             if (consumeString("alse")) {
                 m_source->appendToken(Token(False, pos, tokenPosition()));
+                break;
+            } else if (consumeString("unction")) {
+                m_source->appendToken(Token(Function, pos, tokenPosition()));
                 break;
             } else if (consumeIdentifier()) {
                 m_source->appendToken(Token(Identifier, pos, tokenPosition()));

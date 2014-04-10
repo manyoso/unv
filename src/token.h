@@ -44,9 +44,8 @@ enum TokenType {
     Comment,
     /* keywords */
     Alias,
-    Apply,
-    Construct,
     False,
+    Function,
     Return,
     True,
     Type,
@@ -56,7 +55,7 @@ enum TokenType {
     Undefined
 };
 
-static QString typeToString(TokenType type)
+static inline QString typeToString(TokenType type)
 {
     switch (type) {
     case Whitespace:        return "\' \'";
@@ -95,9 +94,8 @@ static QString typeToString(TokenType type)
 //    case Slash:             return "\'/\'";
     case Comment:           return "comment";
     case Alias:             return "\'alias\'";
-    case Apply:             return "\'apply\'";;
-    case Construct:         return "\'construct\'";
     case False:             return "\'false\'";
+    case Function:             return "\'function\'";
     case Return:            return "\'return\'";
     case True:              return "\'true\'";
     case Type:              return "\'type\'";
