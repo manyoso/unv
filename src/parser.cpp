@@ -73,7 +73,7 @@ bool Parser::expect(Token tok, TokenType type) const
 {
     if (tok.type == type)
         return true;
-    m_source->error(tok, "expecting " + typeToString(type) + " for " + m_context);
+    m_source->error(tok, "expecting " + typeToString(type) + " for " + m_context.top());
     return false;
 }
 
@@ -109,7 +109,7 @@ bool Parser::checkLeadingTab(const Token& tok)
 // alias foo bar
 void Parser::parseAliasDecl()
 {
-    m_context = "alias declaration";
+    ParserContext context(this, "alias declaration");
 
     Token tok = advance(1);
     if (!expect(tok, Whitespace))
@@ -144,7 +144,7 @@ void Parser::parseAliasDecl()
 // function foo : (foo:Foo?, bar:Bar?, ...)? ->? Baz
 void Parser::parseFuncDecl()
 {
-    m_context = "function declaration";
+    ParserContext context(this, "function declaration");
 
     Token tok = advance(1);
     if (!expect(tok, Whitespace))
@@ -190,7 +190,7 @@ void Parser::parseFuncDecl()
     if (!expect(tok, Newline))
         return;
 
-    FuncStmt* stmt = parseFuncStatement();
+    FuncStmt* stmt = parseFuncStmt();
     if (!stmt)
         return;
 
@@ -223,7 +223,7 @@ QList<QSharedPointer<FuncDeclArg> > Parser::parseFuncDeclArgs()
 
 FuncDeclArg* Parser::parseFuncDeclArg()
 {
-    m_context = "function declaration argument";
+    ParserContext context(this, "function declaration argument");
 
     Token tok = current();
     if (tok.type == Comma) {
@@ -255,18 +255,18 @@ FuncDeclArg* Parser::parseFuncDeclArg()
     return arg;
 }
 
-FuncStmt* Parser::parseFuncStatement()
+FuncStmt* Parser::parseFuncStmt()
 {
-    m_context = "function statement";
+    ParserContext context(this, "function statement");
     if (!parseIndent(1))
         return 0;
 
-    Expr* expr = parseExpr();
-    if (!expr)
-        return 0;
+    QList<QSharedPointer<ExprStmt> > stmts;
+    while (ExprStmt* exprStmt = parseExprStmt())
+        stmts.append(QSharedPointer<ExprStmt>(exprStmt));
 
     FuncStmt* stmt = new FuncStmt;
-    stmt->expr = QSharedPointer<Expr>(expr);
+    stmt->stmts = stmts;
     return stmt;
 }
 
@@ -288,16 +288,17 @@ bool Parser::parseIndent(unsigned expected)
 
 Expr* Parser::parseExpr()
 {
-    m_context = "expression";
+    ParserContext context(this, "expression");
 
     Token tok = advance(1);
     switch (tok.type) {
     case Identifier:
-        return parseFuncCallExpr();
+        if (look(1).type == OpenParenthesis)
+            return parseFuncCallExpr();
+        else
+            return parseVarExpr();
     case Digits:
         return parseVarExpr();
-    case Return:
-        return parseReturnExpr();
     default:
         return 0;
     };
@@ -305,18 +306,62 @@ Expr* Parser::parseExpr()
 
 VarExpr* Parser::parseVarExpr()
 {
-    m_context = "variable expression";
+    ParserContext context(this, "variable expression");
 
-    Token digits = current();
+    Token var = current();
 
     VarExpr* varExpr = new VarExpr;
-    varExpr->var = digits;
+    varExpr->var = var;
     return varExpr;
 }
 
-ReturnExpr* Parser::parseReturnExpr()
+ExprStmt* Parser::parseExprStmt()
 {
-    m_context = "return expression";
+    ParserContext context(this, "expression statement");
+    Token tok = advance(1);
+    switch (tok.type) {
+    case If:
+        return parseIfStmt();
+    case Return:
+        return parseReturnStmt();
+    default:
+        return 0;
+    };
+}
+
+IfStmt* Parser::parseIfStmt()
+{
+    ParserContext context(this, "if statement");
+
+    Token tok = advance(1);
+    if (!expect(tok, Whitespace))
+        return 0;
+
+    tok = advance(1);
+    if (!expect(tok, OpenParenthesis))
+        return 0;
+
+    Expr* expr = parseExpr();
+    if (!expr)
+        return 0;
+
+    tok = advance(1);
+    if (!expect(tok, CloseParenthesis))
+        return 0;
+
+    ExprStmt* exprStmt = parseExprStmt();
+    if (!exprStmt)
+        return 0;
+
+    IfStmt* ifStmt = new IfStmt;
+    ifElseStmt->expr = QSharedPointer<Expr>(expr);
+    ifElseStmt->exprStmt = QSharedPointer<ExprStmt>(exprStmt);
+    return ifStmt;
+}
+
+ReturnStmt* Parser::parseReturnStmt()
+{
+    ParserContext context(this, "return statement");
 
     Token tok = advance(1);
     if (!expect(tok, Whitespace))
@@ -326,14 +371,14 @@ ReturnExpr* Parser::parseReturnExpr()
     if (!expr)
         return 0;
 
-    ReturnExpr* returnExpr = new ReturnExpr;
-    returnExpr->expr = QSharedPointer<Expr>(expr);
-    return returnExpr;
+    ReturnStmt* returnStmt = new ReturnStmt;
+    returnStmt->expr = QSharedPointer<Expr>(expr);
+    return returnStmt;
 }
 
 FuncCallExpr* Parser::parseFuncCallExpr()
 {
-    m_context = "function call expression";
+    ParserContext context(this, "function call expression");
 
     Token callee = current();
 

@@ -20,6 +20,21 @@ private:
         Unset
     };
 
+    class ParserContext {
+    public:
+        ParserContext(Parser* p, const QString& context)
+            : m_p(p)
+        {
+            m_p->m_context.push(context);
+        }
+        ~ParserContext()
+        {
+            m_p->m_context.pop();
+        }
+    private:
+        Parser* m_p;
+    };
+
     void clear();
     void newline();
     Token advance(int i, bool skipComments = true);
@@ -34,11 +49,13 @@ private:
     void parseFuncDecl();
     QList<QSharedPointer<FuncDeclArg> > parseFuncDeclArgs();
     FuncDeclArg* parseFuncDeclArg();
-    FuncStmt* parseFuncStatement();
+    FuncStmt* parseFuncStmt();
     bool parseIndent(unsigned expect);
     Expr* parseExpr();
     VarExpr* parseVarExpr();
-    ReturnExpr* parseReturnExpr();
+    ExprStmt* parseExprStmt();
+    IfStmt* parseIfStmt();
+    ReturnStmt* parseReturnStmt();
     FuncCallExpr* parseFuncCallExpr();
 
 private:
@@ -47,7 +64,7 @@ private:
     unsigned m_scope;
     Indent m_indent;
     SourceBuffer* m_source;
-    QString m_context;
+    QStack<QString> m_context;
 };
 
 #endif // parser_h

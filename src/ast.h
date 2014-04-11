@@ -8,6 +8,7 @@
 // forward declarations
 struct AliasDecl;
 struct Expr;
+struct ExprStmt;
 struct FuncCallExpr;
 struct FuncDeclArg;
 struct FuncDecl;
@@ -33,8 +34,15 @@ struct FuncCallExpr : public Expr {
     QList<QSharedPointer<Expr> > args;
 };
 
-struct ReturnExpr : public Expr {
+struct ExprStmt {
     QSharedPointer<Expr> expr;
+};
+
+struct IfStmt : public ExprStmt {
+    QSharedPointer<ExprStmt> exprStmt;
+};
+
+struct ReturnStmt : public ExprStmt {
 };
 
 struct FuncDeclArg {
@@ -43,7 +51,7 @@ struct FuncDeclArg {
 };
 
 struct FuncStmt {
-    QSharedPointer<Expr> expr;
+    QList<QSharedPointer<ExprStmt> > stmts;
 };
 
 struct FuncDecl {

@@ -44,8 +44,10 @@ enum TokenType {
     Comment,
     /* keywords */
     Alias,
+    Else,
     False,
     Function,
+    If,
     Return,
     True,
     Type,
@@ -94,8 +96,10 @@ static inline QString typeToString(TokenType type)
 //    case Slash:             return "\'/\'";
     case Comment:           return "comment";
     case Alias:             return "\'alias\'";
+    case Else:              return "\'else\'";
     case False:             return "\'false\'";
-    case Function:             return "\'function\'";
+    case Function:          return "\'function\'";
+    case If:                return "\'if\'";
     case Return:            return "\'return\'";
     case True:              return "\'true\'";
     case Type:              return "\'type\'";
