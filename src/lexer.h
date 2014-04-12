@@ -20,7 +20,8 @@ private:
     TokenPosition tokenPosition() const;
     TokenPosition consumeChar();
     bool consumeString(const QString&);
-    bool consumeComment();
+    bool consumeCStyleComment();
+    bool consumeCPPStyleComment();
     bool consumeIdentifier();
     TokenPosition consumeDigits();
 

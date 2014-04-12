@@ -57,7 +57,10 @@ void Lexer::lex(SourceBuffer* source)
         case ',': m_source->appendToken(Token(Comma, pos, pos)); break;
         case '.': m_source->appendToken(Token(Period, pos, pos)); break;
         case '/':
-            if (look(1) == '*' && consumeComment()) {
+            if (look(1) == '*' && consumeCStyleComment()) {
+                m_source->appendToken(Token(Comment, pos, tokenPosition()));
+                break;
+            } else if (look(1) == '/' && consumeCPPStyleComment()) {
                 m_source->appendToken(Token(Comment, pos, tokenPosition()));
                 break;
             }
@@ -205,7 +208,7 @@ bool Lexer::consumeString(const QString& string)
     return false;
 }
 
-bool Lexer::consumeComment()
+bool Lexer::consumeCStyleComment()
 {
     advance(2);
     while (m_index < m_source->count()) {
@@ -214,6 +217,17 @@ bool Lexer::consumeComment()
             newline();
         if (look(-1) == '*' && look(0) == '/')
             break;
+    }
+    return m_index < m_source->count();
+}
+
+bool Lexer::consumeCPPStyleComment()
+{
+    advance(1);
+    while (m_index < m_source->count()) {
+        if (look(1) == '\n')
+            break;
+        advance(1);
     }
     return m_index < m_source->count();
 }

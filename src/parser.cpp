@@ -47,7 +47,7 @@ Token Parser::advance(int i, bool skipComments)
     if (!skipComments)
         return current();
 
-    while (current().type == Comment)
+    while (current().type == Comment || (current().type == Whitespace && look(1).type == Comment))
         m_index++;
 
     return current();
@@ -354,8 +354,8 @@ IfStmt* Parser::parseIfStmt()
         return 0;
 
     IfStmt* ifStmt = new IfStmt;
-    ifElseStmt->expr = QSharedPointer<Expr>(expr);
-    ifElseStmt->exprStmt = QSharedPointer<ExprStmt>(exprStmt);
+    ifStmt->expr = QSharedPointer<Expr>(expr);
+    ifStmt->exprStmt = QSharedPointer<ExprStmt>(exprStmt);
     return ifStmt;
 }
 
