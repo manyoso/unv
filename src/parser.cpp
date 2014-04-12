@@ -190,13 +190,13 @@ void Parser::parseFuncDecl()
     if (!expect(tok, Newline))
         return;
 
-    FuncStmt* stmt = parseFuncStmt();
-    if (!stmt)
+    FuncDef* funcDef = parseFuncDef();
+    if (!funcDef)
         return;
 
     FuncDecl* decl = new FuncDecl;
     decl->name = type;
-    decl->stmt = QSharedPointer<FuncStmt>(stmt);
+    decl->funcDef = QSharedPointer<FuncDef>(funcDef);
     decl->returnType = returnType;
     m_source->translationUnit()->funcDecl.append(QSharedPointer<FuncDecl>(decl));
 }
@@ -255,19 +255,19 @@ FuncDeclArg* Parser::parseFuncDeclArg()
     return arg;
 }
 
-FuncStmt* Parser::parseFuncStmt()
+FuncDef* Parser::parseFuncDef()
 {
-    ParserContext context(this, "function statement");
+    ParserContext context(this, "function definition");
     if (!parseIndent(1))
         return 0;
 
-    QList<QSharedPointer<ExprStmt> > stmts;
-    while (ExprStmt* exprStmt = parseExprStmt())
-        stmts.append(QSharedPointer<ExprStmt>(exprStmt));
+    QList<QSharedPointer<Stmt> > stmts;
+    while (Stmt* stmt = parseStmt())
+        stmts.append(QSharedPointer<Stmt>(stmt));
 
-    FuncStmt* stmt = new FuncStmt;
-    stmt->stmts = stmts;
-    return stmt;
+    FuncDef* funcDef = new FuncDef;
+    funcDef->stmts = stmts;
+    return funcDef;
 }
 
 bool Parser::parseIndent(unsigned expected)
@@ -298,7 +298,7 @@ Expr* Parser::parseExpr()
         else
             return parseVarExpr();
     case Digits:
-        return parseVarExpr();
+        return parseLiteralExpr();
     default:
         return 0;
     };
@@ -315,9 +315,20 @@ VarExpr* Parser::parseVarExpr()
     return varExpr;
 }
 
-ExprStmt* Parser::parseExprStmt()
+LiteralExpr* Parser::parseLiteralExpr()
 {
-    ParserContext context(this, "expression statement");
+    ParserContext context(this, "literal expression");
+
+    Token literal = current();
+
+    LiteralExpr* literalExpr = new LiteralExpr;
+    literalExpr->literal = literal;
+    return literalExpr;
+}
+
+Stmt* Parser::parseStmt()
+{
+    ParserContext context(this, "statement");
     Token tok = advance(1);
     switch (tok.type) {
     case If:
@@ -349,13 +360,13 @@ IfStmt* Parser::parseIfStmt()
     if (!expect(tok, CloseParenthesis))
         return 0;
 
-    ExprStmt* exprStmt = parseExprStmt();
-    if (!exprStmt)
+    Stmt* stmt = parseStmt();
+    if (!stmt)
         return 0;
 
     IfStmt* ifStmt = new IfStmt;
     ifStmt->expr = QSharedPointer<Expr>(expr);
-    ifStmt->exprStmt = QSharedPointer<ExprStmt>(exprStmt);
+    ifStmt->stmt = QSharedPointer<Stmt>(stmt);
     return ifStmt;
 }
 

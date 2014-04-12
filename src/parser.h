@@ -49,11 +49,12 @@ private:
     void parseFuncDecl();
     QList<QSharedPointer<FuncDeclArg> > parseFuncDeclArgs();
     FuncDeclArg* parseFuncDeclArg();
-    FuncStmt* parseFuncStmt();
+    FuncDef* parseFuncDef();
     bool parseIndent(unsigned expect);
     Expr* parseExpr();
     VarExpr* parseVarExpr();
-    ExprStmt* parseExprStmt();
+    LiteralExpr* parseLiteralExpr();
+    Stmt* parseStmt();
     IfStmt* parseIfStmt();
     ReturnStmt* parseReturnStmt();
     FuncCallExpr* parseFuncCallExpr();

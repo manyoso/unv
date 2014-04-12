@@ -4,6 +4,7 @@
 #include <QtCore>
 
 #include "ast.h"
+#include "options.h"
 #include "token.h"
 
 class SourceBuffer {
@@ -111,6 +112,9 @@ public:
 
     void error(const Token& tok, const QString& str, ErrorType type = Error) const
     {
+        static int s_numberOfErrors = 0;
+        if (type == Error)
+            s_numberOfErrors++;
         QString err = type == Error ? "error" : "fatal error";
         QString location = name()
             + ":" + QString::number(tok.start.line)
@@ -133,7 +137,7 @@ public:
 
         QTextStream out(stderr);
         out << location << '\n' << context << '\n' << caret << '\n';
-        if (type == Fatal) {
+        if (type == Fatal || s_numberOfErrors > Options::instance()->errorLimit()) {
             out.flush();
             exit(-1);
         }

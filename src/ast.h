@@ -8,11 +8,12 @@
 // forward declarations
 struct AliasDecl;
 struct Expr;
-struct ExprStmt;
+struct Stmt;
 struct FuncCallExpr;
 struct FuncDeclArg;
 struct FuncDecl;
 struct FuncStmt;
+struct LiteralExpr;
 struct VarExpr;
 
 struct TranslationUnit {
@@ -34,15 +35,16 @@ struct FuncCallExpr : public Expr {
     QList<QSharedPointer<Expr> > args;
 };
 
-struct ExprStmt {
+struct Stmt {
+};
+
+struct IfStmt : public Stmt {
     QSharedPointer<Expr> expr;
+    QSharedPointer<Stmt> stmt;
 };
 
-struct IfStmt : public ExprStmt {
-    QSharedPointer<ExprStmt> exprStmt;
-};
-
-struct ReturnStmt : public ExprStmt {
+struct ReturnStmt : public Stmt {
+    QSharedPointer<Expr> expr;
 };
 
 struct FuncDeclArg {
@@ -50,19 +52,23 @@ struct FuncDeclArg {
     Token type;
 };
 
-struct FuncStmt {
-    QList<QSharedPointer<ExprStmt> > stmts;
+struct FuncDef {
+    QList<QSharedPointer<Stmt> > stmts;
 };
 
 struct FuncDecl {
     Token name;
     QList<QSharedPointer<FuncDeclArg> > args;
-    QSharedPointer<FuncStmt> stmt;
     Token returnType;
+    QSharedPointer<FuncDef> funcDef;
 };
 
 struct VarExpr : public Expr {
     Token var;
+};
+
+struct LiteralExpr: public Expr {
+    Token literal;
 };
 
 #endif // ast_h

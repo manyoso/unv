@@ -9,6 +9,9 @@ int main(int argc, char** argv)
     QStringList args = app.arguments();
     args.removeFirst(); // program name
 
+    // Stop at first error for now while developing the language
+    Options::instance()->setErrorLimit(0);
+
     foreach (QString f, args) {
         QFile file(f);
         if (file.open(QFile::ReadOnly)) {
@@ -17,9 +20,6 @@ int main(int argc, char** argv)
 
             Lexer lexer;
             lexer.lex(&buffer);
-
-            buffer.print();
-            buffer.printTokens();
 
             Parser parser;
             parser.parse(&buffer);
