@@ -14,6 +14,15 @@ public:
     void parse(SourceBuffer* source);
 
 private:
+    enum BinOpPrecedence {
+        Equality = 1,
+        LessThanOrEquality = 1,
+        GreaterThanOrEquality = 1,
+        Addition = 2,
+        Subtraction = 2,
+        Multiplication = 3
+    };
+
     enum Indent {
         Spaces,
         Tabs,
@@ -52,6 +61,8 @@ private:
     FuncDef* parseFuncDef();
     bool parseIndent(unsigned expect);
     Expr* parseExpr();
+    Expr* parseBasicExpr();
+    Expr* parseBinaryOpExpr(int, Expr*);
     VarExpr* parseVarExpr();
     LiteralExpr* parseLiteralExpr();
     Stmt* parseStmt();

@@ -7,6 +7,7 @@
 
 // forward declarations
 struct AliasDecl;
+struct BinaryExpr;
 struct Expr;
 struct Stmt;
 struct FuncCallExpr;
@@ -28,6 +29,20 @@ struct AliasDecl {
 
 struct Expr {
     Token type;
+};
+
+struct BinaryExpr : public Expr {
+    enum BinaryOp {
+        Equality,
+        LessThanOrEquality,
+        GreaterThanOrEquality,
+        Addition,
+        Subtraction,
+        Multiplication
+    };
+    BinaryOp op;
+    QSharedPointer<Expr> lhs;
+    QSharedPointer<Expr> rhs;
 };
 
 struct FuncCallExpr : public Expr {

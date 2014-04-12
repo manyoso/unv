@@ -63,6 +63,9 @@ void Lexer::lex(SourceBuffer* source)
             } else if (look(1) == '/' && consumeCPPStyleComment()) {
                 m_source->appendToken(Token(Comment, pos, tokenPosition()));
                 break;
+            } else {
+                m_source->appendToken(Token(Slash, pos, pos));
+                break;
             }
         /*
          * keywords: in alphabetical order

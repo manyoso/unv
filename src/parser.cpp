@@ -290,6 +290,17 @@ Expr* Parser::parseExpr()
 {
     ParserContext context(this, "expression");
 
+    Expr* lhs = parseBasicExpr();
+    if (!lhs)
+        return 0;
+
+    return parseBinaryOpExpr(0, lhs);
+}
+
+Expr* Parser::parseBasicExpr()
+{
+    ParserContext context(this, "basic expression");
+
     Token tok = advance(1);
     switch (tok.type) {
     case Identifier:
@@ -302,6 +313,31 @@ Expr* Parser::parseExpr()
     default:
         return 0;
     };
+}
+
+Expr* Parser::parseBinaryOpExpr(int precedence, Expr* lhs)
+{
+    if (look(1).type != Whitespace)
+        return lhs;
+
+    Token tok = advance(2);
+    if (tok.type == Equals && look(1).type == Equals && precedence <= Equality ) {
+        tok = advance(2);
+
+        if (!expect(tok, Whitespace))
+            return 0;
+
+        Expr* rhs = parseBasicExpr();
+        if (!rhs)
+            return 0;
+
+        BinaryExpr* binaryExpr = new BinaryExpr;
+        binaryExpr->op = BinaryExpr::Equality;
+        binaryExpr->lhs = QSharedPointer<Expr>(lhs);
+        binaryExpr->rhs = QSharedPointer<Expr>(rhs);
+        return binaryExpr;
+    }
+    return lhs;
 }
 
 VarExpr* Parser::parseVarExpr()
@@ -329,15 +365,22 @@ LiteralExpr* Parser::parseLiteralExpr()
 Stmt* Parser::parseStmt()
 {
     ParserContext context(this, "statement");
+    Stmt* stmt = 0;
     Token tok = advance(1);
     switch (tok.type) {
     case If:
-        return parseIfStmt();
+        stmt = parseIfStmt(); break;
     case Return:
-        return parseReturnStmt();
+        stmt = parseReturnStmt(); break;
     default:
         return 0;
     };
+
+    tok = advance(1);
+    if (!expect(tok, Newline))
+        return 0;
+
+    return stmt;
 }
 
 IfStmt* Parser::parseIfStmt()

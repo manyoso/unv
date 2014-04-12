@@ -94,7 +94,7 @@ static inline QString typeToString(TokenType type)
     case Comma:             return "\',\'";
     case Period:            return "\'.\'";
 //    case Slash:             return "\'/\'";
-    case Comment:           return "comment";
+    case Comment:           return "\'comment\'";
     case Alias:             return "\'alias\'";
     case Else:              return "\'else\'";
     case False:             return "\'false\'";
@@ -103,8 +103,8 @@ static inline QString typeToString(TokenType type)
     case Return:            return "\'return\'";
     case True:              return "\'true\'";
     case Type:              return "\'type\'";
-    case Identifier:        return "identifier";
-    case Digits:            return "digits";
+    case Identifier:        return "\'identifier\'";
+    case Digits:            return "\'digits\'";
     default:
         Q_ASSERT(false); // should never be reached
         break;
