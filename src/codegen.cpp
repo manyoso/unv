@@ -11,16 +11,23 @@
 
 #pragma clang diagnostic pop
 
+static llvm::StringRef toStringRef(const QString& string)
+{
+    QByteArray array = string.toLatin1();
+    return llvm::StringRef(array.constData(), array.size());
+}
+
 CodeGen::CodeGen(SourceBuffer* buffer)
     : m_source(buffer)
     , m_context(new llvm::LLVMContext)
-    , m_module(new llvm::Module("foo", (*m_context)))
+    , m_module(new llvm::Module(toStringRef(buffer->name()), (*m_context)))
     , m_builder(new llvm::Builder(*m_context))
 {
 }
 
 CodeGen::~CodeGen()
 {
+    m_module->dump();
 }
 
 void CodeGen::walk()
