@@ -15,9 +15,7 @@ public:
     };
 
     SourceBuffer(const QString& source, const QString& name = "")
-    { m_source = source; m_name = name; m_translationUnit = new TranslationUnit; }
-
-    ~SourceBuffer() { delete m_translationUnit; m_translationUnit = 0; }
+    { m_source = source; m_name = name; m_translationUnit = QSharedPointer<TranslationUnit>(new TranslationUnit); }
 
     QString name() const { return m_name; }
 
@@ -143,14 +141,14 @@ public:
         }
     }
 
-    TranslationUnit* translationUnit() const { return m_translationUnit; }
+    TranslationUnit& translationUnit() const { return *m_translationUnit; }
 
 private:
     QString m_source;
     QString m_name;
     QList<Token> m_tokens;
     QList<int> m_lineInfo;
-    TranslationUnit* m_translationUnit;
+    QSharedPointer<TranslationUnit> m_translationUnit;
 };
 
 #endif // sourcebuffer_h

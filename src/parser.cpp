@@ -138,7 +138,7 @@ void Parser::parseAliasDecl()
     AliasDecl* decl = new AliasDecl;
     decl->alias = alias;
     decl->type = type;
-    m_source->translationUnit()->aliasDecl.append(QSharedPointer<AliasDecl>(decl));
+    m_source->translationUnit().aliasDecl.append(QSharedPointer<AliasDecl>(decl));
 }
 
 // function foo : (foo:Foo?, bar:Bar?, ...)? ->? Baz
@@ -196,9 +196,10 @@ void Parser::parseFuncDecl()
 
     FuncDecl* decl = new FuncDecl;
     decl->name = type;
+    decl->args = args;
     decl->funcDef = QSharedPointer<FuncDef>(funcDef);
     decl->returnType = returnType;
-    m_source->translationUnit()->funcDecl.append(QSharedPointer<FuncDecl>(decl));
+    m_source->translationUnit().funcDecl.append(QSharedPointer<FuncDecl>(decl));
 }
 
 QList<QSharedPointer<FuncDeclArg> > Parser::parseFuncDeclArgs()
@@ -258,12 +259,15 @@ FuncDeclArg* Parser::parseFuncDeclArg()
 FuncDef* Parser::parseFuncDef()
 {
     ParserContext context(this, "function definition");
-    if (!parseIndent(1))
-        return 0;
 
     QList<QSharedPointer<Stmt> > stmts;
     while (Stmt* stmt = parseStmt())
         stmts.append(QSharedPointer<Stmt>(stmt));
+
+    if (stmts.isEmpty()) {
+        m_source->error(current(), "expecting function statements");
+        return 0;
+    }
 
     FuncDef* funcDef = new FuncDef;
     funcDef->stmts = stmts;
@@ -272,6 +276,9 @@ FuncDef* Parser::parseFuncDef()
 
 bool Parser::parseIndent(unsigned expected)
 {
+    if (look(1).type != Whitespace && look(1).type != Tab)
+        return false;
+
     Token tok = advance(1);
     if (tok.type == Whitespace && !checkLeadingWhitespace(tok))
         return false;
@@ -294,7 +301,16 @@ Expr* Parser::parseExpr()
     if (!lhs)
         return 0;
 
-    return parseBinaryOpExpr(0, lhs);
+    Expr* rhs = parseBinaryOpExpr(0, lhs);
+    if (!rhs)
+        return 0;
+
+    while (rhs && lhs != rhs) {
+        lhs = rhs;
+        rhs = parseBinaryOpExpr(0, lhs);
+    }
+
+    return rhs;
 }
 
 Expr* Parser::parseBasicExpr()
@@ -336,6 +352,23 @@ Expr* Parser::parseBinaryOpExpr(int precedence, Expr* lhs)
         binaryExpr->lhs = QSharedPointer<Expr>(lhs);
         binaryExpr->rhs = QSharedPointer<Expr>(rhs);
         return binaryExpr;
+    } else if ((tok.type == Plus && precedence <= Addition)
+        || (tok.type == Minus && precedence <= Subtraction)) {
+        BinaryExpr::BinaryOp op = tok.type == Plus ? BinaryExpr::Addition : BinaryExpr::Subtraction;
+        tok = advance(1);
+
+        if (!expect(tok, Whitespace))
+            return 0;
+
+        Expr* rhs = parseBasicExpr();
+        if (!rhs)
+            return 0;
+
+        BinaryExpr* binaryExpr = new BinaryExpr;
+        binaryExpr->op = op;
+        binaryExpr->lhs = QSharedPointer<Expr>(lhs);
+        binaryExpr->rhs = QSharedPointer<Expr>(rhs);
+        return binaryExpr;
     }
     return lhs;
 }
@@ -365,6 +398,10 @@ LiteralExpr* Parser::parseLiteralExpr()
 Stmt* Parser::parseStmt()
 {
     ParserContext context(this, "statement");
+
+    if (current().type == Newline && !parseIndent(1))
+        return 0;
+
     Stmt* stmt = 0;
     Token tok = advance(1);
     switch (tok.type) {
@@ -375,10 +412,6 @@ Stmt* Parser::parseStmt()
     default:
         return 0;
     };
-
-    tok = advance(1);
-    if (!expect(tok, Newline))
-        return 0;
 
     return stmt;
 }
@@ -403,6 +436,7 @@ IfStmt* Parser::parseIfStmt()
     if (!expect(tok, CloseParenthesis))
         return 0;
 
+    tok = advance(1);
     Stmt* stmt = parseStmt();
     if (!stmt)
         return 0;
@@ -423,6 +457,10 @@ ReturnStmt* Parser::parseReturnStmt()
 
     Expr* expr = parseExpr();
     if (!expr)
+        return 0;
+
+    tok = advance(1);
+    if (!expect(tok, Newline))
         return 0;
 
     ReturnStmt* returnStmt = new ReturnStmt;

@@ -1,5 +1,6 @@
 #include <QtCore>
 
+#include "astprinter.h"
 #include "lexer.h"
 #include "parser.h"
 
@@ -23,6 +24,9 @@ int main(int argc, char** argv)
 
             Parser parser;
             parser.parse(&buffer);
+
+            ASTPrinter printer;
+            printer.walk(buffer.translationUnit());
         }
     }
 }
