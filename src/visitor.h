@@ -7,7 +7,8 @@
 
 struct Visitor {
     void walk(Node& node) { node.walk(*this); }
-    virtual void visit(Node&) = 0;
+    virtual void begin(Node&) = 0;
+    virtual void end(Node&) = 0;
 };
 
 #endif // visitor_h

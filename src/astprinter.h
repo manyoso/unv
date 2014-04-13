@@ -4,8 +4,16 @@
 #include <QtCore>
 #include "visitor.h"
 
-struct ASTPrinter : public Visitor {
-    virtual void visit(Node&);
+class ASTPrinter : public Visitor {
+public:
+    ASTPrinter();
+    ~ASTPrinter();
+    virtual void begin(Node&);
+    virtual void end(Node&);
+
+private:
+    QString indent() const;
+    int m_scope;
 };
 
 #endif // astprinter_h
