@@ -1,0 +1,5 @@
+- Add location info for errors where the declaration was previously declared
+- Add 'note' type for error information
+- Add division binary operators
+- Add logical operators like &&, ||
+- Start unit testing the errors that are generated for common errors
