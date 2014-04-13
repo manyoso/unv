@@ -3,6 +3,8 @@
 
 #include <QtCore>
 
+#include "token.h"
+
 class SourceBuffer;
 struct AliasDecl;
 struct TypeDecl;
@@ -15,6 +17,8 @@ public:
     bool addAlias(AliasDecl&);
     bool addType(TypeDecl&);
     bool addFunction(FuncDecl&);
+
+    QString toTypeAndCheck(const Token &token) const;
 
 private:
     QHash<QString, QString> m_aliasHash;

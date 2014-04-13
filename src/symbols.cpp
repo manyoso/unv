@@ -4,10 +4,6 @@
 Symbols::Symbols(SourceBuffer* source)
     : m_source(source)
 {
-    // architecture dependent int types
-    m_typeList.append("_builtin_uint_");
-    m_typeList.append("_builtin_int_");
-
     // 8 bit int types
     m_typeList.append("_builtin_uint8_");
     m_typeList.append("_builtin_int8_");
@@ -70,4 +66,16 @@ bool Symbols::addFunction(FuncDecl& decl)
 
     m_funcList.append(symbol);
     return true;
+}
+
+QString Symbols::toTypeAndCheck(const Token& token) const
+{
+    QString type = m_source->textForToken(token);
+    if (m_aliasHash.contains(type))
+        type = m_aliasHash.value(type);
+    if (!m_typeList.contains(type)) {
+        m_source->error(token, "type has not been declared", SourceBuffer::Fatal);
+        return QString();
+    }
+    return type;
 }

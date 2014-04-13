@@ -25,6 +25,12 @@ public:
 
     QString name() const { return m_name; }
 
+    QString module() const
+    {
+        QFileInfo info(m_name);
+        return info.baseName();
+    }
+
     QChar at(int index) const
     { return m_source.at(index); }
 

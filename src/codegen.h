@@ -15,6 +15,7 @@ namespace llvm {
     class IRBuilder;
     class Module;
     typedef llvm::IRBuilder<true, llvm::ConstantFolder, llvm::IRBuilderDefaultInserter<true> > Builder;
+    class Type;
 }
 
 typedef QSharedPointer<llvm::LLVMContext> Context;
@@ -42,6 +43,9 @@ public:
     virtual void visit(TranslationUnit&);
     virtual void visit(TypeDecl&);
     virtual void visit(VarExpr&);
+
+private:
+    llvm::Type* toPrimitiveType(const QString&) const;
 
 private:
     SourceBuffer* m_source;
