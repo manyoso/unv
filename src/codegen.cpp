@@ -1,4 +1,5 @@
 #include "codegen.h"
+#include "options.h"
 #include "sourcebuffer.h"
 
 #pragma clang diagnostic push
@@ -9,6 +10,8 @@
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
+#include <llvm/Support/FileSystem.h>
+#include <llvm/Support/raw_ostream.h>
 
 #pragma clang diagnostic pop
 
@@ -45,12 +48,29 @@ CodeGen::CodeGen(SourceBuffer* buffer)
 
 CodeGen::~CodeGen()
 {
-    m_module->dump();
 }
 
 void CodeGen::walk()
 {
     Visitor::walk(m_source->translationUnit());
+
+    QString outputFile = Options::instance()->outputFile();
+
+    if (outputFile.isEmpty()) {
+        llvm::raw_fd_ostream stream(STDOUT_FILENO, true /*shouldClose*/);
+        m_module->print(stream, 0);
+        stream.flush();
+    } else {
+        QFile f(outputFile);
+        if (f.open(QIODevice::WriteOnly)) {
+            llvm::raw_fd_ostream stream(f.handle(), false /*shouldClose*/);
+            m_module->print(stream, 0);
+            stream.flush();
+            f.close();
+        } else {
+            m_source->error(Token(), QString("can not write to file $0").arg(outputFile), SourceBuffer::Fatal);
+        }
+    }
 }
 
 void CodeGen::visit(FuncDecl& node)

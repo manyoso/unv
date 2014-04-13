@@ -8,11 +8,12 @@
 int main(int argc, char** argv)
 {
     QCoreApplication app(argc, argv);
-    QStringList args = app.arguments();
-    args.removeFirst(); // program name
+    QCoreApplication::setApplicationName("unv");
+    QCoreApplication::setApplicationVersion("0.1");
 
-    // Stop at first error for now while developing the language
-    Options::instance()->setErrorLimit(0);
+    Options::instance()->parseCommandLine();
+
+    QStringList args = Options::instance()->files();
 
     foreach (QString f, args) {
         QFile file(f);
