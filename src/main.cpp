@@ -1,6 +1,7 @@
 #include <QtCore>
 
 #include "astprinter.h"
+#include "codegen.h"
 #include "lexer.h"
 #include "parser.h"
 
@@ -27,6 +28,9 @@ int main(int argc, char** argv)
 
             ASTPrinter printer(&buffer);
             printer.walk();
+
+            CodeGen codegen(&buffer);
+            codegen.walk();
         }
     }
 }
