@@ -138,6 +138,10 @@ void Parser::parseAliasDecl()
     AliasDecl* decl = new AliasDecl;
     decl->alias = alias;
     decl->type = type;
+
+    if (!m_source->symbols().addAlias(*decl))
+        return;
+
     m_source->translationUnit().aliasDecl.append(QSharedPointer<AliasDecl>(decl));
 }
 
@@ -199,6 +203,10 @@ void Parser::parseFuncDecl()
     decl->args = args;
     decl->funcDef = QSharedPointer<FuncDef>(funcDef);
     decl->returnType = returnType;
+
+    if (!m_source->symbols().addFunction(*decl))
+        return;
+
     m_source->translationUnit().funcDecl.append(QSharedPointer<FuncDecl>(decl));
 }
 

@@ -3,17 +3,24 @@
 
 #include <QtCore>
 
-class TypeDecl;
-class FuncDecl;
+class SourceBuffer;
+struct AliasDecl;
+struct TypeDecl;
+struct FuncDecl;
 
 class Symbols {
 public:
-    Symbols();
-    ~Symbols();
+    Symbols(SourceBuffer*);
+
+    bool addAlias(AliasDecl&);
+    bool addType(TypeDecl&);
+    bool addFunction(FuncDecl&);
 
 private:
-    QList<TypeDecl> m_typeList;
-    QList<FuncDecl> m_funcList;
+    QHash<QString, QString> m_aliasHash;
+    QList<QString> m_typeList;
+    QList<QString> m_funcList;
+    SourceBuffer* m_source;
 };
 
 #endif // symbols_h

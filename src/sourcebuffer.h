@@ -5,6 +5,7 @@
 
 #include "ast.h"
 #include "options.h"
+#include "symbols.h"
 #include "token.h"
 
 class SourceBuffer {
@@ -15,7 +16,12 @@ public:
     };
 
     SourceBuffer(const QString& source, const QString& name = "")
-    { m_source = source; m_name = name; m_translationUnit = QSharedPointer<TranslationUnit>(new TranslationUnit); }
+    {
+        m_source = source;
+        m_name = name;
+        m_translationUnit = QSharedPointer<TranslationUnit>(new TranslationUnit);
+        m_symbols = QSharedPointer<Symbols>(new Symbols(this));
+    }
 
     QString name() const { return m_name; }
 
@@ -143,12 +149,15 @@ public:
 
     TranslationUnit& translationUnit() const { return *m_translationUnit; }
 
+    Symbols& symbols() const { return *m_symbols; }
+
 private:
     QString m_source;
     QString m_name;
     QList<Token> m_tokens;
     QList<int> m_lineInfo;
     QSharedPointer<TranslationUnit> m_translationUnit;
+    QSharedPointer<Symbols> m_symbols;
 };
 
 #endif // sourcebuffer_h

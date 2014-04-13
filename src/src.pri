@@ -16,5 +16,6 @@ SOURCES += $$PWD/ast.cpp \
            $$PWD/lexer.cpp \
            $$PWD/options.cpp \
            $$PWD/parser.cpp \
+           $$PWD/symbols.cpp
 
 LIBS += $$system(llvm-config --ldflags --libs core)
