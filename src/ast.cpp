@@ -87,6 +87,13 @@ void TranslationUnit::walk(Visitor& visitor)
     visitor.end(*this);
 }
 
+void TypeDecl::walk(Visitor& visitor)
+{
+    visitor.begin(*this);
+    visitor.visit(*this);
+    visitor.end(*this);
+}
+
 void VarExpr::walk(Visitor& visitor)
 {
     visitor.begin(*this);

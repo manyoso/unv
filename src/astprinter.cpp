@@ -26,7 +26,7 @@ QString ASTPrinter::indent() const
 
 void ASTPrinter::begin(Node& node)
 {
-    *m_stream << indent() << node.typeToString() << "\n";
+    *m_stream << indent() << node.kindToString() << "\n";
     m_stream->flush();
     m_scope++;
 }
@@ -38,7 +38,7 @@ void ASTPrinter::end(Node&)
 
 void ASTPrinter::visit(AliasDecl& node)
 {
-    *m_stream << indent() << m_source->textForToken(node.type) << " " << m_source->textForToken(node.alias) << "\n";
+    *m_stream << indent() << m_source->textForToken(node.alias) << " " << m_source->textForToken(node.type) << "\n";
     m_stream->flush();
 }
 
@@ -69,6 +69,12 @@ void ASTPrinter::visit(FuncDecl& node)
 void ASTPrinter::visit(LiteralExpr& node)
 {
     *m_stream << indent() << m_source->textForToken(node.literal) << "\n";
+    m_stream->flush();
+}
+
+void ASTPrinter::visit(TypeDecl& node)
+{
+    *m_stream << indent() << m_source->textForToken(node.type) << "\n";
     m_stream->flush();
 }
 

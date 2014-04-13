@@ -20,6 +20,7 @@ struct Visitor {
     virtual void visit(LiteralExpr&) {}
     virtual void visit(ReturnStmt&) {}
     virtual void visit(TranslationUnit&) {}
+    virtual void visit(TypeDecl&) {}
     virtual void visit(VarExpr&) {}
 };
 

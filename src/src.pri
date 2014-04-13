@@ -7,6 +7,7 @@ HEADERS += $$PWD/ast.h \
            $$PWD/options.h \
            $$PWD/parser.h \
            $$PWD/sourcebuffer.h \
+           $$PWD/symbols.h \
            $$PWD/token.h \
            $$PWD/visitor.h
 

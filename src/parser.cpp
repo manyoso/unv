@@ -119,7 +119,7 @@ void Parser::parseAliasDecl()
     if (!expect(tok, Identifier))
         return;
 
-    Token type = tok;
+    Token alias = tok;
 
     tok = advance(1);
     if (!expect(tok, Whitespace))
@@ -129,7 +129,7 @@ void Parser::parseAliasDecl()
     if (!expect(tok, Identifier))
         return;
 
-    Token alias = tok;
+    Token type = tok;
 
     tok = advance(1);
     if (!expect(tok, Newline))

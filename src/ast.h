@@ -18,11 +18,12 @@ struct FuncDecl;
 struct ReturnStmt;
 struct LiteralExpr;
 struct TranslationUnit;
+struct TypeDecl;
 struct VarExpr;
 struct Visitor;
 
 struct Node {
-    enum Type {
+    enum Kind {
         _AliasDecl,
         _BinaryExpr,
         _IfStmt,
@@ -33,12 +34,13 @@ struct Node {
         _LiteralExpr,
         _ReturnStmt,
         _TranslationUnit,
+        _TypeDecl,
         _VarExpr
     };
 
-    QString typeToString() const
+    QString kindToString() const
     {
-        switch (type) {
+        switch (kind) {
         case _AliasDecl:        return "AliasDecl";
         case _BinaryExpr:       return "BinaryExpr";
         case _IfStmt:           return "IfStmt";
@@ -49,19 +51,17 @@ struct Node {
         case _LiteralExpr:      return "LiteralExpr";
         case _ReturnStmt:       return "ReturnStmt";
         case _TranslationUnit:  return "TranslationUnit";
+        case _TypeDecl:         return "TypeDecl";
         case _VarExpr:          return "VarExpr";
-        default:
-            Q_ASSERT(false); // should never be reached
-            break;
         }
     }
 
-    Node(Type type) : type(type) {}
+    Node(Kind kind) : kind(kind) {}
     virtual ~Node() {}
 
     virtual void walk(Visitor&) = 0;
 
-    Type type;
+    Kind kind;
 };
 
 struct TranslationUnit : public Node {
@@ -71,15 +71,21 @@ struct TranslationUnit : public Node {
     virtual void walk(Visitor&);
 };
 
+struct TypeDecl : public Node {
+    TypeDecl() : Node(_TypeDecl) {}
+    Token type;
+    virtual void walk(Visitor&);
+};
+
 struct AliasDecl : public Node {
     AliasDecl() : Node(_AliasDecl) {}
-    Token type;
     Token alias;
+    Token type;
     virtual void walk(Visitor&);
 };
 
 struct Expr : public Node {
-    Expr(Type type) : Node(type) {}
+    Expr(Kind kind) : Node(kind) {}
 };
 
 struct BinaryExpr : public Expr {
@@ -101,9 +107,6 @@ struct BinaryExpr : public Expr {
         case Addition:              return "+";
         case Subtraction:           return "-";
         case Multiplication:        return "*";
-        default:
-            Q_ASSERT(false); // should never be reached
-            break;
         }
     }
 
@@ -122,7 +125,7 @@ struct FuncCallExpr : public Expr {
 };
 
 struct Stmt : public Node {
-    Stmt(Type type) : Node(type) {}
+    Stmt(Kind kind) : Node(kind) {}
 };
 
 struct IfStmt : public Stmt {

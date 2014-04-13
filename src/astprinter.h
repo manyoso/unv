@@ -21,6 +21,7 @@ public:
     virtual void visit(FuncDeclArg&);
     virtual void visit(FuncDecl&);
     virtual void visit(LiteralExpr&);
+    virtual void visit(TypeDecl&);
     virtual void visit(VarExpr&);
 
 private:
