@@ -4,6 +4,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
 
+#include <llvm/Analysis/Verifier.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
@@ -52,38 +53,6 @@ void CodeGen::walk()
     Visitor::walk(m_source->translationUnit());
 }
 
-void CodeGen::begin(Node&)
-{
-}
-
-void CodeGen::end(Node&)
-{
-}
-
-void CodeGen::visit(AliasDecl&)
-{
-}
-
-void CodeGen::visit(BinaryExpr&)
-{
-}
-
-void CodeGen::visit(IfStmt&)
-{
-}
-
-void CodeGen::visit(FuncCallExpr&)
-{
-}
-
-void CodeGen::visit(FuncDef&)
-{
-}
-
-void CodeGen::visit(FuncDeclArg&)
-{
-}
-
 void CodeGen::visit(FuncDecl& node)
 {
     LLVMString name(m_source->textForToken(node.name));
@@ -96,26 +65,36 @@ void CodeGen::visit(FuncDecl& node)
     llvm::FunctionType *ft = llvm::FunctionType::get(returnType, params.toVector().toStdVector(), false /*varargs*/);
     llvm::Function *f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, name, m_module.data());
     Q_ASSERT(f->getName() == name);
+
+    int i = 0;
+    for (llvm::Function::arg_iterator it = f->arg_begin(); it != f->arg_end(); ++it, ++i) {
+        QSharedPointer<FuncDeclArg> arg = node.args.at(i);
+        LLVMString name(m_source->textForToken(arg->name));
+        it->setName(name);
+    }
+
+    llvm::BasicBlock *block = llvm::BasicBlock::Create(*m_context, "entry", f);
+    m_builder->SetInsertPoint(block);
+
+    if (llvm::Value* value = codegen(*node.funcDef))
+        m_builder->CreateRet(value);
+    else
+        m_builder->CreateRetVoid();
+    llvm::verifyFunction(*f);
 }
 
-void CodeGen::visit(LiteralExpr&)
+llvm::Value* CodeGen::codegen(FuncDef&)
 {
+    return llvm::ConstantInt::get(*m_context, llvm::APInt(32, "0", 10));;
 }
 
-void CodeGen::visit(ReturnStmt&)
+llvm::Value* CodeGen::codegen(LiteralExpr& node)
 {
-}
-
-void CodeGen::visit(TranslationUnit&)
-{
-}
-
-void CodeGen::visit(TypeDecl&)
-{
-}
-
-void CodeGen::visit(VarExpr&)
-{
+    if (node.literal.type == Digits) {
+        LLVMString number(m_source->textForToken(node.literal));
+        return llvm::ConstantInt::get(*m_context, llvm::APInt(64, number, 10));
+    }
+    return 0;
 }
 
 llvm::Type* CodeGen::toPrimitiveType(const QString& string) const

@@ -16,6 +16,8 @@ namespace llvm {
     class Module;
     typedef llvm::IRBuilder<true, llvm::ConstantFolder, llvm::IRBuilderDefaultInserter<true> > Builder;
     class Type;
+    class Function;
+    class Value;
 }
 
 typedef QSharedPointer<llvm::LLVMContext> Context;
@@ -28,23 +30,12 @@ public:
     ~CodeGen();
     void walk();
 
-    virtual void begin(Node&);
-    virtual void end(Node&);
-
-    virtual void visit(AliasDecl&);
-    virtual void visit(BinaryExpr&);
-    virtual void visit(IfStmt&);
-    virtual void visit(FuncCallExpr&);
-    virtual void visit(FuncDef&);
-    virtual void visit(FuncDeclArg&);
-    virtual void visit(FuncDecl&);
-    virtual void visit(LiteralExpr&);
-    virtual void visit(ReturnStmt&);
-    virtual void visit(TranslationUnit&);
-    virtual void visit(TypeDecl&);
-    virtual void visit(VarExpr&);
-
 private:
+    virtual void begin(Node&) {}
+    virtual void end(Node&) {}
+    virtual void visit(FuncDecl&);
+    llvm::Value* codegen(FuncDef& node);
+    llvm::Value* codegen(LiteralExpr& node);
     llvm::Type* toPrimitiveType(const QString&) const;
 
 private:

@@ -3,3 +3,4 @@
 - Add division binary operators
 - Add logical operators like &&, ||
 - Start unit testing the errors that are generated for common errors
+- Produce error when functions decl have duplicate names for parameters
