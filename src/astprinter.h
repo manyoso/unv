@@ -4,16 +4,30 @@
 #include <QtCore>
 #include "visitor.h"
 
+class SourceBuffer;
+
 class ASTPrinter : public Visitor {
 public:
-    ASTPrinter();
+    ASTPrinter(SourceBuffer* source);
     ~ASTPrinter();
+    void walk();
+
     virtual void begin(Node&);
     virtual void end(Node&);
+
+    virtual void visit(AliasDecl&);
+    virtual void visit(BinaryExpr&);
+    virtual void visit(FuncCallExpr&);
+    virtual void visit(FuncDeclArg&);
+    virtual void visit(FuncDecl&);
+    virtual void visit(LiteralExpr&);
+    virtual void visit(VarExpr&);
 
 private:
     QString indent() const;
     int m_scope;
+    QTextStream* m_stream;
+    SourceBuffer* m_source;
 };
 
 #endif // astprinter_h

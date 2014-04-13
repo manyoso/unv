@@ -25,8 +25,8 @@ int main(int argc, char** argv)
             Parser parser;
             parser.parse(&buffer);
 
-            ASTPrinter printer;
-            printer.walk(buffer.translationUnit());
+            ASTPrinter printer(&buffer);
+            printer.walk();
         }
     }
 }

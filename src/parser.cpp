@@ -154,7 +154,7 @@ void Parser::parseFuncDecl()
     if (!expect(tok, Identifier))
         return;
 
-    Token type = tok;
+    Token name = tok;
 
     tok = advance(1);
     if (!expect(tok, Whitespace))
@@ -184,7 +184,7 @@ void Parser::parseFuncDecl()
     if (!expect(tok, Identifier))
         return;
 
-    Token returnType = type;
+    Token returnType = tok;
 
     tok = advance(1);
     if (!expect(tok, Newline))
@@ -195,7 +195,7 @@ void Parser::parseFuncDecl()
         return;
 
     FuncDecl* decl = new FuncDecl;
-    decl->name = type;
+    decl->name = name;
     decl->args = args;
     decl->funcDef = QSharedPointer<FuncDef>(funcDef);
     decl->returnType = returnType;

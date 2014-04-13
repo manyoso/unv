@@ -4,12 +4,14 @@
 void AliasDecl::walk(Visitor& visitor)
 {
     visitor.begin(*this);
+    visitor.visit(*this);
     visitor.end(*this);
 }
 
 void BinaryExpr::walk(Visitor& visitor)
 {
     visitor.begin(*this);
+    visitor.visit(*this);
     lhs->walk(visitor);
     rhs->walk(visitor);
     visitor.end(*this);
@@ -18,6 +20,7 @@ void BinaryExpr::walk(Visitor& visitor)
 void IfStmt::walk(Visitor& visitor)
 {
     visitor.begin(*this);
+    visitor.visit(*this);
     expr->walk(visitor);
     stmt->walk(visitor);
     visitor.end(*this);
@@ -26,6 +29,7 @@ void IfStmt::walk(Visitor& visitor)
 void FuncCallExpr::walk(Visitor& visitor)
 {
     visitor.begin(*this);
+    visitor.visit(*this);
     foreach (QSharedPointer<Expr> arg, args)
         arg->walk(visitor);
     visitor.end(*this);
@@ -34,6 +38,7 @@ void FuncCallExpr::walk(Visitor& visitor)
 void FuncDef::walk(Visitor& visitor)
 {
     visitor.begin(*this);
+    visitor.visit(*this);
     foreach (QSharedPointer<Stmt> stmt, stmts)
         stmt->walk(visitor);
     visitor.end(*this);
@@ -42,16 +47,16 @@ void FuncDef::walk(Visitor& visitor)
 void FuncDeclArg::walk(Visitor& visitor)
 {
     visitor.begin(*this);
+    visitor.visit(*this);
     visitor.end(*this);
 }
 
 void FuncDecl::walk(Visitor& visitor)
 {
     visitor.begin(*this);
-
+    visitor.visit(*this);
     foreach (QSharedPointer<FuncDeclArg> arg, args)
         arg->walk(visitor);
-
     funcDef->walk(visitor);
     visitor.end(*this);
 }
@@ -59,6 +64,7 @@ void FuncDecl::walk(Visitor& visitor)
 void ReturnStmt::walk(Visitor& visitor)
 {
     visitor.begin(*this);
+    visitor.visit(*this);
     expr->walk(visitor);
     visitor.end(*this);
 }
@@ -66,12 +72,14 @@ void ReturnStmt::walk(Visitor& visitor)
 void LiteralExpr::walk(Visitor& visitor)
 {
     visitor.begin(*this);
+    visitor.visit(*this);
     visitor.end(*this);
 }
 
 void TranslationUnit::walk(Visitor& visitor)
 {
     visitor.begin(*this);
+    visitor.visit(*this);
     foreach (QSharedPointer<AliasDecl> alias, aliasDecl)
         alias->walk(visitor);
     foreach (QSharedPointer<FuncDecl> func, funcDecl)
@@ -82,5 +90,6 @@ void TranslationUnit::walk(Visitor& visitor)
 void VarExpr::walk(Visitor& visitor)
 {
     visitor.begin(*this);
+    visitor.visit(*this);
     visitor.end(*this);
 }

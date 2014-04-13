@@ -80,7 +80,6 @@ struct AliasDecl : public Node {
 
 struct Expr : public Node {
     Expr(Type type) : Node(type) {}
-    Token type;
 };
 
 struct BinaryExpr : public Expr {
@@ -92,6 +91,22 @@ struct BinaryExpr : public Expr {
         Subtraction,
         Multiplication
     };
+
+    QString opToString() const
+    {
+        switch (op) {
+        case Equality:              return "==";
+        case LessThanOrEquality:    return "<=";
+        case GreaterThanOrEquality: return ">=";
+        case Addition:              return "+";
+        case Subtraction:           return "-";
+        case Multiplication:        return "*";
+        default:
+            Q_ASSERT(false); // should never be reached
+            break;
+        }
+    }
+
     BinaryExpr() : Expr(_BinaryExpr) {}
     BinaryOp op;
     QSharedPointer<Expr> lhs;
