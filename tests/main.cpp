@@ -2,6 +2,7 @@
 #include <QtTest/QtTest>
 
 #include "testlexer.h"
+#include "testexamples.h"
 
 #define _NAME_ "unvtests"
 
@@ -13,6 +14,9 @@ int main(int argc, char* argv[])
     int rc = 0;
     TestLexer test1;
     rc = QTest::qExec(&test1, argc, argv) == 0 ? rc : -1;
+
+    TestExamples test2;
+    rc = QTest::qExec(&test2, argc, argv) == 0 ? rc : -1;
 
     return rc;
 }

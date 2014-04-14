@@ -9,5 +9,8 @@ QT += testlib
 DEPENDPATH += .
 INCLUDEPATH += .
 
-HEADERS += testlexer.h
-SOURCES += main.cpp testlexer.cpp
+HEADERS += testexamples.h \
+           testlexer.h
+SOURCES += main.cpp \
+           testexamples.cpp \
+           testlexer.cpp
