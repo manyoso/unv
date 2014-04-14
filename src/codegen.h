@@ -28,7 +28,12 @@ class CodeGen : public Visitor {
 public:
     CodeGen(SourceBuffer* source);
     ~CodeGen();
-    void walk();
+
+    /*!
+     * \brief walks the AST and returns the generated LLVM IR
+     * @return an LLVM IR representation of the AST in the form of a QString
+     */
+    QString generateLLVMIR();
 
 private:
     virtual void begin(Node&) {}

@@ -33,7 +33,7 @@ void Options::parseCommandLine()
     parser.addOption(outputFile);
 
     QCommandLineOption outputType(QStringList() << "e" << "emit",
-                                  "Specify the type of output. [Default: exe]\n   type=exe|llvm|asm", "type", "exe");
+                                  "Specify the type of output. [Default: obj]\n   type=obj|llvm|ast", "type", "obj");
     parser.addOption(outputType);
 
     parser.process(*QCoreApplication::instance());
@@ -42,6 +42,6 @@ void Options::parseCommandLine()
     m_errorLimit = parser.value(errorLimit).toInt();
     m_outputFile = parser.value(outputFile);
     m_outputType = parser.value(outputType);
-    if (m_outputType != "exe" && m_outputType != "llvm" && m_outputType != "asm")
-        m_outputType = "exe";
+    if (m_outputType != "obj" && m_outputType != "llvm" && m_outputType != "ast")
+        m_outputType = "obj";
 }

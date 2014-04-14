@@ -6,6 +6,7 @@ HEADERS += $$PWD/ast.h \
            $$PWD/codegen.h \
            $$PWD/lexer.h \
            $$PWD/options.h \
+           $$PWD/output.h \
            $$PWD/parser.h \
            $$PWD/sourcebuffer.h \
            $$PWD/symbols.h \
@@ -17,6 +18,7 @@ SOURCES += $$PWD/ast.cpp \
            $$PWD/codegen.cpp \
            $$PWD/lexer.cpp \
            $$PWD/options.cpp \
+           $$PWD/output.cpp \
            $$PWD/parser.cpp \
            $$PWD/symbols.cpp
 

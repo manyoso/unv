@@ -50,10 +50,17 @@ CodeGen::~CodeGen()
 {
 }
 
-void CodeGen::walk()
+QString CodeGen::generateLLVMIR()
 {
     Visitor::walk(m_source->translationUnit());
 
+    std::string str;
+    llvm::raw_string_ostream stream(str);
+    m_module->print(stream, 0);
+    stream.flush();
+    return QString::fromStdString(str);
+
+#if 0
     QString outputFile = Options::instance()->outputFile();
 
     if (outputFile.isEmpty()) {
@@ -71,6 +78,7 @@ void CodeGen::walk()
             m_source->error(Token(), QString("can not write to file $0").arg(outputFile), SourceBuffer::Fatal);
         }
     }
+#endif
 }
 
 void CodeGen::visit(FuncDecl& node)

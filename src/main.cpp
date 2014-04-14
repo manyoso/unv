@@ -1,8 +1,8 @@
 #include <QtCore>
 
-#include "astprinter.h"
 #include "codegen.h"
 #include "lexer.h"
+#include "output.h"
 #include "parser.h"
 
 int main(int argc, char** argv)
@@ -27,11 +27,11 @@ int main(int argc, char** argv)
             Parser parser;
             parser.parse(&buffer);
 
-            ASTPrinter printer(&buffer);
-            printer.walk();
-
             CodeGen codegen(&buffer);
-            codegen.walk();
+            QString llvmIR = codegen.generateLLVMIR();
+
+            Output output(&buffer);
+            output.write(llvmIR);
         }
     }
 }
