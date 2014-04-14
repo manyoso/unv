@@ -59,26 +59,6 @@ QString CodeGen::generateLLVMIR()
     m_module->print(stream, 0);
     stream.flush();
     return QString::fromStdString(str);
-
-#if 0
-    QString outputFile = Options::instance()->outputFile();
-
-    if (outputFile.isEmpty()) {
-        llvm::raw_fd_ostream stream(STDOUT_FILENO, true /*shouldClose*/);
-        m_module->print(stream, 0);
-        stream.flush();
-    } else {
-        QFile f(outputFile);
-        if (f.open(QIODevice::WriteOnly)) {
-            llvm::raw_fd_ostream stream(f.handle(), false /*shouldClose*/);
-            m_module->print(stream, 0);
-            stream.flush();
-            f.close();
-        } else {
-            m_source->error(Token(), QString("can not write to file $0").arg(outputFile), SourceBuffer::Fatal);
-        }
-    }
-#endif
 }
 
 void CodeGen::visit(FuncDecl& node)

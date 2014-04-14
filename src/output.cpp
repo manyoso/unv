@@ -63,7 +63,9 @@ void Output::write(const QString& llvmIR)
 
         llc.write(llvmIR.toLatin1());
 
+        llc.waitForBytesWritten();
         llc.closeWriteChannel();
+
         if (!llc.waitForFinished()) {
             m_source->error(Token(),
                             "llc tool crashed",
@@ -81,9 +83,8 @@ void Output::write(const QString& llvmIR)
 
         QFile f(file);
         if (f.open(QIODevice::WriteOnly)) {
-            QTextStream out(&f);
-            out << output;
-            out.flush();
+            f.write(output);
+            f.flush();
             f.close();
         } else {
             m_source->error(Token(),
