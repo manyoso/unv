@@ -1,0 +1,55 @@
+TranslationUnit
+  AliasDecl
+    Int _builtin_int32_
+  FuncDecl
+    main Int
+    FuncDef
+      ReturnStmt
+        FuncCallExpr
+          fibonacci
+          LiteralExpr
+            40
+  FuncDecl
+    fibonacci Int
+    FuncDeclArg
+      n Int
+    FuncDef
+      IfStmt
+        BinaryExpr
+          ==
+          VarExpr
+            n
+          LiteralExpr
+            0
+        ReturnStmt
+          LiteralExpr
+            0
+      IfStmt
+        BinaryExpr
+          ==
+          VarExpr
+            n
+          LiteralExpr
+            1
+        ReturnStmt
+          LiteralExpr
+            1
+      ReturnStmt
+        BinaryExpr
+          +
+          FuncCallExpr
+            fibonacci
+            BinaryExpr
+              -
+              VarExpr
+                n
+              LiteralExpr
+                1
+          FuncCallExpr
+            fibonacci
+            BinaryExpr
+              -
+              VarExpr
+                n
+              LiteralExpr
+                2

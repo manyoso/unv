@@ -10,7 +10,11 @@ DEPENDPATH += .
 INCLUDEPATH += .
 
 HEADERS += testexamples.h \
-           testlexer.h
+           testlexer.h \
+           testparser.h
 SOURCES += main.cpp \
            testexamples.cpp \
-           testlexer.cpp
+           testlexer.cpp \
+           testparser.cpp
+
+RESOURCES = tests.qrc

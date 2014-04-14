@@ -1,11 +1,10 @@
-#include <QtTest/QtTest>
 #include <QtCore>
 
 #include "testexamples.h"
 
 void TestExamples::testExamples()
 {
-    QDir examples(QCoreApplication::applicationDirPath() + "/../../build/bin/examples");
+    QDir examples(QCoreApplication::applicationDirPath() + "/examples");
     QVERIFY(examples.exists());
 
     QProcess fibonacci;

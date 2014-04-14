@@ -1,17 +1,15 @@
 #include "astprinter.h"
 #include "sourcebuffer.h"
 
-ASTPrinter::ASTPrinter(SourceBuffer* buffer)
+ASTPrinter::ASTPrinter(SourceBuffer* buffer, QTextStream* stream)
     : m_scope(0)
-    , m_stream(new QTextStream(stdout))
+    , m_stream(stream)
     , m_source(buffer)
 {
 }
 
 ASTPrinter::~ASTPrinter()
 {
-    delete m_stream;
-    m_stream = 0;
 }
 
 void ASTPrinter::walk()

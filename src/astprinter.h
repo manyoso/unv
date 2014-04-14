@@ -8,7 +8,7 @@ class SourceBuffer;
 
 class ASTPrinter : public Visitor {
 public:
-    ASTPrinter(SourceBuffer* source);
+    ASTPrinter(SourceBuffer* source, QTextStream* stream);
     ~ASTPrinter();
     void walk();
 

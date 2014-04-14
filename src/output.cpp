@@ -13,7 +13,14 @@ void Output::write(const QString& llvmIR)
     QString file = Options::instance()->outputFile();
     QString type = Options::instance()->outputType();
     if (type == "ast") {
-        ASTPrinter printer(m_source);
+        QTextStream out(stdout);
+        QFile f(file);
+        if (!file.isEmpty()) {
+            if (f.open(QIODevice::WriteOnly))
+                out.setDevice(&f);
+        }
+        f.close();
+        ASTPrinter printer(m_source, &out);
         printer.walk();
     } else if (type == "llvm") {
         if (file.isEmpty()) {
