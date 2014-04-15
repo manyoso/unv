@@ -7,4 +7,7 @@ export SCRIPTDIR=$PWD
 export BUILDDIR=$PWD/build
 
 /bin/sh $SCRIPTDIR/build.sh debug
-$BUILDDIR/bin/$BASENAME"tests" "$@"
+
+echo "\nRunning unit tests...\n"
+
+$BUILDDIR/bin/$BASENAME"tests" -silent "$@"
