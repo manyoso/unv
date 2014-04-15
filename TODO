@@ -12,3 +12,5 @@
 - AUTHORS/COPYING files and VERSION/CHANGELOG
 - Documentation and doxygen support for both compiler and for language
 - Pick a better name?
+- Make a more efficient two pass solution for codegen for top-level decl
+- Flesh out the type checking in codegen for expression nodes
