@@ -12,6 +12,6 @@ void TestExamples::testExamples()
     fibonacci.start();
     QVERIFY(fibonacci.waitForFinished());
     QCOMPARE(fibonacci.exitStatus(), QProcess::NormalExit);
-    QCOMPARE(fibonacci.exitCode(), 0);
+    QCOMPARE(fibonacci.exitCode(), 203);
     QCOMPARE(fibonacci.state(), QProcess::NotRunning);
 }

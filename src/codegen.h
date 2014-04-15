@@ -39,8 +39,15 @@ private:
     virtual void begin(Node&) {}
     virtual void end(Node&) {}
     virtual void visit(FuncDecl&);
+    void registerFuncDecl(FuncDecl&);
+    llvm::Value* codegen(BinaryExpr& node);
+    llvm::Value* codegen(Expr& node);
+    llvm::Value* codegen(FuncCallExpr& node);
     llvm::Value* codegen(FuncDef& node);
+    llvm::Value* codegen(IfStmt& node);
     llvm::Value* codegen(LiteralExpr& node);
+    llvm::Value* codegen(ReturnStmt& node);
+    llvm::Value* codegen(VarExpr& node);
     llvm::Type* toPrimitiveType(const QString&) const;
 
 private:
@@ -48,6 +55,8 @@ private:
     Context m_context;
     Module m_module;
     Builder m_builder;
+    bool m_declPass;
+    QHash<QString, llvm::Value*> m_namedValues;
 };
 
 #endif // codegen_h

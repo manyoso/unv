@@ -273,7 +273,7 @@ FuncDef* Parser::parseFuncDef()
         stmts.append(QSharedPointer<Stmt>(stmt));
 
     if (stmts.isEmpty()) {
-        m_source->error(current(), "expecting function statements");
+        m_source->error(current(), "function must define at least one statement");
         return 0;
     }
 
@@ -446,8 +446,10 @@ IfStmt* Parser::parseIfStmt()
 
     tok = advance(1);
     Stmt* stmt = parseStmt();
-    if (!stmt)
+    if (!stmt) {
+        m_source->error(tok, "no statement following condition");
         return 0;
+    }
 
     IfStmt* ifStmt = new IfStmt;
     ifStmt->expr = QSharedPointer<Expr>(expr);
