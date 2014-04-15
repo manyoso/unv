@@ -135,10 +135,15 @@ void CodeGen::codegen(Stmt* node, llvm::Type*)
 void CodeGen::codegen(IfStmt* node, llvm::Type*)
 {
     llvm::Value *condition = codegen(node->expr.data());
+    Q_ASSERT(condition);
     if (!condition)
         return;
 
     llvm::Function* f = m_builder->GetInsertBlock()->getParent();
+    Q_ASSERT(f);
+    if (!f)
+        return;
+
     llvm::BasicBlock* then = llvm::BasicBlock::Create(*m_context, "then", f);
     llvm::BasicBlock* ifcont = llvm::BasicBlock::Create(*m_context, "ifcont");
 
@@ -154,7 +159,13 @@ void CodeGen::codegen(IfStmt* node, llvm::Type*)
 
 void CodeGen::codegen(ReturnStmt* node, llvm::Type*)
 {
-    if (llvm::Value* value = codegen(node->expr.data())) {
+    llvm::Function* f = m_builder->GetInsertBlock()->getParent();
+
+    Q_ASSERT(f);
+    if (!f)
+        return;
+
+    if (llvm::Value* value = codegen(node->expr.data(), f->getReturnType())) {
         m_builder->CreateRet(value);
         return;
     }
@@ -165,36 +176,56 @@ void CodeGen::codegen(ReturnStmt* node, llvm::Type*)
 
 llvm::Value* CodeGen::codegen(BinaryExpr* node, llvm::Type*)
 {
-    llvm::Value *l = codegen(node->lhs.data());
-    llvm::Value *r = codegen(node->rhs.data());
-    if (l == 0 || r == 0) return 0;
+    llvm::Value *l = 0;
+    llvm::Value *r = 0;
+    if (node->lhs->kind != Node::_LiteralExpr)
+        l = codegen(node->lhs.data());
+    if (node->rhs->kind != Node::_LiteralExpr)
+        r = codegen(node->rhs.data());
+
+    if (!l && !r) {
+        m_source->error(static_cast<LiteralExpr*>(node->lhs.data())->literal,
+            "we do not support binary expressions involving two literals yet",
+            SourceBuffer::Fatal);
+        return 0;
+    }
+
+    if (!l)
+        l = codegen(node->lhs.data(), r->getType());
+    if (!r)
+        r = codegen(node->rhs.data(), l->getType());
+
+    Q_ASSERT(l && r);
+    if (!l && !r) return 0;
 
     switch (node->op) {
     case BinaryExpr::Equality:
         return m_builder->CreateICmpEQ(l, r, "equaltmp");
     case BinaryExpr::LessThanOrEquality:
     case BinaryExpr::GreaterThanOrEquality:
+        Q_ASSERT(false); // should not be reached
         return 0;
     case BinaryExpr::Addition:
         return m_builder->CreateAdd(l, r, "addtmp");
     case BinaryExpr::Subtraction:
         return m_builder->CreateSub(l, r, "subtmp");
     case BinaryExpr::Multiplication:
+        Q_ASSERT(false); // should not be reached
         return 0;
     }
 }
 
-llvm::Value* CodeGen::codegen(Expr* node, llvm::Type*)
+llvm::Value* CodeGen::codegen(Expr* node, llvm::Type* type)
 {
     switch (node->kind) {
     case Node::_BinaryExpr:
-        return codegen(static_cast<BinaryExpr*>(node));
+        return codegen(static_cast<BinaryExpr*>(node), type);
     case Node::_FuncCallExpr:
-        return codegen(static_cast<FuncCallExpr*>(node));
+        return codegen(static_cast<FuncCallExpr*>(node), type);
     case Node::_LiteralExpr:
-        return codegen(static_cast<LiteralExpr*>(node));
+        return codegen(static_cast<LiteralExpr*>(node), type);
     case Node::_VarExpr:
-        return codegen(static_cast<VarExpr*>(node));
+        return codegen(static_cast<VarExpr*>(node), type);
     default:
         Q_ASSERT(false); // should not be reached
         return 0;
@@ -221,7 +252,8 @@ llvm::Value* CodeGen::codegen(FuncCallExpr* node, llvm::Type*)
             it != calleeFunction->arg_end();
             ++it, ++i) {
         QSharedPointer<Expr> arg = node->args.at(i);
-        llvm::Value* value = codegen(arg.data());
+        llvm::Value* value = codegen(arg.data(), it->getType());
+        Q_ASSERT(value);
         if (!value)
             return 0;
         args.append(value);
@@ -230,38 +262,72 @@ llvm::Value* CodeGen::codegen(FuncCallExpr* node, llvm::Type*)
     return m_builder->CreateCall(calleeFunction, args.toVector().toStdVector(), "calltmp");
 }
 
-llvm::Value* CodeGen::codegen(LiteralExpr* node, llvm::Type*)
+llvm::Value* CodeGen::codegen(LiteralExpr* node, llvm::Type* type)
 {
+    Q_ASSERT(type);
+    if (!type)
+        return 0;
+
     if (node->literal.type == Digits) {
-        QString digits = m_source->textForToken(node->literal);
-        bool success = false;
-        quint64 n = digits.toULongLong(&success);
-        if (!success) {
-            m_source->error(node->literal, "integer literal out of range", SourceBuffer::Fatal);
+        if (!type->isIntegerTy()) {
+            m_source->error(node->literal, "non-integer literal not supported yet", SourceBuffer::Fatal);
             return 0;
         }
 
-        unsigned numbits = 8;
-        if (n > std::numeric_limits<int8_t>::max())
-            numbits = 16;
-        if (n > std::numeric_limits<int16_t>::max())
-            numbits = 32;
-        if (n > std::numeric_limits<int32_t>::max())
-            numbits = 64;
+        llvm::IntegerType* integerType = static_cast<llvm::IntegerType*>(type);
+        QString digits = m_source->textForToken(node->literal);
+        unsigned numbits = integerType->getBitWidth();
+        bool isSigned = integerType->getSignBit();
+        bool success = false;
 
-        // FIXME: Find out how to determine the type of literal
-        numbits = 32;
-        return llvm::ConstantInt::get(*m_context, llvm::APInt(numbits, n, true));
+        if (!isSigned) {
+            quint64 n = digits.toULongLong(&success);
+
+            bool outOfRange = false;
+            if ((numbits == 1 && n > 1)
+                || (numbits == 8 && n > 255)
+                || (numbits == 16 && n > std::numeric_limits<uint16_t>::max())
+                || (numbits == 32 && n > std::numeric_limits<uint32_t>::max())
+                || (numbits == 64 && n > std::numeric_limits<uint64_t>::max()))
+                outOfRange = true;
+
+            if (!success || outOfRange) {
+                m_source->error(node->literal, "unsigned integer literal out of range", SourceBuffer::Fatal);
+                return 0;
+            }
+
+            return llvm::ConstantInt::get(*m_context, llvm::APInt(numbits, n, false));
+        } else {
+            qint64 n = digits.toULongLong(&success);
+
+            bool outOfRange = false;
+            if ((numbits == 1)
+                || (numbits == 8 && (n < -128 || n > 127))
+                || (numbits == 16 && (n < std::numeric_limits<int16_t>::min() || n > std::numeric_limits<int16_t>::max()))
+                || (numbits == 32 && (n < std::numeric_limits<int16_t>::min() || n > std::numeric_limits<int32_t>::max()))
+                || (numbits == 64 && (n < std::numeric_limits<int16_t>::min() || n > std::numeric_limits<int64_t>::max())))
+                outOfRange = true;
+
+            if (!success || outOfRange) {
+                m_source->error(node->literal, "signed integer literal out of range", SourceBuffer::Fatal);
+                return 0;
+            }
+
+            return llvm::ConstantInt::get(*m_context, llvm::APInt(numbits, n, true));
+        }
     }
+    Q_ASSERT(false); // should not be reached
     return 0;
 }
 
-llvm::Value* CodeGen::codegen(VarExpr* node, llvm::Type*)
+llvm::Value* CodeGen::codegen(VarExpr* node, llvm::Type* type)
 {
     QString name = m_source->textForToken(node->var);
     llvm::Value *value = m_namedValues.contains(name) ? m_namedValues.value(name) : 0;
     if (!value)
         m_source->error(node->var, "unknown variable name", SourceBuffer::Fatal);
+    if (type && value->getType() != type)
+        m_source->error(node->var, "unknown variable type", SourceBuffer::Fatal);
     return value;
 }
 
