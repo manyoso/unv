@@ -71,7 +71,7 @@ QString CodeGen::generateLLVMIR()
 void CodeGen::visit(FuncDecl& node)
 {
     if (m_declPass) {
-        registerFuncDecl(node);
+        registerFuncDecl(&node);
         return;
     }
 
@@ -87,50 +87,54 @@ void CodeGen::visit(FuncDecl& node)
 
     llvm::BasicBlock *block = llvm::BasicBlock::Create(*m_context, "entry", f);
     m_builder->SetInsertPoint(block);
-    codegen(*node.funcDef);
+    codegen(node.funcDef.data());
     llvm::verifyFunction(*f);
 }
 
-void CodeGen::registerFuncDecl(FuncDecl& node) {
-    LLVMString name(m_source->textForToken(node.name));
+void CodeGen::registerFuncDecl(FuncDecl* node) {
+    LLVMString name(m_source->textForToken(node->name));
     QList<llvm::Type*> params;
-    foreach (QSharedPointer<FuncDeclArg> arg, node.args) {
+    foreach (QSharedPointer<FuncDeclArg> arg, node->args) {
         QString type = m_source->symbols().toTypeAndCheck(arg->type);
         params.append(toPrimitiveType(type));
     }
-    llvm::Type* returnType = toPrimitiveType(m_source->symbols().toTypeAndCheck(node.returnType));
+    llvm::Type* returnType = toPrimitiveType(m_source->symbols().toTypeAndCheck(node->returnType));
     llvm::FunctionType *ft = llvm::FunctionType::get(returnType, params.toVector().toStdVector(), false /*varargs*/);
     llvm::Function *f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, name, m_module.data());
     Q_ASSERT(f->getName() == name);
 
     int i = 0;
     for (llvm::Function::arg_iterator it = f->arg_begin(); it != f->arg_end(); ++it, ++i) {
-        QSharedPointer<FuncDeclArg> arg = node.args.at(i);
+        QSharedPointer<FuncDeclArg> arg = node->args.at(i);
         LLVMString name(m_source->textForToken(arg->name));
         it->setName(name);
     }
 }
 
-void CodeGen::codegen(FuncDef& node, llvm::Type*)
+void CodeGen::codegen(FuncDef* node, llvm::Type*)
 {
-    foreach (QSharedPointer<Stmt> stmt, node.stmts) {
-        switch (stmt->kind) {
-        case Node::_IfStmt:
-            codegen(*static_cast<IfStmt*>(stmt.data()));
-            break;
-        case Node::_ReturnStmt:
-            codegen(*static_cast<ReturnStmt*>(stmt.data()));
-            break;
-        default:
-            Q_ASSERT(false); // should not be reached
-            return;
-        }
+    foreach (QSharedPointer<Stmt> stmt, node->stmts)
+        codegen(stmt.data());
+}
+
+void CodeGen::codegen(Stmt* node, llvm::Type*)
+{
+    switch (node->kind) {
+    case Node::_IfStmt:
+        codegen(static_cast<IfStmt*>(node));
+        break;
+    case Node::_ReturnStmt:
+        codegen(static_cast<ReturnStmt*>(node));
+        break;
+    default:
+        Q_ASSERT(false); // should not be reached
+        return;
     }
 }
 
-void CodeGen::codegen(IfStmt& node, llvm::Type*)
+void CodeGen::codegen(IfStmt* node, llvm::Type*)
 {
-    llvm::Value *condition = codegen(*static_cast<Expr*>(node.expr.data()));
+    llvm::Value *condition = codegen(node->expr.data());
     if (!condition)
         return;
 
@@ -142,15 +146,15 @@ void CodeGen::codegen(IfStmt& node, llvm::Type*)
 
     m_builder->SetInsertPoint(then);
 
-    codegen(*static_cast<ReturnStmt*>(node.stmt.data()));
+    codegen(node->stmt.data());
 
     f->getBasicBlockList().push_back(ifcont);
     m_builder->SetInsertPoint(ifcont);
 }
 
-void CodeGen::codegen(ReturnStmt& node, llvm::Type*)
+void CodeGen::codegen(ReturnStmt* node, llvm::Type*)
 {
-    if (llvm::Value* value = codegen(*static_cast<Expr*>(node.expr.data()))) {
+    if (llvm::Value* value = codegen(node->expr.data())) {
         m_builder->CreateRet(value);
         return;
     }
@@ -159,13 +163,13 @@ void CodeGen::codegen(ReturnStmt& node, llvm::Type*)
     m_source->error(Token(), "return statement of void is not allowed", SourceBuffer::Fatal);
 }
 
-llvm::Value* CodeGen::codegen(BinaryExpr& node, llvm::Type*)
+llvm::Value* CodeGen::codegen(BinaryExpr* node, llvm::Type*)
 {
-    llvm::Value *l = codegen(*static_cast<Expr*>(node.lhs.data()));
-    llvm::Value *r = codegen(*static_cast<Expr*>(node.rhs.data()));
+    llvm::Value *l = codegen(node->lhs.data());
+    llvm::Value *r = codegen(node->rhs.data());
     if (l == 0 || r == 0) return 0;
 
-    switch (node.op) {
+    switch (node->op) {
     case BinaryExpr::Equality:
         return m_builder->CreateICmpEQ(l, r, "equaltmp");
     case BinaryExpr::LessThanOrEquality:
@@ -180,34 +184,34 @@ llvm::Value* CodeGen::codegen(BinaryExpr& node, llvm::Type*)
     }
 }
 
-llvm::Value* CodeGen::codegen(Expr& node, llvm::Type*)
+llvm::Value* CodeGen::codegen(Expr* node, llvm::Type*)
 {
-    switch (node.kind) {
+    switch (node->kind) {
     case Node::_BinaryExpr:
-        return codegen(*static_cast<BinaryExpr*>(&node));
+        return codegen(static_cast<BinaryExpr*>(node));
     case Node::_FuncCallExpr:
-        return codegen(*static_cast<FuncCallExpr*>(&node));
+        return codegen(static_cast<FuncCallExpr*>(node));
     case Node::_LiteralExpr:
-        return codegen(*static_cast<LiteralExpr*>(&node));
+        return codegen(static_cast<LiteralExpr*>(node));
     case Node::_VarExpr:
-        return codegen(*static_cast<VarExpr*>(&node));
+        return codegen(static_cast<VarExpr*>(node));
     default:
         Q_ASSERT(false); // should not be reached
         return 0;
     }
 }
 
-llvm::Value* CodeGen::codegen(FuncCallExpr& node, llvm::Type*)
+llvm::Value* CodeGen::codegen(FuncCallExpr* node, llvm::Type*)
 {
-    LLVMString callee = m_source->textForToken(node.callee);
+    LLVMString callee = m_source->textForToken(node->callee);
     llvm::Function *calleeFunction = m_module->getFunction(callee);
     if (!calleeFunction) {
-        m_source->error(node.callee, "unknown function reference", SourceBuffer::Fatal);
+        m_source->error(node->callee, "unknown function reference", SourceBuffer::Fatal);
         return 0;
     }
 
-    if (int(calleeFunction->arg_size()) != node.args.size()) {
-        m_source->error(node.callee, "incorrect number of arguments passed", SourceBuffer::Fatal);
+    if (int(calleeFunction->arg_size()) != node->args.size()) {
+        m_source->error(node->callee, "incorrect number of arguments passed", SourceBuffer::Fatal);
         return 0;
     }
 
@@ -216,8 +220,8 @@ llvm::Value* CodeGen::codegen(FuncCallExpr& node, llvm::Type*)
     for (llvm::Function::arg_iterator it = calleeFunction->arg_begin();
             it != calleeFunction->arg_end();
             ++it, ++i) {
-        QSharedPointer<Expr> arg = node.args.at(i);
-        llvm::Value* value = codegen(*static_cast<Expr*>(arg.data()));
+        QSharedPointer<Expr> arg = node->args.at(i);
+        llvm::Value* value = codegen(arg.data());
         if (!value)
             return 0;
         args.append(value);
@@ -226,14 +230,14 @@ llvm::Value* CodeGen::codegen(FuncCallExpr& node, llvm::Type*)
     return m_builder->CreateCall(calleeFunction, args.toVector().toStdVector(), "calltmp");
 }
 
-llvm::Value* CodeGen::codegen(LiteralExpr& node, llvm::Type*)
+llvm::Value* CodeGen::codegen(LiteralExpr* node, llvm::Type*)
 {
-    if (node.literal.type == Digits) {
-        QString digits = m_source->textForToken(node.literal);
+    if (node->literal.type == Digits) {
+        QString digits = m_source->textForToken(node->literal);
         bool success = false;
         quint64 n = digits.toULongLong(&success);
         if (!success) {
-            m_source->error(node.literal, "integer literal out of range", SourceBuffer::Fatal);
+            m_source->error(node->literal, "integer literal out of range", SourceBuffer::Fatal);
             return 0;
         }
 
@@ -252,12 +256,12 @@ llvm::Value* CodeGen::codegen(LiteralExpr& node, llvm::Type*)
     return 0;
 }
 
-llvm::Value* CodeGen::codegen(VarExpr& node, llvm::Type*)
+llvm::Value* CodeGen::codegen(VarExpr* node, llvm::Type*)
 {
-    QString name = m_source->textForToken(node.var);
+    QString name = m_source->textForToken(node->var);
     llvm::Value *value = m_namedValues.contains(name) ? m_namedValues.value(name) : 0;
     if (!value)
-        m_source->error(node.var, "unknown variable name", SourceBuffer::Fatal);
+        m_source->error(node->var, "unknown variable name", SourceBuffer::Fatal);
     return value;
 }
 

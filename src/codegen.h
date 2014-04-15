@@ -39,15 +39,16 @@ private:
     virtual void begin(Node&) {}
     virtual void end(Node&) {}
     virtual void visit(FuncDecl&);
-    void registerFuncDecl(FuncDecl&);
-    void codegen(FuncDef& node, llvm::Type* type = 0);
-    void codegen(IfStmt& node, llvm::Type* type = 0);
-    void codegen(ReturnStmt& node, llvm::Type* type = 0);
-    llvm::Value* codegen(BinaryExpr& node, llvm::Type* type = 0);
-    llvm::Value* codegen(Expr& node, llvm::Type* type = 0);
-    llvm::Value* codegen(FuncCallExpr& node, llvm::Type* type = 0);
-    llvm::Value* codegen(LiteralExpr& node, llvm::Type* type = 0);
-    llvm::Value* codegen(VarExpr& node, llvm::Type* type = 0);
+    void registerFuncDecl(FuncDecl*);
+    void codegen(FuncDef* node, llvm::Type* type = 0);
+    void codegen(Stmt* node, llvm::Type* type = 0);
+    void codegen(IfStmt* node, llvm::Type* type = 0);
+    void codegen(ReturnStmt* node, llvm::Type* type = 0);
+    llvm::Value* codegen(BinaryExpr* node, llvm::Type* type = 0);
+    llvm::Value* codegen(Expr* node, llvm::Type* type = 0);
+    llvm::Value* codegen(FuncCallExpr* node, llvm::Type* type = 0);
+    llvm::Value* codegen(LiteralExpr* node, llvm::Type* type = 0);
+    llvm::Value* codegen(VarExpr* node, llvm::Type* type = 0);
     llvm::Type* toPrimitiveType(const QString&) const;
 
 private:
