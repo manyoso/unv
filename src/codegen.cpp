@@ -111,7 +111,55 @@ void CodeGen::registerFuncDecl(FuncDecl& node) {
     }
 }
 
-llvm::Value* CodeGen::codegen(BinaryExpr& node)
+void CodeGen::codegen(FuncDef& node, llvm::Type*)
+{
+    foreach (QSharedPointer<Stmt> stmt, node.stmts) {
+        switch (stmt->kind) {
+        case Node::_IfStmt:
+            codegen(*static_cast<IfStmt*>(stmt.data()));
+            break;
+        case Node::_ReturnStmt:
+            codegen(*static_cast<ReturnStmt*>(stmt.data()));
+            break;
+        default:
+            Q_ASSERT(false); // should not be reached
+            return;
+        }
+    }
+}
+
+void CodeGen::codegen(IfStmt& node, llvm::Type*)
+{
+    llvm::Value *condition = codegen(*static_cast<Expr*>(node.expr.data()));
+    if (!condition)
+        return;
+
+    llvm::Function* f = m_builder->GetInsertBlock()->getParent();
+    llvm::BasicBlock* then = llvm::BasicBlock::Create(*m_context, "then", f);
+    llvm::BasicBlock* ifcont = llvm::BasicBlock::Create(*m_context, "ifcont");
+
+    m_builder->CreateCondBr(condition, then, ifcont);
+
+    m_builder->SetInsertPoint(then);
+
+    codegen(*static_cast<ReturnStmt*>(node.stmt.data()));
+
+    f->getBasicBlockList().push_back(ifcont);
+    m_builder->SetInsertPoint(ifcont);
+}
+
+void CodeGen::codegen(ReturnStmt& node, llvm::Type*)
+{
+    if (llvm::Value* value = codegen(*static_cast<Expr*>(node.expr.data()))) {
+        m_builder->CreateRet(value);
+        return;
+    }
+
+    // FIXME: Should be able to point to the return token
+    m_source->error(Token(), "return statement of void is not allowed", SourceBuffer::Fatal);
+}
+
+llvm::Value* CodeGen::codegen(BinaryExpr& node, llvm::Type*)
 {
     llvm::Value *l = codegen(*static_cast<Expr*>(node.lhs.data()));
     llvm::Value *r = codegen(*static_cast<Expr*>(node.rhs.data()));
@@ -132,7 +180,7 @@ llvm::Value* CodeGen::codegen(BinaryExpr& node)
     }
 }
 
-llvm::Value* CodeGen::codegen(Expr& node)
+llvm::Value* CodeGen::codegen(Expr& node, llvm::Type*)
 {
     switch (node.kind) {
     case Node::_BinaryExpr:
@@ -149,7 +197,7 @@ llvm::Value* CodeGen::codegen(Expr& node)
     }
 }
 
-llvm::Value* CodeGen::codegen(FuncCallExpr& node)
+llvm::Value* CodeGen::codegen(FuncCallExpr& node, llvm::Type*)
 {
     LLVMString callee = m_source->textForToken(node.callee);
     llvm::Function *calleeFunction = m_module->getFunction(callee);
@@ -163,8 +211,12 @@ llvm::Value* CodeGen::codegen(FuncCallExpr& node)
         return 0;
     }
 
+    int i = 0;
     QList<llvm::Value*> args;
-    foreach (QSharedPointer<Expr> arg, node.args) {
+    for (llvm::Function::arg_iterator it = calleeFunction->arg_begin();
+            it != calleeFunction->arg_end();
+            ++it, ++i) {
+        QSharedPointer<Expr> arg = node.args.at(i);
         llvm::Value* value = codegen(*static_cast<Expr*>(arg.data()));
         if (!value)
             return 0;
@@ -174,48 +226,7 @@ llvm::Value* CodeGen::codegen(FuncCallExpr& node)
     return m_builder->CreateCall(calleeFunction, args.toVector().toStdVector(), "calltmp");
 }
 
-llvm::Value* CodeGen::codegen(FuncDef& node)
-{
-    foreach (QSharedPointer<Stmt> stmt, node.stmts) {
-        switch (stmt->kind) {
-        case Node::_IfStmt:
-            codegen(*static_cast<IfStmt*>(stmt.data()));
-            break;
-        case Node::_ReturnStmt:
-            codegen(*static_cast<ReturnStmt*>(stmt.data()));
-            break;
-        default:
-            Q_ASSERT(false); // should not be reached
-            return 0;
-        }
-    }
-    return 0;
-}
-
-llvm::Value* CodeGen::codegen(IfStmt& node)
-{
-    llvm::Value *condition = codegen(*static_cast<Expr*>(node.expr.data()));
-    if (!condition)
-        return 0;
-
-    llvm::Function* f = m_builder->GetInsertBlock()->getParent();
-    llvm::BasicBlock* then = llvm::BasicBlock::Create(*m_context, "then", f);
-    llvm::BasicBlock* ifcont = llvm::BasicBlock::Create(*m_context, "ifcont");
-
-    m_builder->CreateCondBr(condition, then, ifcont);
-
-    m_builder->SetInsertPoint(then);
-
-    llvm::Value *thenValue = codegen(*static_cast<ReturnStmt*>(node.stmt.data()));
-    if (!thenValue)
-        return 0;
-
-    f->getBasicBlockList().push_back(ifcont);
-    m_builder->SetInsertPoint(ifcont);
-    return 0;
-}
-
-llvm::Value* CodeGen::codegen(LiteralExpr& node)
+llvm::Value* CodeGen::codegen(LiteralExpr& node, llvm::Type*)
 {
     if (node.literal.type == Digits) {
         QString digits = m_source->textForToken(node.literal);
@@ -241,19 +252,7 @@ llvm::Value* CodeGen::codegen(LiteralExpr& node)
     return 0;
 }
 
-llvm::Value* CodeGen::codegen(ReturnStmt& node)
-{
-    if (llvm::Value* value = codegen(*static_cast<Expr*>(node.expr.data()))) {
-        m_builder->CreateRet(value);
-        return value;
-    }
-
-    // FIXME: Should be able to point to the return token
-    m_source->error(Token(), "return statement of void is not allowed", SourceBuffer::Fatal);
-    return 0;
-}
-
-llvm::Value* CodeGen::codegen(VarExpr& node)
+llvm::Value* CodeGen::codegen(VarExpr& node, llvm::Type*)
 {
     QString name = m_source->textForToken(node.var);
     llvm::Value *value = m_namedValues.contains(name) ? m_namedValues.value(name) : 0;
