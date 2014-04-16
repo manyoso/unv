@@ -10,6 +10,7 @@ Options* Options::instance()
 
 Options::Options()
     : m_errorLimit(20)
+    , m_readFromStdin(false)
 {
 }
 
@@ -36,6 +37,9 @@ void Options::parseCommandLine()
                                   "Specify the type of output. [Default: obj]\n   type=obj|llvm|ast", "type", "obj");
     parser.addOption(outputType);
 
+    QCommandLineOption readFromStdin("stdin", "Read from stdin.");
+    parser.addOption(readFromStdin);
+
     parser.process(*QCoreApplication::instance());
 
     m_files = parser.positionalArguments();
@@ -44,4 +48,5 @@ void Options::parseCommandLine()
     m_outputType = parser.value(outputType);
     if (m_outputType != "obj" && m_outputType != "llvm" && m_outputType != "ast")
         m_outputType = "obj";
+    m_readFromStdin = parser.isSet(readFromStdin);
 }

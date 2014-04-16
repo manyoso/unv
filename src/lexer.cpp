@@ -47,7 +47,12 @@ void Lexer::lex(SourceBuffer* source)
         case '<': m_source->appendToken(Token(LessThan, pos, pos)); break;
         case '>': m_source->appendToken(Token(GreaterThan, pos, pos)); break;
 //        case '?': m_source->appendToken(Token(QuestionMark, pos, pos)); break;
-        case '-': m_source->appendToken(Token(Minus, pos, pos)); break;
+        case '-':
+            if (isDigit(look(1)))
+                m_source->appendToken(Token(Digits, pos, consumeDigits()));
+            else
+                m_source->appendToken(Token(Minus, pos, pos));
+            break;
         case '=': m_source->appendToken(Token(Equals, pos, pos)); break;
 //        case '[': m_source->appendToken(Token(OpenSquare, pos, pos)); break;
 //        case ']': m_source->appendToken(Token(ClosedSquare, pos, pos)); break;
@@ -260,16 +265,23 @@ bool Lexer::consumeIdentifier()
     return m_index < m_source->count();
 }
 
-TokenPosition Lexer::consumeDigits()
+bool Lexer::isDigit(const QChar& ch) const
 {
     static QList<QChar> allowedChars = QList<QChar>()
         << '0' << '1' << '2' << '3' << '4'
         << '5' << '6' << '7' << '8' << '9';
+    return allowedChars.contains(ch);
+}
+
+TokenPosition Lexer::consumeDigits()
+{
+    if (current() == '-')
+        advance(1);
+
     while (m_index < m_source->count()) {
-        if (!allowedChars.contains(look(1)))
+        if (!isDigit(look(1)))
             break;
         advance(1);
     }
     return tokenPosition();
 }
-

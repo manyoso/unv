@@ -298,14 +298,14 @@ llvm::Value* CodeGen::codegen(LiteralExpr* node, llvm::Type* type)
 
             return llvm::ConstantInt::get(*m_context, llvm::APInt(numbits, n, false));
         } else {
-            qint64 n = digits.toULongLong(&success);
+            qint64 n = digits.toLongLong(&success);
 
             bool outOfRange = false;
-            if ((numbits == 1)
+            if ((numbits == 1 && (n < 0 || n > 1))
                 || (numbits == 8 && (n < -128 || n > 127))
                 || (numbits == 16 && (n < std::numeric_limits<int16_t>::min() || n > std::numeric_limits<int16_t>::max()))
-                || (numbits == 32 && (n < std::numeric_limits<int16_t>::min() || n > std::numeric_limits<int32_t>::max()))
-                || (numbits == 64 && (n < std::numeric_limits<int16_t>::min() || n > std::numeric_limits<int64_t>::max())))
+                || (numbits == 32 && (n < std::numeric_limits<int32_t>::min() || n > std::numeric_limits<int32_t>::max()))
+                || (numbits == 64 && (n < std::numeric_limits<int64_t>::min() || n > std::numeric_limits<int64_t>::max())))
                 outOfRange = true;
 
             if (!success || outOfRange) {
@@ -335,6 +335,8 @@ llvm::Type* CodeGen::toPrimitiveType(const QString& string) const
 {
     if (string.isEmpty())
         return llvm::Type::getVoidTy(*m_context);
+    else if (string == "_builtin_bit_")
+        return llvm::Type::getInt1Ty(*m_context);
 //    else if (string == "_builtin_uint8_")
     else if (string == "_builtin_int8_")
         return llvm::Type::getInt8Ty(*m_context);

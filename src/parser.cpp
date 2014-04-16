@@ -410,6 +410,9 @@ Stmt* Parser::parseStmt()
     if (current().type == Newline && !parseIndent(1))
         return 0;
 
+    if (m_index == m_source->tokenCount() - 1)
+        return 0;
+
     Stmt* stmt = 0;
     Token tok = advance(1);
     switch (tok.type) {
@@ -469,9 +472,11 @@ ReturnStmt* Parser::parseReturnStmt()
     if (!expr)
         return 0;
 
-    tok = advance(1);
-    if (!expect(tok, Newline))
-        return 0;
+    if (m_index < m_source->tokenCount() - 1) {
+        tok = advance(1);
+        if (!expect(tok, Newline))
+            return 0;
+    }
 
     ReturnStmt* returnStmt = new ReturnStmt;
     returnStmt->expr = QSharedPointer<Expr>(expr);

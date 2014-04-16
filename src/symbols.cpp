@@ -4,6 +4,9 @@
 Symbols::Symbols(SourceBuffer* source)
     : m_source(source)
 {
+    // 1 bit int types
+    m_typeList.append("_builtin_bit_");
+
     // 8 bit int types
     m_typeList.append("_builtin_uint8_");
     m_typeList.append("_builtin_int8_");

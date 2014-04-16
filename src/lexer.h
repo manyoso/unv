@@ -24,6 +24,7 @@ private:
     bool consumeCPPStyleComment();
     bool consumeIdentifier();
     TokenPosition consumeDigits();
+    bool isDigit(const QChar&) const;
 
 private:
     int m_index;

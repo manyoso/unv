@@ -21,6 +21,7 @@ public:
         m_name = name;
         m_translationUnit = QSharedPointer<TranslationUnit>(new TranslationUnit);
         m_symbols = QSharedPointer<Symbols>(new Symbols(this));
+        m_hasErrors = false;
     }
 
     QString name() const { return m_name; }
@@ -41,7 +42,7 @@ public:
     {
         int start = 0;
         int end = 0;
-        if (tok.start.line - 2 > 0)
+        if (tok.start.line - 2 >= 0)
             start = m_lineInfo.at(tok.start.line - 2);
 
         if (tok.start.line - 1 >= m_lineInfo.count()) {
@@ -120,7 +121,7 @@ public:
         }
     }
 
-    void error(const Token& tok, const QString& str, ErrorType type = Error) const
+    void error(const Token& tok, const QString& str, ErrorType type = Error)
     {
         static int s_numberOfErrors = 0;
         if (type == Error)
@@ -145,17 +146,21 @@ public:
         caret += QString(tok.end.column - tok.start.column + 1, '^');
 #endif
 
+        m_hasErrors = true;
+
         QTextStream out(stderr);
         out << location << '\n' << context << '\n' << caret << '\n';
         if (type == Fatal || s_numberOfErrors > Options::instance()->errorLimit()) {
             out.flush();
-            exit(-1);
+            exit(EXIT_FAILURE);
         }
     }
 
     TranslationUnit& translationUnit() const { return *m_translationUnit; }
 
     Symbols& symbols() const { return *m_symbols; }
+
+    bool hasErrors() const { return m_hasErrors; }
 
 private:
     QString m_source;
@@ -164,6 +169,7 @@ private:
     QList<int> m_lineInfo;
     QSharedPointer<TranslationUnit> m_translationUnit;
     QSharedPointer<Symbols> m_symbols;
+    bool m_hasErrors;
 };
 
 #endif // sourcebuffer_h

@@ -13,6 +13,7 @@ public:
     int errorLimit() const { return m_errorLimit; }
     QString outputFile() const { return m_outputFile; }
     QString outputType() const { return m_outputType; }
+    bool readFromStdin() const { return m_readFromStdin; }
 
 private:
     Options();
@@ -22,6 +23,7 @@ private:
     int m_errorLimit;
     QString m_outputFile;
     QString m_outputType;
+    bool m_readFromStdin;
 };
 
 #endif // options_h
