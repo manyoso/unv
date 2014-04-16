@@ -3,6 +3,14 @@
 #include "options.h"
 #include "sourcebuffer.h"
 
+static void error(const QString& err)
+{
+    QTextStream out(stderr);
+    out << err;
+    out.flush();
+    exit(EXIT_FAILURE);
+}
+
 Output::Output(SourceBuffer* source)
     : m_source(source)
 {
@@ -35,9 +43,7 @@ void Output::write(const QString& llvmIR)
                 out.flush();
                 f.close();
             } else {
-                m_source->error(Token(),
-                                QString("can not write to file $0").arg(file),
-                                SourceBuffer::Fatal);
+                error(QString("can not write to file $0").arg(file));
             }
         }
     } else if (type == "obj") {
@@ -50,11 +56,8 @@ void Output::write(const QString& llvmIR)
         config.setProgram("llvm-config");
         config.setArguments(QStringList() << "--bindir");
         config.start(QIODevice::ReadOnly);
-        if (!config.waitForFinished()) {
-            m_source->error(Token(),
-                            "could not find llvm-config tool",
-                            SourceBuffer::Fatal);
-        }
+        if (!config.waitForFinished())
+            error("could not find llvm-config tool");
         QString bindir = config.readAllStandardOutput();
         bindir.remove('\n');
 
@@ -62,29 +65,20 @@ void Output::write(const QString& llvmIR)
         llc.setProgram(bindir + QDir::separator() + "llc");
         llc.setArguments(QStringList() << "-filetype=obj");
         llc.start();
-        if (!llc.waitForStarted()) {
-            m_source->error(Token(),
-                            "could not start llc tool",
-                            SourceBuffer::Fatal);
-        }
+        if (!llc.waitForStarted())
+            error("could not start llc tool");
 
         llc.write(llvmIR.toLatin1());
 
         llc.waitForBytesWritten();
         llc.closeWriteChannel();
 
-        if (!llc.waitForFinished()) {
-            m_source->error(Token(),
-                            "llc tool crashed",
-                            SourceBuffer::Fatal);
-        }
+        if (!llc.waitForFinished())
+            error("llc tool crashed");
 
-        QByteArray error = llc.readAllStandardError();
-        if (!error.isEmpty()) {
-            m_source->error(Token(),
-                            "llc tool exited with error",
-                            SourceBuffer::Fatal);
-        }
+        QByteArray err = llc.readAllStandardError();
+        if (!err.isEmpty())
+            error("llc tool exited with error");
 
         QByteArray output = llc.readAllStandardOutput();
 
@@ -94,9 +88,7 @@ void Output::write(const QString& llvmIR)
             f.flush();
             f.close();
         } else {
-            m_source->error(Token(),
-                            QString("can not write to file $0").arg(file),
-                            SourceBuffer::Fatal);
+            error(QString("can not write to file $0").arg(file));
         }
     }
 }

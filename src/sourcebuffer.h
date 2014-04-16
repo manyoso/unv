@@ -124,6 +124,7 @@ public:
     void error(const Token& tok, const QString& str, ErrorType type = Error)
     {
         static int s_numberOfErrors = 0;
+        Q_ASSERT(tok.type != Undefined);
         if (type == Error)
             s_numberOfErrors++;
         QString err = type == Error ? "error" : "fatal error";
