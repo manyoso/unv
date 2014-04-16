@@ -137,6 +137,7 @@ struct IfStmt : public Stmt {
 
 struct ReturnStmt : public Stmt {
     ReturnStmt() : Stmt(_ReturnStmt) {}
+    Token keyword;
     QSharedPointer<Expr> expr;
     virtual void walk(Visitor&);
 };

@@ -464,6 +464,8 @@ ReturnStmt* Parser::parseReturnStmt()
 {
     ParserContext context(this, "return statement");
 
+    Token keyword = current();
+
     Token tok = advance(1);
     if (!expect(tok, Whitespace))
         return 0;
@@ -479,6 +481,7 @@ ReturnStmt* Parser::parseReturnStmt()
     }
 
     ReturnStmt* returnStmt = new ReturnStmt;
+    returnStmt->keyword = keyword;
     returnStmt->expr = QSharedPointer<Expr>(expr);
     return returnStmt;
 }

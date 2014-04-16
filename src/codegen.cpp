@@ -170,8 +170,7 @@ void CodeGen::codegen(ReturnStmt* node, llvm::Type*)
         return;
     }
 
-    // FIXME: Should be able to point to the return token
-    m_source->error(Token(), "return statement of void is not allowed", SourceBuffer::Fatal);
+    m_source->error(node->keyword, "return statement of void is not allowed", SourceBuffer::Fatal);
 }
 
 llvm::Value* CodeGen::codegen(BinaryExpr* node, llvm::Type*)
