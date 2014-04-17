@@ -34,7 +34,7 @@ void Lexer::lex(SourceBuffer* source)
 //        case '%': m_source->appendToken(Token(Percent, pos, pos)); break;
 //        case '^': m_source->appendToken(Token(Cap, pos, pos)); break;
 //        case '&': m_source->appendToken(Token(Ampersand, pos, pos)); break;
-//        case '*': m_source->appendToken(Token(Star, pos, pos)); break;
+        case '*': m_source->appendToken(Token(Star, pos, pos)); break;
         case '(': m_source->appendToken(Token(OpenParenthesis, pos, pos)); break;
         case ')': m_source->appendToken(Token(CloseParenthesis, pos, pos)); break;
 //        case '_': m_source->appendToken(Token(Underscore, pos, pos)); break;

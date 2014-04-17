@@ -200,6 +200,12 @@ void CodeGen::codegen(VarDeclStmt* node, llvm::Type*)
     m_namedValues.insert(name, value);
 }
 
+void CodeGen::comparisonOfSigns(Token tok, bool lSigned, bool rSigned)
+{
+    if (lSigned != rSigned)
+        m_source->error(tok, "comparison of signed and unsigned integers not supported", SourceBuffer::Fatal);
+}
+
 llvm::Value* CodeGen::codegen(BinaryExpr* node, llvm::Type*)
 {
     llvm::Value *l = 0;
@@ -224,18 +230,49 @@ llvm::Value* CodeGen::codegen(BinaryExpr* node, llvm::Type*)
     Q_ASSERT(l && r);
     if (!l && !r) return 0;
 
-    switch (node->op) {
-    case BinaryExpr::Equality:
-        return m_builder->CreateICmpEQ(l, r, "equaltmp");
-    case BinaryExpr::LessThanOrEquality:
-    case BinaryExpr::GreaterThanOrEquality:
-        Q_ASSERT(false); // should not be reached
+    Token lhs = node->lhs->start;
+    if (!l->getType()->isIntegerTy() || !r->getType()->isIntegerTy()) {
+        m_source->error(lhs, "non-integer binary expressions not supported yet", SourceBuffer::Fatal);
         return 0;
-    case BinaryExpr::Addition:
+    }
+
+    bool lSigned = static_cast<llvm::IntegerType*>(l->getType())->getSignBit();
+    bool rSigned = static_cast<llvm::IntegerType*>(r->getType())->getSignBit();
+
+    switch (node->op) {
+    case BinaryExpr::OpEquality:
+        return m_builder->CreateICmpEQ(l, r, "equaltmp");
+    case BinaryExpr::OpLessThanOrEquality:
+        comparisonOfSigns(lhs, lSigned, rSigned);
+        if (lSigned)
+            return m_builder->CreateICmpSLE(l, r, "sletmp");
+        else
+            return m_builder->CreateICmpULE(l, r, "uletmp");
+    case BinaryExpr::OpGreaterThanOrEquality:
+        comparisonOfSigns(lhs, lSigned, rSigned);
+        if (lSigned)
+            return m_builder->CreateICmpSGE(l, r, "sgetmp");
+        else
+            return m_builder->CreateICmpUGE(l, r, "ugetmp");
+    case BinaryExpr::OpLessThan:
+        comparisonOfSigns(lhs, lSigned, rSigned);
+        if (lSigned)
+            return m_builder->CreateICmpSLT(l, r, "slttmp");
+        else
+            return m_builder->CreateICmpULT(l, r, "ulttmp");
+    case BinaryExpr::OpGreaterThan:
+        comparisonOfSigns(lhs, lSigned, rSigned);
+        if (lSigned)
+            return m_builder->CreateICmpSGT(l, r, "sgttmp");
+        else
+            return m_builder->CreateICmpUGT(l, r, "ugttmp");
+    case BinaryExpr::OpAddition:
         return m_builder->CreateAdd(l, r, "addtmp");
-    case BinaryExpr::Subtraction:
+    case BinaryExpr::OpSubtraction:
         return m_builder->CreateSub(l, r, "subtmp");
-    case BinaryExpr::Multiplication:
+    case BinaryExpr::OpMultiplication:
+        return m_builder->CreateMul(l, r, "multmp");
+    case BinaryExpr::OpDivision:
         Q_ASSERT(false); // should not be reached
         return 0;
     }

@@ -326,17 +326,24 @@ Expr* Parser::parseBasicExpr()
     ParserContext context(this, "basic expression");
 
     Token tok = advance(1);
+    Expr* expr = 0;
     switch (tok.type) {
     case Identifier:
         if (look(1).type == OpenParenthesis)
-            return parseFuncCallExpr();
+            expr = parseFuncCallExpr();
         else
-            return parseVarExpr();
+            expr = parseVarExpr();
+        break;
     case Digits:
-        return parseLiteralExpr();
+        expr = parseLiteralExpr();
+        break;
     default:
-        return 0;
+        break;
     };
+
+    if (expr)
+        expr->start = tok;
+    return expr;
 }
 
 Expr* Parser::parseBinaryOpExpr(int precedence, Expr* lhs)
@@ -345,40 +352,53 @@ Expr* Parser::parseBinaryOpExpr(int precedence, Expr* lhs)
         return lhs;
 
     Token tok = advance(2);
-    if (tok.type == Equals && look(1).type == Equals && precedence <= Equality ) {
+
+    BinaryExpr::BinaryOp op;
+    bool foundBinaryOp = false;
+
+    if (tok.type == Equals && look(1).type == Equals
+        && precedence <= 1) {
+        op = BinaryExpr::OpEquality;
         tok = advance(2);
-
-        if (!expect(tok, Whitespace))
-            return 0;
-
-        Expr* rhs = parseBasicExpr();
-        if (!rhs)
-            return 0;
-
-        BinaryExpr* binaryExpr = new BinaryExpr;
-        binaryExpr->op = BinaryExpr::Equality;
-        binaryExpr->lhs = QSharedPointer<Expr>(lhs);
-        binaryExpr->rhs = QSharedPointer<Expr>(rhs);
-        return binaryExpr;
-    } else if ((tok.type == Plus && precedence <= Addition)
-        || (tok.type == Minus && precedence <= Subtraction)) {
-        BinaryExpr::BinaryOp op = tok.type == Plus ? BinaryExpr::Addition : BinaryExpr::Subtraction;
+        foundBinaryOp = true;
+    } else if ((tok.type == LessThan || tok.type == GreaterThan)
+        && look(1).type == Equals
+        && precedence <= 1) {
+        op = tok.type == LessThan ? BinaryExpr::OpLessThanOrEquality : BinaryExpr::OpGreaterThanOrEquality;
+        tok = advance(2);
+        foundBinaryOp = true;
+    } else if ((tok.type == LessThan || tok.type == GreaterThan)
+        && precedence <= 1) {
+        op = tok.type == LessThan ? BinaryExpr::OpLessThan : BinaryExpr::OpGreaterThan;
         tok = advance(1);
-
-        if (!expect(tok, Whitespace))
-            return 0;
-
-        Expr* rhs = parseBasicExpr();
-        if (!rhs)
-            return 0;
-
-        BinaryExpr* binaryExpr = new BinaryExpr;
-        binaryExpr->op = op;
-        binaryExpr->lhs = QSharedPointer<Expr>(lhs);
-        binaryExpr->rhs = QSharedPointer<Expr>(rhs);
-        return binaryExpr;
+        foundBinaryOp = true;
+    } else if ((tok.type == Plus || tok.type == Minus)
+        && precedence <= 2) {
+        op = tok.type == Plus ? BinaryExpr::OpAddition : BinaryExpr::OpSubtraction;
+        tok = advance(1);
+        foundBinaryOp = true;
+    } else if ((tok.type == Star || tok.type == Slash)
+        && precedence <= 3) {
+        op = tok.type == Star ? BinaryExpr::OpMultiplication : BinaryExpr::OpDivision;
+        tok = advance(1);
+        foundBinaryOp = true;
     }
-    return lhs;
+
+    if (!foundBinaryOp)
+        return lhs;
+
+    if (!expect(tok, Whitespace))
+        return 0;
+
+    Expr* rhs = parseBasicExpr();
+    if (!rhs)
+        return 0;
+
+    BinaryExpr* binaryExpr = new BinaryExpr;
+    binaryExpr->op = op;
+    binaryExpr->lhs = QSharedPointer<Expr>(lhs);
+    binaryExpr->rhs = QSharedPointer<Expr>(rhs);
+    return binaryExpr;
 }
 
 VarExpr* Parser::parseVarExpr()

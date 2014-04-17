@@ -15,12 +15,15 @@ public:
 
 private:
     enum BinOpPrecedence {
-        Equality = 1,
-        LessThanOrEquality = 1,
-        GreaterThanOrEquality = 1,
-        Addition = 2,
-        Subtraction = 2,
-        Multiplication = 3
+        OpEquality = 1,
+        OpLessThanOrEquality = 1,
+        OpGreaterThanOrEquality = 1,
+        OpLessThan = 1,
+        OpGreaterThan = 1,
+        OpAddition = 2,
+        OpSubtraction = 2,
+        OpMultiplication = 3,
+        OpDivision = 3
     };
 
     enum Indent {

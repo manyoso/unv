@@ -51,6 +51,7 @@ private:
     llvm::Value* codegen(LiteralExpr* node, llvm::Type* type = 0);
     llvm::Value* codegen(VarExpr* node, llvm::Type* type = 0);
     llvm::Type* toPrimitiveType(const QString&) const;
+    void comparisonOfSigns(Token tok, bool lSigned, bool rSigned);
 
 private:
     SourceBuffer* m_source;

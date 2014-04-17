@@ -17,7 +17,7 @@ enum TokenType {
 //    Percent,
 //    Cap,
 //    Ampersand,
-//    Star,
+    Star,
     OpenParenthesis,
     CloseParenthesis,
 //    Underscore,
@@ -71,7 +71,7 @@ static inline QString typeToString(TokenType type)
 //    case Percent:           return "\'%\'";
 //    case Cap:               return "\'^\'";
 //    case Ampersand:         return "\'&\'";
-//    case Star:              return "\'*\'";
+    case Star:              return "\'*\'";
     case OpenParenthesis:   return "\'(\'";
     case CloseParenthesis:  return "\')\'";
 //    case Underscore:        return "\'_\'";

@@ -30,21 +30,11 @@ TranslationUnit
     FuncDef
       IfStmt
         BinaryExpr
-          ==
+          <
           VarExpr
             n
           LiteralExpr
-            0
-        ReturnStmt
-          LiteralExpr
-            0
-      IfStmt
-        BinaryExpr
-          ==
-          VarExpr
-            n
-          LiteralExpr
-            1
+            3
         ReturnStmt
           LiteralExpr
             1

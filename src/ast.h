@@ -89,27 +89,34 @@ struct AliasDecl : public Node {
 
 struct Expr : public Node {
     Expr(Kind kind) : Node(kind) {}
+    Token start;
 };
 
 struct BinaryExpr : public Expr {
     enum BinaryOp {
-        Equality,
-        LessThanOrEquality,
-        GreaterThanOrEquality,
-        Addition,
-        Subtraction,
-        Multiplication
+        OpEquality,
+        OpLessThanOrEquality,
+        OpGreaterThanOrEquality,
+        OpLessThan,
+        OpGreaterThan,
+        OpAddition,
+        OpSubtraction,
+        OpMultiplication,
+        OpDivision
     };
 
     QString opToString() const
     {
         switch (op) {
-        case Equality:              return "==";
-        case LessThanOrEquality:    return "<=";
-        case GreaterThanOrEquality: return ">=";
-        case Addition:              return "+";
-        case Subtraction:           return "-";
-        case Multiplication:        return "*";
+        case OpEquality:              return "==";
+        case OpLessThanOrEquality:    return "<=";
+        case OpGreaterThanOrEquality: return ">=";
+        case OpLessThan:              return "<";
+        case OpGreaterThan:           return ">";
+        case OpAddition:              return "+";
+        case OpSubtraction:           return "-";
+        case OpMultiplication:        return "*";
+        case OpDivision:              return "/";
         }
     }
 
