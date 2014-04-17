@@ -20,6 +20,7 @@ struct Stmt;
 struct TranslationUnit;
 struct TypeDecl;
 struct VarExpr;
+struct VarDeclStmt;
 struct Visitor;
 
 struct Node {
@@ -35,6 +36,7 @@ struct Node {
         _ReturnStmt,
         _TranslationUnit,
         _TypeDecl,
+        _VarDeclStmt,
         _VarExpr
     };
 
@@ -52,6 +54,7 @@ struct Node {
         case _ReturnStmt:       return "ReturnStmt";
         case _TranslationUnit:  return "TranslationUnit";
         case _TypeDecl:         return "TypeDecl";
+        case _VarDeclStmt:      return "VarDeclStmt";
         case _VarExpr:          return "VarExpr";
         }
     }
@@ -173,6 +176,14 @@ struct VarExpr : public Expr {
 struct LiteralExpr: public Expr {
     LiteralExpr() : Expr(_LiteralExpr) {}
     Token literal;
+    virtual void walk(Visitor&);
+};
+
+struct VarDeclStmt: public Stmt {
+    VarDeclStmt() : Stmt(_VarDeclStmt) {}
+    Token type;
+    Token name;
+    QSharedPointer<Expr> expr;
     virtual void walk(Visitor&);
 };
 

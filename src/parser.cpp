@@ -420,6 +420,8 @@ Stmt* Parser::parseStmt()
         stmt = parseIfStmt(); break;
     case Return:
         stmt = parseReturnStmt(); break;
+    case Identifier:
+        stmt = parseVarDeclStmt(); break;
     default:
         return 0;
     };
@@ -508,4 +510,50 @@ FuncCallExpr* Parser::parseFuncCallExpr()
     funcCallExpr->callee = callee;
     funcCallExpr->args = args;
     return funcCallExpr;
+}
+
+VarDeclStmt* Parser::parseVarDeclStmt()
+{
+    ParserContext context(this, "variable declaration statement");
+
+    Token type = current();
+
+    Token tok = advance(1);
+    if (!expect(tok, Whitespace))
+        return 0;
+
+    tok = advance(1);
+    if (!expect(tok, Identifier))
+        return 0;
+
+    Token name = tok;
+
+    tok = advance(1);
+    if (!expect(tok, Whitespace))
+        return 0;
+
+    tok = advance(1);
+    if (!expect(tok, Equals))
+        return 0;
+
+    tok = advance(1);
+    if (!expect(tok, Whitespace))
+        return 0;
+
+    tok = look(1);
+    Expr* expr = parseExpr();
+    if (!expr) {
+        m_source->error(tok, "expected expression for variable initialization");
+        return 0;
+    }
+
+    tok = advance(1);
+    if (!expect(tok, Newline))
+        return 0;
+
+    VarDeclStmt* varDeclStmt = new VarDeclStmt;
+    varDeclStmt->type = type;
+    varDeclStmt->name = name;
+    varDeclStmt->expr = QSharedPointer<Expr>(expr);
+    return varDeclStmt;
 }

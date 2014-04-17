@@ -81,3 +81,9 @@ void ASTPrinter::visit(VarExpr& node)
     *m_stream << indent() << m_source->textForToken(node.var) << "\n";
     m_stream->flush();
 }
+
+void ASTPrinter::visit(VarDeclStmt& node)
+{
+    *m_stream << indent() << m_source->textForToken(node.type) << " " << m_source->textForToken(node.name) << "\n";
+    m_stream->flush();
+}

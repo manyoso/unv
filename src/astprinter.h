@@ -23,6 +23,7 @@ public:
     virtual void visit(LiteralExpr&);
     virtual void visit(TypeDecl&);
     virtual void visit(VarExpr&);
+    virtual void visit(VarDeclStmt&);
 
 private:
     QString indent() const;

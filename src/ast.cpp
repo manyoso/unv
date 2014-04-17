@@ -100,3 +100,11 @@ void VarExpr::walk(Visitor& visitor)
     visitor.visit(*this);
     visitor.end(*this);
 }
+
+void VarDeclStmt::walk(Visitor& visitor)
+{
+    visitor.begin(*this);
+    visitor.visit(*this);
+    expr->walk(visitor);
+    visitor.end(*this);
+}

@@ -44,6 +44,7 @@ private:
     void codegen(Stmt* node, llvm::Type* type = 0);
     void codegen(IfStmt* node, llvm::Type* type = 0);
     void codegen(ReturnStmt* node, llvm::Type* type = 0);
+    void codegen(VarDeclStmt* node, llvm::Type* type = 0);
     llvm::Value* codegen(BinaryExpr* node, llvm::Type* type = 0);
     llvm::Value* codegen(Expr* node, llvm::Type* type = 0);
     llvm::Value* codegen(FuncCallExpr* node, llvm::Type* type = 0);

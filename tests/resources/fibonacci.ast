@@ -4,11 +4,25 @@ TranslationUnit
   FuncDecl
     main Int
     FuncDef
-      ReturnStmt
+      VarDeclStmt
+        Int i
         FuncCallExpr
           fibonacci
           LiteralExpr
             40
+      IfStmt
+        BinaryExpr
+          ==
+          VarExpr
+            i
+          LiteralExpr
+            102334155
+        ReturnStmt
+          LiteralExpr
+            0
+      ReturnStmt
+        LiteralExpr
+          1
   FuncDecl
     fibonacci Int
     FuncDeclArg

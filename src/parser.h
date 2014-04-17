@@ -69,6 +69,7 @@ private:
     IfStmt* parseIfStmt();
     ReturnStmt* parseReturnStmt();
     FuncCallExpr* parseFuncCallExpr();
+    VarDeclStmt* parseVarDeclStmt();
 
 private:
     int m_index;

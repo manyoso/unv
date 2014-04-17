@@ -126,6 +126,9 @@ void CodeGen::codegen(Stmt* node, llvm::Type*)
     case Node::_ReturnStmt:
         codegen(static_cast<ReturnStmt*>(node));
         break;
+    case Node::_VarDeclStmt:
+        codegen(static_cast<VarDeclStmt*>(node));
+        break;
     default:
         Q_ASSERT(false); // should not be reached
         return;
@@ -171,6 +174,30 @@ void CodeGen::codegen(ReturnStmt* node, llvm::Type*)
     }
 
     m_source->error(node->keyword, "return statement of void is not allowed", SourceBuffer::Fatal);
+}
+
+void CodeGen::codegen(VarDeclStmt* node, llvm::Type*)
+{
+    llvm::Function* f = m_builder->GetInsertBlock()->getParent();
+
+    Q_ASSERT(f);
+    if (!f)
+        return;
+
+    QString typeName = m_source->symbols().toTypeAndCheck(node->type);
+    QString name = m_source->textForToken(node->name);
+
+    llvm::Type* type = toPrimitiveType(typeName);
+    Q_ASSERT(type);
+    if (!type)
+        return;
+
+    llvm::Value* value = codegen(node->expr.data(), type);
+    Q_ASSERT(value);
+    if (!value)
+        return;
+
+    m_namedValues.insert(name, value);
 }
 
 llvm::Value* CodeGen::codegen(BinaryExpr* node, llvm::Type*)

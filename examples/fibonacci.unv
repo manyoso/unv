@@ -5,7 +5,9 @@
 alias Int _builtin_int32_
 
 function main : () -> Int
-    return fibonacci(40)
+    Int i = fibonacci(40)
+    if (i == 102334155) return 0
+    return 1
 
 function fibonacci : (n:Int) -> Int
     if (n == 0) return 0

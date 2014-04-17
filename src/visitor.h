@@ -22,6 +22,7 @@ struct Visitor {
     virtual void visit(TranslationUnit&) {}
     virtual void visit(TypeDecl&) {}
     virtual void visit(VarExpr&) {}
+    virtual void visit(VarDeclStmt&) {}
 };
 
 #endif // visitor_h
