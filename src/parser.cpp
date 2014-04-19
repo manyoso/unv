@@ -15,6 +15,7 @@ void Parser::clear()
     m_index = -1;
     m_originalSpacesForIndent = 0;
     m_scope = 0;
+    m_expectedScope = 0;
     m_indent = Unset;
     m_source = 0;
 }
@@ -267,6 +268,7 @@ FuncDeclArg* Parser::parseFuncDeclArg()
 FuncDef* Parser::parseFuncDef()
 {
     ParserContext context(this, "function definition");
+    IndentLevel indent(this);
 
     QList<QSharedPointer<Stmt> > stmts;
     while (Stmt* stmt = parseStmt())
@@ -427,7 +429,7 @@ Stmt* Parser::parseStmt()
 {
     ParserContext context(this, "statement");
 
-    if (current().type == Newline && !parseIndent(1))
+    if (current().type == Newline && !parseIndent(m_expectedScope))
         return 0;
 
     if (m_index == m_source->tokenCount() - 1)
@@ -470,6 +472,8 @@ IfStmt* Parser::parseIfStmt()
         return 0;
 
     tok = advance(1);
+
+    IndentLevel indent(this);
     Stmt* stmt = parseStmt();
     if (!stmt) {
         m_source->error(tok, "no statement following condition");

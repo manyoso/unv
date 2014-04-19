@@ -47,6 +47,23 @@ private:
         Parser* m_p;
     };
 
+    class IndentLevel {
+    public:
+        IndentLevel(Parser* p)
+            : m_p(p)
+        {
+            m_p->m_expectedScope++;
+        }
+
+        ~IndentLevel()
+        {
+            m_p->m_expectedScope--;
+        }
+
+    private:
+        Parser* m_p;
+    };
+
     void clear();
     void newline();
     Token advance(int i, bool skipComments = true);
@@ -78,6 +95,7 @@ private:
     int m_index;
     int m_originalSpacesForIndent;
     unsigned m_scope;
+    unsigned m_expectedScope;
     Indent m_indent;
     SourceBuffer* m_source;
     QStack<QString> m_context;
