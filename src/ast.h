@@ -16,6 +16,7 @@ struct ReturnStmt;
 struct LiteralExpr;
 struct Stmt;
 struct TranslationUnit;
+struct TypeCtorExpr;
 struct TypeDecl;
 struct TypeObject;
 struct VarExpr;
@@ -34,6 +35,7 @@ struct Node {
         _LiteralExpr,
         _ReturnStmt,
         _TranslationUnit,
+        _TypeCtorExpr,
         _TypeDecl,
         _TypeObject,
         _VarDeclStmt,
@@ -51,6 +53,7 @@ struct Node {
         case _LiteralExpr:      return "LiteralExpr";
         case _ReturnStmt:       return "ReturnStmt";
         case _TranslationUnit:  return "TranslationUnit";
+        case _TypeCtorExpr:         return "TypeCtorExpr";
         case _TypeDecl:         return "TypeDecl";
         case _TypeObject:       return "TypeObject";
         case _VarDeclStmt:      return "VarDeclStmt";
@@ -123,6 +126,13 @@ struct BinaryExpr : public Expr {
 struct FuncCallExpr : public Expr {
     FuncCallExpr() : Expr(_FuncCallExpr) {}
     Token callee;
+    QList<QSharedPointer<Expr> > args;
+    virtual void walk(Visitor&);
+};
+
+struct TypeCtorExpr : public Expr {
+    TypeCtorExpr() : Expr(_TypeCtorExpr) {}
+    Token type;
     QList<QSharedPointer<Expr> > args;
     virtual void walk(Visitor&);
 };
