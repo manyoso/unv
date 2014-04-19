@@ -112,7 +112,6 @@ void Parser::parseTypeDecl()
 {
     ParserContext context(this, "type declaration");
 
-
     Token tok = advance(1);
     if (!expect(tok, Whitespace))
         return;
@@ -122,6 +121,12 @@ void Parser::parseTypeDecl()
         return;
 
     Token name = tok;
+
+    QChar firstChar = m_source->textForToken(name).at(0);
+    if (firstChar.toUpper() != firstChar) {
+        m_source->error(name, "type names must begin with an upper case char");
+        return;
+    }
 
     tok = advance(1);
     if (!expect(tok, Whitespace))
@@ -163,6 +168,12 @@ void Parser::parseFuncDecl()
         return;
 
     Token name = tok;
+
+    QChar firstChar = m_source->textForToken(name).at(0);
+    if (firstChar.toLower() != firstChar) {
+        m_source->error(name, "function names must begin with a lower case char");
+        return;
+    }
 
     tok = advance(1);
     if (!expect(tok, Whitespace))

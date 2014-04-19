@@ -28,6 +28,16 @@ void TestErrors::testTabBeforeSpace()
     compile("\t\n    ", ExpectFailure);
 }
 
+void TestErrors::testFuncDeclIsLowerCamelCase()
+{
+    compile("function Main : () -> Int", ExpectFailure);
+}
+
+void TestErrors::testTypeDeclIsUpperCamelCase()
+{
+    compile("type int : (_builtin_int32_)", ExpectFailure);
+}
+
 void TestErrors::testInt1Overflow()
 {
     QString testInt1 = "function main : () -> _builtin_bit_\n\treturn ";

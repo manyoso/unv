@@ -13,6 +13,8 @@ public:
 private slots:
     void testSpaceBeforeTab();
     void testTabBeforeSpace();
+    void testFuncDeclIsLowerCamelCase();
+    void testTypeDeclIsUpperCamelCase();
     void testInt1Overflow();
     void testInt8Overflow();
     void testInt16Overflow();
