@@ -1,6 +1,8 @@
 TranslationUnit
-  AliasDecl
-    Int _builtin_int32_
+  TypeDecl
+    Int
+    TypeObject
+      _builtin_int32_
   FuncDecl
     main Int
     FuncDef
@@ -25,7 +27,7 @@ TranslationUnit
           1
   FuncDecl
     fibonacci Int
-    FuncDeclArg
+    TypeObject
       n Int
     FuncDef
       IfStmt

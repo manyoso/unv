@@ -15,13 +15,12 @@ public:
     virtual void begin(Node&);
     virtual void end(Node&);
 
-    virtual void visit(AliasDecl&);
     virtual void visit(BinaryExpr&);
     virtual void visit(FuncCallExpr&);
-    virtual void visit(FuncDeclArg&);
     virtual void visit(FuncDecl&);
     virtual void visit(LiteralExpr&);
     virtual void visit(TypeDecl&);
+    virtual void visit(TypeObject&);
     virtual void visit(VarExpr&);
     virtual void visit(VarDeclStmt&);
 

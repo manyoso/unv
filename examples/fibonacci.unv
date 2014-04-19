@@ -2,7 +2,7 @@
  * Example of calculating fibonacci in unv syntax.
  * http://en.wikipedia.org/wiki/Fibonacci_number
  */
-alias Int _builtin_int32_
+type Int : (_builtin_int32_)
 
 function main : () -> Int
     Int i = fibonacci(40)

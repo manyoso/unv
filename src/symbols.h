@@ -6,7 +6,6 @@
 #include "token.h"
 
 class SourceBuffer;
-struct AliasDecl;
 struct TypeDecl;
 struct FuncDecl;
 
@@ -14,7 +13,6 @@ class Symbols {
 public:
     Symbols(SourceBuffer*);
 
-    bool addAlias(AliasDecl&);
     bool addType(TypeDecl&);
     bool addFunction(FuncDecl&);
 

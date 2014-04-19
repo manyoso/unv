@@ -34,12 +34,6 @@ void ASTPrinter::end(Node&)
     m_scope--;
 }
 
-void ASTPrinter::visit(AliasDecl& node)
-{
-    *m_stream << indent() << m_source->textForToken(node.alias) << " " << m_source->textForToken(node.type) << "\n";
-    m_stream->flush();
-}
-
 void ASTPrinter::visit(BinaryExpr& node)
 {
     *m_stream << indent() << node.opToString() << "\n";
@@ -49,12 +43,6 @@ void ASTPrinter::visit(BinaryExpr& node)
 void ASTPrinter::visit(FuncCallExpr& node)
 {
     *m_stream << indent() << m_source->textForToken(node.callee) << "\n";
-    m_stream->flush();
-}
-
-void ASTPrinter::visit(FuncDeclArg& node)
-{
-    *m_stream << indent() << m_source->textForToken(node.name) << " " << m_source->textForToken(node.type) << "\n";
     m_stream->flush();
 }
 
@@ -72,7 +60,16 @@ void ASTPrinter::visit(LiteralExpr& node)
 
 void ASTPrinter::visit(TypeDecl& node)
 {
-    *m_stream << indent() << m_source->textForToken(node.type) << "\n";
+    *m_stream << indent() << m_source->textForToken(node.name) << "\n";
+    m_stream->flush();
+}
+
+void ASTPrinter::visit(TypeObject& node)
+{
+    if (node.name.type != Undefined)
+        *m_stream << indent() << m_source->textForToken(node.name) << " " << m_source->textForToken(node.type) << "\n";
+    else
+        *m_stream << indent() << m_source->textForToken(node.type) << "\n";
     m_stream->flush();
 }
 

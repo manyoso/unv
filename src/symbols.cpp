@@ -24,26 +24,32 @@ Symbols::Symbols(SourceBuffer* source)
     m_typeList.append("_builtin_int64_");
 }
 
-bool Symbols::addAlias(AliasDecl& decl)
-{
-    QString alias = m_source->textForToken(decl.alias);
-
-    if (m_aliasHash.contains(alias)) {
-        m_source->error(decl.alias, "alias declaration previously declared");
-        return false;
-    }
-
-    QString type = m_source->textForToken(decl.type);
-    m_aliasHash.insert(alias, type);
-    return true;
-}
-
 bool Symbols::addType(TypeDecl& decl)
 {
-    QString symbol(m_source->textForToken(decl.type));
+    QString name(m_source->textForToken(decl.name));
+
+    QStringList objects;
+    foreach (QSharedPointer<TypeObject> object, decl.objects)
+        objects.append(m_source->textForToken(object->type));
+
+    if (objects.size() < 1) {
+        m_source->error(decl.name, "type declaration must declare a type");
+        return false;
+    } else if (objects.size() < 2) {
+        QString alias = name;
+        if (m_aliasHash.contains(alias)) {
+            m_source->error(decl.name, "alias for name previously declared");
+            return false;
+        }
+
+        QString type = objects.first();
+        m_aliasHash.insert(alias, type);
+    }
+
+    QString symbol = name + objects.join("");
 
     if (m_typeList.contains(symbol)) {
-        m_source->error(decl.type, "type declaration previously declared");
+        m_source->error(decl.name, "type declaration previously declared");
         return false;
     }
 
@@ -56,11 +62,11 @@ bool Symbols::addFunction(FuncDecl& decl)
     QString name(m_source->textForToken(decl.name));
     QString returnType(m_source->textForToken(decl.returnType));
 
-    QStringList args;
-    foreach (QSharedPointer<FuncDeclArg> arg, decl.args)
-        args.append(m_source->textForToken(arg->type));
+    QStringList objects;
+    foreach (QSharedPointer<TypeObject> object, decl.objects)
+        objects.append(m_source->textForToken(object->type));
 
-    QString symbol = name + args.join("") + returnType;
+    QString symbol = name + objects.join("") + returnType;
 
     if (m_funcList.contains(symbol)) {
         m_source->error(decl.name, "function declaration previously declared");

@@ -74,20 +74,7 @@ void Lexer::lex(SourceBuffer* source)
             }
         /*
          * keywords: in alphabetical order
-         *  false
-         *  point
-         *  space
-         *  true
-         *  universe
          */
-        case 'a':
-            if (consumeString("lias")) {
-                m_source->appendToken(Token(Alias, pos, tokenPosition()));
-                break;
-            } else if (consumeIdentifier()) {
-                m_source->appendToken(Token(Identifier, pos, tokenPosition()));
-                break;
-            }
         case 'e':
             if (consumeString("lse")) {
                 m_source->appendToken(Token(Else, pos, tokenPosition()));

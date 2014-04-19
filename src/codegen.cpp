@@ -81,8 +81,8 @@ void CodeGen::visit(FuncDecl& node)
     int i = 0;
     m_namedValues.clear();
     for (llvm::Function::arg_iterator it = f->arg_begin(); it != f->arg_end(); ++it, ++i) {
-        QSharedPointer<FuncDeclArg> arg = node.args.at(i);
-        m_namedValues.insert(m_source->textForToken(arg->name), it);
+        QSharedPointer<TypeObject> object = node.objects.at(i);
+        m_namedValues.insert(m_source->textForToken(object->name), it);
     }
 
     llvm::BasicBlock *block = llvm::BasicBlock::Create(*m_context, "entry", f);
@@ -94,8 +94,8 @@ void CodeGen::visit(FuncDecl& node)
 void CodeGen::registerFuncDecl(FuncDecl* node) {
     LLVMString name(m_source->textForToken(node->name));
     QList<llvm::Type*> params;
-    foreach (QSharedPointer<FuncDeclArg> arg, node->args) {
-        QString type = m_source->symbols().toTypeAndCheck(arg->type);
+    foreach (QSharedPointer<TypeObject> object, node->objects) {
+        QString type = m_source->symbols().toTypeAndCheck(object->type);
         params.append(toPrimitiveType(type));
     }
     llvm::Type* returnType = toPrimitiveType(m_source->symbols().toTypeAndCheck(node->returnType));
@@ -105,8 +105,8 @@ void CodeGen::registerFuncDecl(FuncDecl* node) {
 
     int i = 0;
     for (llvm::Function::arg_iterator it = f->arg_begin(); it != f->arg_end(); ++it, ++i) {
-        QSharedPointer<FuncDeclArg> arg = node->args.at(i);
-        LLVMString name(m_source->textForToken(arg->name));
+        QSharedPointer<TypeObject> object = node->objects.at(i);
+        LLVMString name(m_source->textForToken(object->name));
         it->setName(name);
     }
 }

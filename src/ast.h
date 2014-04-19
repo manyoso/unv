@@ -6,19 +6,18 @@
 #include "token.h"
 
 // forward declarations
-struct AliasDecl;
 struct BinaryExpr;
 struct Expr;
 struct IfStmt;
 struct FuncCallExpr;
 struct FuncDef;
-struct FuncDeclArg;
 struct FuncDecl;
 struct ReturnStmt;
 struct LiteralExpr;
 struct Stmt;
 struct TranslationUnit;
 struct TypeDecl;
+struct TypeObject;
 struct VarExpr;
 struct VarDeclStmt;
 struct Visitor;
@@ -27,17 +26,16 @@ class TypeHandle;
 
 struct Node {
     enum Kind {
-        _AliasDecl,
         _BinaryExpr,
         _IfStmt,
         _FuncCallExpr,
         _FuncDef,
-        _FuncDeclArg,
         _FuncDecl,
         _LiteralExpr,
         _ReturnStmt,
         _TranslationUnit,
         _TypeDecl,
+        _TypeObject,
         _VarDeclStmt,
         _VarExpr
     };
@@ -45,17 +43,16 @@ struct Node {
     QString kindToString() const
     {
         switch (kind) {
-        case _AliasDecl:        return "AliasDecl";
         case _BinaryExpr:       return "BinaryExpr";
         case _IfStmt:           return "IfStmt";
         case _FuncCallExpr:     return "FuncCallExpr";
         case _FuncDef:          return "FuncDef";
-        case _FuncDeclArg:      return "FuncDeclArg";
         case _FuncDecl:         return "FuncDecl";
         case _LiteralExpr:      return "LiteralExpr";
         case _ReturnStmt:       return "ReturnStmt";
         case _TranslationUnit:  return "TranslationUnit";
         case _TypeDecl:         return "TypeDecl";
+        case _TypeObject:       return "TypeObject";
         case _VarDeclStmt:      return "VarDeclStmt";
         case _VarExpr:          return "VarExpr";
         }
@@ -71,21 +68,15 @@ struct Node {
 
 struct TranslationUnit : public Node {
     TranslationUnit() : Node(_TranslationUnit) {}
-    QList<QSharedPointer<AliasDecl> > aliasDecl;
+    QList<QSharedPointer<TypeDecl> > typeDecl;
     QList<QSharedPointer<FuncDecl> > funcDecl;
     virtual void walk(Visitor&);
 };
 
 struct TypeDecl : public Node {
     TypeDecl() : Node(_TypeDecl) {}
-    Token type;
-    virtual void walk(Visitor&);
-};
-
-struct AliasDecl : public Node {
-    AliasDecl() : Node(_AliasDecl) {}
-    Token alias;
-    Token type;
+    Token name;
+    QList<QSharedPointer<TypeObject> > objects;
     virtual void walk(Visitor&);
 };
 
@@ -155,8 +146,8 @@ struct ReturnStmt : public Stmt {
     virtual void walk(Visitor&);
 };
 
-struct FuncDeclArg : public Node {
-    FuncDeclArg() : Node(_FuncDeclArg) {}
+struct TypeObject : public Node {
+    TypeObject() : Node(_TypeObject) {}
     Token name;
     Token type;
     virtual void walk(Visitor&);
@@ -171,7 +162,7 @@ struct FuncDef : public Node {
 struct FuncDecl : public Node {
     FuncDecl() : Node(_FuncDecl) {}
     Token name;
-    QList<QSharedPointer<FuncDeclArg> > args;
+    QList<QSharedPointer<TypeObject> > objects;
     Token returnType;
     QSharedPointer<FuncDef> funcDef;
     virtual void walk(Visitor&);

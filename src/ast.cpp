@@ -1,13 +1,6 @@
 #include "ast.h"
 #include "visitor.h"
 
-void AliasDecl::walk(Visitor& visitor)
-{
-    visitor.begin(*this);
-    visitor.visit(*this);
-    visitor.end(*this);
-}
-
 void BinaryExpr::walk(Visitor& visitor)
 {
     visitor.begin(*this);
@@ -44,19 +37,12 @@ void FuncDef::walk(Visitor& visitor)
     visitor.end(*this);
 }
 
-void FuncDeclArg::walk(Visitor& visitor)
-{
-    visitor.begin(*this);
-    visitor.visit(*this);
-    visitor.end(*this);
-}
-
 void FuncDecl::walk(Visitor& visitor)
 {
     visitor.begin(*this);
     visitor.visit(*this);
-    foreach (QSharedPointer<FuncDeclArg> arg, args)
-        arg->walk(visitor);
+    foreach (QSharedPointer<TypeObject> obj, objects)
+        obj->walk(visitor);
     funcDef->walk(visitor);
     visitor.end(*this);
 }
@@ -80,14 +66,23 @@ void TranslationUnit::walk(Visitor& visitor)
 {
     visitor.begin(*this);
     visitor.visit(*this);
-    foreach (QSharedPointer<AliasDecl> alias, aliasDecl)
-        alias->walk(visitor);
+    foreach (QSharedPointer<TypeDecl> type, typeDecl)
+        type->walk(visitor);
     foreach (QSharedPointer<FuncDecl> func, funcDecl)
         func->walk(visitor);
     visitor.end(*this);
 }
 
 void TypeDecl::walk(Visitor& visitor)
+{
+    visitor.begin(*this);
+    visitor.visit(*this);
+    foreach (QSharedPointer<TypeObject> obj, objects)
+        obj->walk(visitor);
+    visitor.end(*this);
+}
+
+void TypeObject::walk(Visitor& visitor)
 {
     visitor.begin(*this);
     visitor.visit(*this);

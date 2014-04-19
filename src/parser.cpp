@@ -29,8 +29,8 @@ void Parser::parse(SourceBuffer* source)
         Token tok = advance(1);
         if (tok.type == Newline)
             continue;
-        if (tok.type == Alias)
-            parseAliasDecl();
+        if (tok.type == Type)
+            parseTypeDecl();
         else if (tok.type == Function)
             parseFuncDecl();
         else
@@ -107,10 +107,11 @@ bool Parser::checkLeadingTab(const Token& tok)
     return true;
 }
 
-// alias foo bar
-void Parser::parseAliasDecl()
+// type foo : (b1:bar(, b2:baz)?)
+void Parser::parseTypeDecl()
 {
-    ParserContext context(this, "alias declaration");
+    ParserContext context(this, "type declaration");
+
 
     Token tok = advance(1);
     if (!expect(tok, Whitespace))
@@ -120,30 +121,32 @@ void Parser::parseAliasDecl()
     if (!expect(tok, Identifier))
         return;
 
-    Token alias = tok;
+    Token name = tok;
 
     tok = advance(1);
     if (!expect(tok, Whitespace))
         return;
 
     tok = advance(1);
-    if (!expect(tok, Identifier))
+    if (!expect(tok, Colon))
         return;
 
-    Token type = tok;
+    QList<QSharedPointer<TypeObject> > objects;
+    if (look(1).type == Whitespace && look(2).type == OpenParenthesis)
+        objects = parseTypeObjects();
 
     tok = advance(1);
     if (!expect(tok, Newline))
         return;
 
-    AliasDecl* decl = new AliasDecl;
-    decl->alias = alias;
-    decl->type = type;
+    TypeDecl* decl = new TypeDecl;
+    decl->name = name;
+    decl->objects = objects;
 
-    if (!m_source->symbols().addAlias(*decl))
+    if (!m_source->symbols().addType(*decl))
         return;
 
-    m_source->translationUnit().aliasDecl.append(QSharedPointer<AliasDecl>(decl));
+    m_source->translationUnit().typeDecl.append(QSharedPointer<TypeDecl>(decl));
 }
 
 // function foo : (foo:Foo?, bar:Bar?, ...)? ->? Baz
@@ -169,9 +172,13 @@ void Parser::parseFuncDecl()
     if (!expect(tok, Colon))
         return;
 
-    QList<QSharedPointer<FuncDeclArg> > args;
+    QList<QSharedPointer<TypeObject> > objects;
     if (look(1).type == Whitespace && look(2).type == OpenParenthesis)
-        args = parseFuncDeclArgs();
+        objects = parseTypeObjects();
+
+    tok = advance(1);
+    if (!expect(tok, Whitespace))
+        return;
 
     tok = advance(1);
     if (!expect(tok, Minus))
@@ -201,7 +208,7 @@ void Parser::parseFuncDecl()
 
     FuncDecl* decl = new FuncDecl;
     decl->name = name;
-    decl->args = args;
+    decl->objects = objects;
     decl->funcDef = QSharedPointer<FuncDef>(funcDef);
     decl->returnType = returnType;
 
@@ -211,29 +218,35 @@ void Parser::parseFuncDecl()
     m_source->translationUnit().funcDecl.append(QSharedPointer<FuncDecl>(decl));
 }
 
-QList<QSharedPointer<FuncDeclArg> > Parser::parseFuncDeclArgs()
+QList<QSharedPointer<TypeObject> > Parser::parseTypeObjects()
 {
-    QList<QSharedPointer<FuncDeclArg> > args;
+    bool unnamedTypeObject = false;
+    QList<QSharedPointer<TypeObject> > objects;
     Token tok = advance(3);
+    Token first = tok;
     if (tok.type == Identifier) {
-        while(FuncDeclArg* arg = parseFuncDeclArg())
-            args.append(QSharedPointer<FuncDeclArg>(arg));
+        while(TypeObject* object = parseTypeObject()) {
+            if (object->name.type == Undefined)
+                unnamedTypeObject = true;
+            objects.append(QSharedPointer<TypeObject>(object));
+        }
     }
 
     tok = current();
     if (!expect(tok, CloseParenthesis))
-        return args;
+        return QList<QSharedPointer<TypeObject> >();
 
-    tok = advance(1);
-    if (!expect(tok, Whitespace))
-        return args;
+    if (unnamedTypeObject && objects.size() > 1) {
+        m_source->error(first, "a type object list must consist of named objects or only one unnamed object");
+        return QList<QSharedPointer<TypeObject> >();
+    }
 
-    return args;
+    return objects;
 }
 
-FuncDeclArg* Parser::parseFuncDeclArg()
+TypeObject* Parser::parseTypeObject()
 {
-    ParserContext context(this, "function declaration argument");
+    ParserContext context(this, "type object");
 
     Token tok = current();
     if (tok.type == Comma) {
@@ -246,22 +259,22 @@ FuncDeclArg* Parser::parseFuncDeclArg()
     if (!expect(tok, Identifier))
         return 0;
 
-    Token name = tok;
+    Token identifier1 = tok;
+    Token identifier2;
 
-    tok = advance(1);
-    if (!expect(tok, Colon))
-        return 0;
+    if (look(1).type == Colon) {
+        tok = advance(2);
+        if (!expect(tok, Identifier))
+            return 0;
 
-    tok = advance(1);
-    if (!expect(tok, Identifier))
-        return 0;
+        identifier2 = tok;
+    }
 
     advance(1);
 
-    Token type = tok;
-    FuncDeclArg* arg = new FuncDeclArg;
-    arg->name = name;
-    arg->type = type;
+    TypeObject* arg = new TypeObject;
+    arg->name = identifier2.type == Undefined ? Token() : identifier1;
+    arg->type = identifier2.type == Identifier ? identifier2 : identifier1;
     return arg;
 }
 

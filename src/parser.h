@@ -74,10 +74,10 @@ private:
     bool checkLeadingWhitespace(const Token&);
     bool checkLeadingTab(const Token&);
 
-    void parseAliasDecl();
+    void parseTypeDecl();
     void parseFuncDecl();
-    QList<QSharedPointer<FuncDeclArg> > parseFuncDeclArgs();
-    FuncDeclArg* parseFuncDeclArg();
+    QList<QSharedPointer<TypeObject> > parseTypeObjects();
+    TypeObject* parseTypeObject();
     FuncDef* parseFuncDef();
     bool parseIndent(unsigned expect);
     Expr* parseExpr();
