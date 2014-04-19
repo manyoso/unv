@@ -253,6 +253,7 @@ TypeObject* Parser::parseTypeObject()
         tok = advance(1);
         if (!expect(tok, Whitespace))
             return 0;
+        tok = advance(1);
     } else if (tok.type == CloseParenthesis)
         return 0;
 
