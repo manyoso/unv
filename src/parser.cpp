@@ -537,9 +537,18 @@ FuncCallExpr* Parser::parseFuncCallExpr()
         return 0;
 
     QList<QSharedPointer<Expr> > args;
-    while(Expr* expr = parseExpr())
+    while(Expr* expr = parseExpr()) {
         args.append(QSharedPointer<Expr>(expr));
 
+        if (look(1).type == Comma) {
+            tok = advance(2);
+            if (!expect(tok, Whitespace))
+                return 0;
+        }
+    }
+
+    // This doesn't advance because the last attempt to parse expr in the
+    // loop above advanced it for us...
     tok = current();
     if (!expect(tok, CloseParenthesis))
         return 0;
