@@ -111,13 +111,13 @@ void CodeGen::registerFuncDecl(FuncDecl* node) {
     }
 }
 
-void CodeGen::codegen(FuncDef* node, llvm::Type*)
+void CodeGen::codegen(FuncDef* node)
 {
     foreach (QSharedPointer<Stmt> stmt, node->stmts)
         codegen(stmt.data());
 }
 
-void CodeGen::codegen(Stmt* node, llvm::Type*)
+void CodeGen::codegen(Stmt* node)
 {
     switch (node->kind) {
     case Node::_IfStmt:
@@ -135,7 +135,7 @@ void CodeGen::codegen(Stmt* node, llvm::Type*)
     }
 }
 
-void CodeGen::codegen(IfStmt* node, llvm::Type*)
+void CodeGen::codegen(IfStmt* node)
 {
     llvm::Value *condition = codegen(node->expr.data());
     Q_ASSERT(condition);
@@ -160,7 +160,7 @@ void CodeGen::codegen(IfStmt* node, llvm::Type*)
     m_builder->SetInsertPoint(ifcont);
 }
 
-void CodeGen::codegen(ReturnStmt* node, llvm::Type*)
+void CodeGen::codegen(ReturnStmt* node)
 {
     llvm::Function* f = m_builder->GetInsertBlock()->getParent();
 
@@ -176,7 +176,7 @@ void CodeGen::codegen(ReturnStmt* node, llvm::Type*)
     m_source->error(node->keyword, "return statement of void is not allowed", SourceBuffer::Fatal);
 }
 
-void CodeGen::codegen(VarDeclStmt* node, llvm::Type*)
+void CodeGen::codegen(VarDeclStmt* node)
 {
     llvm::Function* f = m_builder->GetInsertBlock()->getParent();
 
@@ -400,17 +400,13 @@ llvm::Type* CodeGen::toPrimitiveType(const QString& string) const
         return llvm::Type::getVoidTy(*m_context);
     else if (string == "_builtin_bit_")
         return llvm::Type::getInt1Ty(*m_context);
-//    else if (string == "_builtin_uint8_")
-    else if (string == "_builtin_int8_")
+    else if (string == "_builtin_int8_" || string == "_builtin_uint8_")
         return llvm::Type::getInt8Ty(*m_context);
-//    else if (string == "_builtin_uint16_")
-    else if (string == "_builtin_int16_")
+    else if (string == "_builtin_int16_" || string == "_builtin_uint16_")
         return llvm::Type::getInt16Ty(*m_context);
-//    else if (string == "_builtin_uint32_")
-    else if (string == "_builtin_int32_")
+    else if (string == "_builtin_int32_" || string == "_builtin_uint32_")
         return llvm::Type::getInt32Ty(*m_context);
-//    else if (string == "_builtin_uint64_")
-    else if (string == "_builtin_int64_")
+    else if (string == "_builtin_int64_" || string == "_builtin_uint64_")
         return llvm::Type::getInt64Ty(*m_context);
     Q_ASSERT(false);
     return llvm::Type::getVoidTy(*m_context);

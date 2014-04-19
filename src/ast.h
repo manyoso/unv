@@ -23,6 +23,8 @@ struct VarExpr;
 struct VarDeclStmt;
 struct Visitor;
 
+class TypeHandle;
+
 struct Node {
     enum Kind {
         _AliasDecl,
@@ -149,6 +151,7 @@ struct ReturnStmt : public Stmt {
     ReturnStmt() : Stmt(_ReturnStmt) {}
     Token keyword;
     QSharedPointer<Expr> expr;
+    TypeHandle* typeHandle;
     virtual void walk(Visitor&);
 };
 
