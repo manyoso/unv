@@ -40,7 +40,8 @@ void TestErrors::testTypeDeclIsUpperCamelCase()
 
 void TestErrors::testSingleWhitespace()
 {
-    compile("function  main : () -> Int", ExpectFailure);}
+    compile("function  main : () -> Int", ExpectFailure);
+}
 
 void TestErrors::testInt1Overflow()
 {
