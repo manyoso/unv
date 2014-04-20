@@ -49,9 +49,10 @@ private:
     llvm::Value* codegen(Expr* node, llvm::Type* type = 0);
     llvm::Value* codegen(FuncCallExpr* node, llvm::Type* type = 0);
     llvm::Value* codegen(LiteralExpr* node, llvm::Type* type = 0);
+    llvm::Value* codegen(TypeCtorExpr* node, llvm::Type* type = 0);
     llvm::Value* codegen(VarExpr* node, llvm::Type* type = 0);
-    llvm::Type* toPrimitiveType(const QString&) const;
-    void comparisonOfSigns(Token tok, bool lSigned, bool rSigned);
+    llvm::Type* toBuiltinType(const Token& tok) const;
+    void comparisonOfSigns(const Token& tok, bool lSigned, bool rSigned);
 
 private:
     SourceBuffer* m_source;

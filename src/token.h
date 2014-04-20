@@ -47,6 +47,7 @@ enum TokenType {
     False,
     Function,
     If,
+    New,
     Return,
     True,
     Type,
@@ -98,6 +99,7 @@ static inline QString typeToString(TokenType type)
     case False:             return "\'false\'";
     case Function:          return "\'function\'";
     case If:                return "\'if\'";
+    case New:               return "\'new\'";
     case Return:            return "\'return\'";
     case True:              return "\'true\'";
     case Type:              return "\'type\'";

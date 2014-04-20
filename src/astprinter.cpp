@@ -58,6 +58,13 @@ void ASTPrinter::visit(LiteralExpr& node)
     m_stream->flush();
 }
 
+void ASTPrinter::visit(TypeCtorExpr& node)
+{
+    if (node.type.type != Undefined)
+        *m_stream << indent() << m_source->textForToken(node.type) << "\n";
+    m_stream->flush();
+}
+
 void ASTPrinter::visit(TypeDecl& node)
 {
     *m_stream << indent() << m_source->textForToken(node.name) << "\n";

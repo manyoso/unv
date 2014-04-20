@@ -19,6 +19,7 @@ public:
     virtual void visit(FuncCallExpr&);
     virtual void visit(FuncDecl&);
     virtual void visit(LiteralExpr&);
+    virtual void visit(TypeCtorExpr&);
     virtual void visit(TypeDecl&);
     virtual void visit(TypeObject&);
     virtual void visit(VarExpr&);

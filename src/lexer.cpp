@@ -102,6 +102,14 @@ void Lexer::lex(SourceBuffer* source)
                 m_source->appendToken(Token(Identifier, pos, tokenPosition()));
                 break;
             }
+        case 'n':
+            if (consumeString("ew")) {
+                m_source->appendToken(Token(New, pos, tokenPosition()));
+                break;
+            } else if (consumeIdentifier()) {
+                m_source->appendToken(Token(Identifier, pos, tokenPosition()));
+                break;
+            }
         case 'r':
             if (consumeString("eturn")) {
                 m_source->appendToken(Token(Return, pos, tokenPosition()));
@@ -125,7 +133,7 @@ void Lexer::lex(SourceBuffer* source)
         case '_':
         case 'a': case 'b': case 'c': case 'd': /*case 'e':*/ /*case 'f':*/
         case 'g': case 'h': /*case 'i':*/ case 'j': case 'k': case 'l':
-        case 'm': case 'n': case 'o': case 'p': case 'q': /*case 'r':*/
+        case 'm': /*case 'n':*/ case 'o': case 'p': case 'q': /*case 'r':*/
         case 's': /*case 't':*/ case 'u': case 'v': case 'w': case 'x':
         case 'y': case 'z':
         case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':

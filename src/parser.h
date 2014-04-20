@@ -85,6 +85,7 @@ private:
     Expr* parseBinaryOpExpr(int, Expr*);
     VarExpr* parseVarExpr();
     LiteralExpr* parseLiteralExpr();
+    TypeCtorExpr* parseTypeCtorExpr();
     Stmt* parseStmt();
     IfStmt* parseIfStmt();
     ReturnStmt* parseReturnStmt();

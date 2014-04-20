@@ -73,6 +73,15 @@ void TranslationUnit::walk(Visitor& visitor)
     visitor.end(*this);
 }
 
+void TypeCtorExpr::walk(Visitor& visitor)
+{
+    visitor.begin(*this);
+    visitor.visit(*this);
+    foreach (QSharedPointer<Expr> arg, args)
+        arg->walk(visitor);
+    visitor.end(*this);
+}
+
 void TypeDecl::walk(Visitor& visitor)
 {
     visitor.begin(*this);

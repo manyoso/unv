@@ -18,6 +18,7 @@ struct Visitor {
     virtual void visit(LiteralExpr&) {}
     virtual void visit(ReturnStmt&) {}
     virtual void visit(TranslationUnit&) {}
+    virtual void visit(TypeCtorExpr&) {}
     virtual void visit(TypeDecl&) {}
     virtual void visit(TypeObject&) {}
     virtual void visit(VarExpr&) {}

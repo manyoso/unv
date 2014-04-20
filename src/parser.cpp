@@ -34,7 +34,7 @@ void Parser::parse(SourceBuffer* source)
         else if (tok.type == Function)
             parseFuncDecl();
         else
-            m_source->error(tok, "unexpected token when parsing translation unit");
+            m_source->error(tok, "unexpected token when parsing translation unit", SourceBuffer::Fatal);
     }
 }
 
@@ -295,12 +295,13 @@ FuncDef* Parser::parseFuncDef()
     ParserContext context(this, "function definition");
     IndentLevel indent(this);
 
+    Token tok = current();
     QList<QSharedPointer<Stmt> > stmts;
     while (Stmt* stmt = parseStmt())
         stmts.append(QSharedPointer<Stmt>(stmt));
 
     if (stmts.isEmpty()) {
-        m_source->error(current(), "function must define at least one statement");
+        m_source->error(tok, "function must define at least one statement");
         return 0;
     }
 
@@ -448,6 +449,59 @@ LiteralExpr* Parser::parseLiteralExpr()
     LiteralExpr* literalExpr = new LiteralExpr;
     literalExpr->literal = literal;
     return literalExpr;
+}
+
+TypeCtorExpr* Parser::parseTypeCtorExpr()
+{
+    ParserContext context(this, "type constructor expression");
+
+    if (look(1).type != New) {
+        Expr* expr = parseExpr();
+        if (!expr) {
+            m_source->error(current(), "expecting a single valid expression to follow '=' without 'new' keyword");
+            return 0;
+        }
+
+        TypeCtorExpr* typeCtorExpr = new TypeCtorExpr;
+        typeCtorExpr->args = QList<QSharedPointer<Expr> >() << QSharedPointer<Expr>(expr);
+        return typeCtorExpr;
+    }
+
+    Token tok = advance(2);
+    if (!expect(tok, Whitespace))
+        return 0;
+
+    tok = advance(1);
+    if (!expect(tok, Identifier))
+        return 0;
+
+    Token type = tok;
+
+    tok = advance(1);
+    if (!expect(tok, OpenParenthesis))
+        return 0;
+
+    QList<QSharedPointer<Expr> > args;
+    while(Expr* expr = parseExpr()) {
+        args.append(QSharedPointer<Expr>(expr));
+
+        if (look(1).type == Comma) {
+            tok = advance(2);
+            if (!expect(tok, Whitespace))
+                return 0;
+        }
+    }
+
+    // This doesn't advance because the last attempt to parse expr in the
+    // loop above advanced it for us...
+    tok = current();
+    if (!expect(tok, CloseParenthesis))
+        return 0;
+
+    TypeCtorExpr* typeCtorExpr = new TypeCtorExpr;
+    typeCtorExpr->type = type;
+    typeCtorExpr->args = args;
+    return typeCtorExpr;
 }
 
 Stmt* Parser::parseStmt()
@@ -598,8 +652,7 @@ VarDeclStmt* Parser::parseVarDeclStmt()
     if (!expect(tok, Whitespace))
         return 0;
 
-    tok = look(1);
-    Expr* expr = parseExpr();
+    TypeCtorExpr* expr = parseTypeCtorExpr();
     if (!expr) {
         m_source->error(tok, "expected expression for variable initialization");
         return 0;
@@ -612,6 +665,6 @@ VarDeclStmt* Parser::parseVarDeclStmt()
     VarDeclStmt* varDeclStmt = new VarDeclStmt;
     varDeclStmt->type = type;
     varDeclStmt->name = name;
-    varDeclStmt->expr = QSharedPointer<Expr>(expr);
+    varDeclStmt->expr = QSharedPointer<TypeCtorExpr>(expr);
     return varDeclStmt;
 }

@@ -20,8 +20,8 @@ public:
 
 private:
     QHash<QString, QString> m_aliasHash;
-    QList<QString> m_typeList;
-    QList<QString> m_funcList;
+    QHash<QString, QString> m_typeHash;
+    QHash<QString, QString> m_funcHash;
     SourceBuffer* m_source;
 };
 

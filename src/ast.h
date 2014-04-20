@@ -194,7 +194,7 @@ struct VarDeclStmt: public Stmt {
     VarDeclStmt() : Stmt(_VarDeclStmt) {}
     Token type;
     Token name;
-    QSharedPointer<Expr> expr;
+    QSharedPointer<TypeCtorExpr> expr;
     virtual void walk(Visitor&);
 };
 

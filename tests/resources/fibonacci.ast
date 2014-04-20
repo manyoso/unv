@@ -8,10 +8,11 @@ TranslationUnit
     FuncDef
       VarDeclStmt
         Int i
-        FuncCallExpr
-          fibonacci
-          LiteralExpr
-            40
+        TypeCtorExpr
+          FuncCallExpr
+            fibonacci
+            LiteralExpr
+              40
       IfStmt
         BinaryExpr
           ==
