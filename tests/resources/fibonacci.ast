@@ -12,14 +12,14 @@ TranslationUnit
           FuncCallExpr
             fibonacci
             LiteralExpr
-              40
+              20
       IfStmt
         BinaryExpr
           ==
           VarExpr
             i
           LiteralExpr
-            102334155
+            6765
         ReturnStmt
           LiteralExpr
             0
