@@ -15,6 +15,7 @@ private slots:
     void testTabBeforeSpace();
     void testFuncDeclIsLowerCamelCase();
     void testTypeDeclIsUpperCamelCase();
+    void testSingleWhitespace();
     void testInt1Overflow();
     void testInt8Overflow();
     void testInt16Overflow();

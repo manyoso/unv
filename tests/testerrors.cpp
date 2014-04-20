@@ -38,6 +38,10 @@ void TestErrors::testTypeDeclIsUpperCamelCase()
     compile("type int : (_builtin_int32_)", ExpectFailure);
 }
 
+void TestErrors::testSingleWhitespace()
+{
+    compile("function  main : () -> Int", ExpectFailure);}
+
 void TestErrors::testInt1Overflow()
 {
     QString testInt1 = "function main : () -> _builtin_bit_\n\treturn ";

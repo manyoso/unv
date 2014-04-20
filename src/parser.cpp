@@ -72,7 +72,7 @@ Token Parser::look(int i) const
 
 bool Parser::expect(Token tok, TokenType type) const
 {
-    if (tok.type == type)
+    if (tok.type == type && (tok.type != Whitespace || tok.start.column == tok.end.column))
         return true;
     m_source->error(tok, "expecting " + typeToString(type) + " for " + m_context.top());
     return false;
