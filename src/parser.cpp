@@ -148,7 +148,7 @@ void Parser::parseTypeDecl()
     decl->name = name;
     decl->objects = objects;
 
-    if (!m_source->symbols().addType(*decl))
+    if (!m_source->typeSystem().addType(*decl))
         return;
 
     m_source->translationUnit().typeDecl.append(QSharedPointer<TypeDecl>(decl));
@@ -223,7 +223,7 @@ void Parser::parseFuncDecl()
     decl->funcDef = QSharedPointer<FuncDef>(funcDef);
     decl->returnType = returnType;
 
-    if (!m_source->symbols().addFunction(*decl))
+    if (!m_source->typeSystem().addFunction(*decl))
         return;
 
     m_source->translationUnit().funcDecl.append(QSharedPointer<FuncDecl>(decl));

@@ -9,7 +9,7 @@ HEADERS += $$PWD/ast.h \
            $$PWD/output.h \
            $$PWD/parser.h \
            $$PWD/sourcebuffer.h \
-           $$PWD/symbols.h \
+           $$PWD/typesystem.h \
            $$PWD/token.h \
            $$PWD/visitor.h
 
@@ -20,7 +20,7 @@ SOURCES += $$PWD/ast.cpp \
            $$PWD/options.cpp \
            $$PWD/output.cpp \
            $$PWD/parser.cpp \
-           $$PWD/symbols.cpp
+           $$PWD/typesystem.cpp
 
 QMAKE_CXXFLAGS += $$system(llvm-config --cppflags)
 LIBS += $$system(llvm-config --ldflags --libs core)

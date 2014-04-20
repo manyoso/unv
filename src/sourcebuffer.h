@@ -5,8 +5,8 @@
 
 #include "ast.h"
 #include "options.h"
-#include "symbols.h"
 #include "token.h"
+#include "typesystem.h"
 
 class SourceBuffer {
 public:
@@ -20,7 +20,7 @@ public:
         m_source = source;
         m_name = name;
         m_translationUnit = QSharedPointer<TranslationUnit>(new TranslationUnit);
-        m_symbols = QSharedPointer<Symbols>(new Symbols(this));
+        m_typeSystem = QSharedPointer<TypeSystem>(new TypeSystem(this));
         m_hasErrors = false;
     }
 
@@ -164,7 +164,7 @@ public:
 
     TranslationUnit& translationUnit() const { return *m_translationUnit; }
 
-    Symbols& symbols() const { return *m_symbols; }
+    TypeSystem& typeSystem() const { return *m_typeSystem; }
 
     bool hasErrors() const { return m_hasErrors; }
 
@@ -174,7 +174,7 @@ private:
     QList<Token> m_tokens;
     QList<int> m_lineInfo;
     QSharedPointer<TranslationUnit> m_translationUnit;
-    QSharedPointer<Symbols> m_symbols;
+    QSharedPointer<TypeSystem> m_typeSystem;
     bool m_hasErrors;
 };
 

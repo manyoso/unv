@@ -51,7 +51,7 @@ private:
     llvm::Value* codegen(LiteralExpr* node, llvm::Type* type = 0);
     llvm::Value* codegen(TypeCtorExpr* node, llvm::Type* type = 0);
     llvm::Value* codegen(VarExpr* node, llvm::Type* type = 0);
-    llvm::Type* toBuiltinType(const Token& tok) const;
+    llvm::Type* toCodeGenType(const Token& tok) const;
     void comparisonOfSigns(const Token& tok, bool lSigned, bool rSigned);
 
 private:

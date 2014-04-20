@@ -47,6 +47,53 @@ CodeGen::CodeGen(SourceBuffer* buffer)
     , m_builder(new llvm::Builder(*m_context))
     , m_declPass(true)
 {
+    TypeInfo* info = m_source->typeSystem().toType("_builtin_bit_");
+    Q_ASSERT(info);
+    info->handle = llvm::Type::getInt1Ty(*m_context);
+
+    info = m_source->typeSystem().toType("_builtin_uint8_");
+    Q_ASSERT(info);
+    info->handle = llvm::Type::getInt8Ty(*m_context);
+
+    info = m_source->typeSystem().toType("_builtin_int8_");
+    Q_ASSERT(info);
+    info->handle = llvm::Type::getInt8Ty(*m_context);
+    info->isSignedInt = true;
+
+    info = m_source->typeSystem().toType("_builtin_uint16_");
+    Q_ASSERT(info);
+    info->handle = llvm::Type::getInt16Ty(*m_context);
+
+    info = m_source->typeSystem().toType("_builtin_int16_");
+    Q_ASSERT(info);
+    info->handle = llvm::Type::getInt16Ty(*m_context);
+    info->isSignedInt = true;
+
+    info = m_source->typeSystem().toType("_builtin_uint32_");
+    Q_ASSERT(info);
+    info->handle = llvm::Type::getInt32Ty(*m_context);
+
+    info = m_source->typeSystem().toType("_builtin_int32_");
+    Q_ASSERT(info);
+    info->handle = llvm::Type::getInt32Ty(*m_context);
+    info->isSignedInt = true;
+
+    info = m_source->typeSystem().toType("_builtin_uint64_");
+    Q_ASSERT(info);
+    info->handle = llvm::Type::getInt64Ty(*m_context);
+
+    info = m_source->typeSystem().toType("_builtin_int64_");
+    Q_ASSERT(info);
+    info->handle = llvm::Type::getInt64Ty(*m_context);
+    info->isSignedInt = true;
+
+    info = m_source->typeSystem().toType("_builtin_float_");
+    Q_ASSERT(info);
+    info->handle = llvm::Type::getFloatTy(*m_context);
+
+    info = m_source->typeSystem().toType("_builtin_double_");
+    Q_ASSERT(info);
+    info->handle = llvm::Type::getDoubleTy(*m_context);
 }
 
 CodeGen::~CodeGen()
@@ -95,8 +142,8 @@ void CodeGen::registerFuncDecl(FuncDecl* node) {
     LLVMString name(m_source->textForToken(node->name));
     QList<llvm::Type*> params;
     foreach (QSharedPointer<TypeObject> object, node->objects)
-        params.append(toBuiltinType(object->type));
-    llvm::Type* returnType = toBuiltinType(node->returnType);
+        params.append(toCodeGenType(object->type));
+    llvm::Type* returnType = toCodeGenType(node->returnType);
     llvm::FunctionType *ft = llvm::FunctionType::get(returnType, params.toVector().toStdVector(), false /*varargs*/);
     llvm::Function *f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, name, m_module.data());
     Q_ASSERT(f->getName() == name);
@@ -182,7 +229,7 @@ void CodeGen::codegen(VarDeclStmt* node)
     if (!f)
         return;
 
-    llvm::Type* type = toBuiltinType(node->type);
+    llvm::Type* type = toCodeGenType(node->type);
     Q_ASSERT(type);
     if (!type)
         return;
@@ -404,26 +451,9 @@ llvm::Value* CodeGen::codegen(VarExpr* node, llvm::Type* type)
     return value;
 }
 
-llvm::Type* CodeGen::toBuiltinType(const Token& tok) const
+llvm::Type* CodeGen::toCodeGenType(const Token& tok) const
 {
-    QString string = m_source->symbols().toTypeAndCheck(tok);
-    if (string.isEmpty())
-        return llvm::Type::getVoidTy(*m_context);
-    else if (string == "_builtin_bit_")
-        return llvm::Type::getInt1Ty(*m_context);
-    else if (string == "_builtin_int8_" || string == "_builtin_uint8_")
-        return llvm::Type::getInt8Ty(*m_context);
-    else if (string == "_builtin_int16_" || string == "_builtin_uint16_")
-        return llvm::Type::getInt16Ty(*m_context);
-    else if (string == "_builtin_int32_" || string == "_builtin_uint32_")
-        return llvm::Type::getInt32Ty(*m_context);
-    else if (string == "_builtin_int64_" || string == "_builtin_uint64_")
-        return llvm::Type::getInt64Ty(*m_context);
-    else if (string == "_builtin_float_")
-        return llvm::Type::getFloatTy(*m_context);
-    else if (string == "_builtin_double_")
-        return llvm::Type::getDoubleTy(*m_context);
-
-    m_source->error(tok, "type is not a builtin type", SourceBuffer::Fatal);
-    return llvm::Type::getVoidTy(*m_context);
+    TypeInfo* info = m_source->typeSystem().toTypeAndCheck(tok);
+    Q_ASSERT(info);
+    return info->handle;
 }
