@@ -1,10 +1,12 @@
 TranslationUnit
-  TypeDecl
+  AliasDecl
     Int
     TypeObject
       _builtin_int32_
   FuncDecl
-    main Int
+    main
+    TypeObject
+      Int
     FuncDef
       VarDeclStmt
         Int i
@@ -27,9 +29,11 @@ TranslationUnit
         LiteralExpr
           1
   FuncDecl
-    fibonacci Int
+    fibonacci
     TypeObject
       n Int
+    TypeObject
+      Int
     FuncDef
       IfStmt
         BinaryExpr

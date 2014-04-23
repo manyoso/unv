@@ -43,6 +43,7 @@ void FuncDecl::walk(Visitor& visitor)
     visitor.visit(*this);
     foreach (QSharedPointer<TypeObject> obj, objects)
         obj->walk(visitor);
+    returnType->walk(visitor);
     funcDef->walk(visitor);
     visitor.end(*this);
 }

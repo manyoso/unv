@@ -119,11 +119,15 @@ struct TokenPosition {
 struct Token {
     Token()
     { type = Undefined; }
-    Token(TokenType t, const TokenPosition& s, const TokenPosition& e)
-    { type = t; start = s; end = e; }
+    Token(TokenType t, const TokenPosition& s, const TokenPosition& e, const QStringRef& tx)
+    { type = t; start = s; end = e; text = tx; }
     TokenType type;
     TokenPosition start;
     TokenPosition end;
+    QStringRef text;
+
+    QString toString() const { return text.toString(); }
+    QStringRef toStringRef() const { return text; }
 };
 
 #endif // token_h

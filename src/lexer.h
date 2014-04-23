@@ -23,8 +23,10 @@ private:
     bool consumeCStyleComment();
     bool consumeCPPStyleComment();
     bool consumeIdentifier();
-    TokenPosition consumeDigits();
     bool isDigit(const QChar&) const;
+    TokenPosition consumeDigits();
+    Token createToken(TokenType t, const TokenPosition& s, const TokenPosition& e) const;
+    void appendToken(TokenType t, const TokenPosition& s, const TokenPosition& e);
 
 private:
     int m_index;

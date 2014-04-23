@@ -42,52 +42,52 @@ void ASTPrinter::visit(BinaryExpr& node)
 
 void ASTPrinter::visit(FuncCallExpr& node)
 {
-    *m_stream << indent() << m_source->textForToken(node.callee) << "\n";
+    *m_stream << indent() << node.callee.toString() << "\n";
     m_stream->flush();
 }
 
 void ASTPrinter::visit(FuncDecl& node)
 {
-    *m_stream << indent() << m_source->textForToken(node.name) << " " << m_source->textForToken(node.returnType) << "\n";
+    *m_stream << indent() << node.name.toString() << "\n";
     m_stream->flush();
 }
 
 void ASTPrinter::visit(LiteralExpr& node)
 {
-    *m_stream << indent() << m_source->textForToken(node.literal) << "\n";
+    *m_stream << indent() << node.literal.toString() << "\n";
     m_stream->flush();
 }
 
 void ASTPrinter::visit(TypeCtorExpr& node)
 {
     if (node.type.type != Undefined)
-        *m_stream << indent() << m_source->textForToken(node.type) << "\n";
+        *m_stream << indent() << node.type.toString() << "\n";
     m_stream->flush();
 }
 
 void ASTPrinter::visit(TypeDecl& node)
 {
-    *m_stream << indent() << m_source->textForToken(node.name) << "\n";
+    *m_stream << indent() << node.name.toString() << "\n";
     m_stream->flush();
 }
 
 void ASTPrinter::visit(TypeObject& node)
 {
     if (node.name.type != Undefined)
-        *m_stream << indent() << m_source->textForToken(node.name) << " " << m_source->textForToken(node.type) << "\n";
+        *m_stream << indent() << node.name.toString() << " " << node.type.toString() << "\n";
     else
-        *m_stream << indent() << m_source->textForToken(node.type) << "\n";
+        *m_stream << indent() << node.type.toString() << "\n";
     m_stream->flush();
 }
 
 void ASTPrinter::visit(VarExpr& node)
 {
-    *m_stream << indent() << m_source->textForToken(node.var) << "\n";
+    *m_stream << indent() << node.var.toString() << "\n";
     m_stream->flush();
 }
 
 void ASTPrinter::visit(VarDeclStmt& node)
 {
-    *m_stream << indent() << m_source->textForToken(node.type) << " " << m_source->textForToken(node.name) << "\n";
+    *m_stream << indent() << node.type.toString() << " " << node.name.toString() << "\n";
     m_stream->flush();
 }

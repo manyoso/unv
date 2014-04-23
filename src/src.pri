@@ -22,5 +22,5 @@ SOURCES += $$PWD/ast.cpp \
            $$PWD/parser.cpp \
            $$PWD/typesystem.cpp
 
-QMAKE_CXXFLAGS += $$system(llvm-config --cppflags)
+QMAKE_CXXFLAGS += $$system(llvm-config --cppflags) -ferror-limit=1
 LIBS += $$system(llvm-config --ldflags --libs core)

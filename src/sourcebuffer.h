@@ -35,10 +35,10 @@ public:
     QChar at(int index) const
     { return m_source.at(index); }
 
-    QString text(int pos, int n) const
-    { return m_source.mid(pos, n); }
+    QStringRef text(int pos, int n) const
+    { return m_source.midRef(pos, n); }
 
-    QString lineForToken(const Token& tok) const
+    QStringRef lineForToken(const Token& tok) const
     {
         int start = 0;
         int end = 0;
@@ -54,7 +54,7 @@ public:
         } else {
             end = m_lineInfo.at(tok.start.line - 1);
         }
-        return m_source.mid(start, end - start + 1);
+        return m_source.midRef(start, end - start + 1);
     }
 
     int count() const
@@ -76,11 +76,11 @@ public:
     void appendToken(const Token& token)
     { m_tokens.append(token); }
 
-    QString textForToken(const Token& tok) const
+    QStringRef textForTokenPosition(const TokenPosition& s, const TokenPosition& e) const
     {
-        int start = indexForPosition(tok.start);
-        int end = indexForPosition(tok.end);
-        return m_source.mid(start, end - start + 1);
+        int start = indexForPosition(s);
+        int end = indexForPosition(e);
+        return m_source.midRef(start, end - start + 1);
     }
 
     Token tokenAt(int index) const
@@ -99,7 +99,7 @@ public:
     void print(QTextStream& stream) const
     {
         foreach (Token tok, m_tokens)
-            stream << textForToken(tok);
+            stream << tok.toStringRef().toString();
     }
 
     void printTokens() const
@@ -141,7 +141,7 @@ public:
 #else
             + " " + err + ": " + str;
 #endif
-        QString context = lineForToken(tok);
+        QString context = lineForToken(tok).toString();
         context.replace('\n', QChar());
         QString caret(tok.start.column - 1, ' ');
         context.replace('\t', ' ');

@@ -24,6 +24,8 @@ typedef QSharedPointer<llvm::LLVMContext> Context;
 typedef QSharedPointer<llvm::Module> Module;
 typedef QSharedPointer<llvm::Builder> Builder;
 
+struct TypeInfo;
+
 class CodeGen : public Visitor {
 public:
     CodeGen(SourceBuffer* source);
@@ -38,20 +40,23 @@ public:
 private:
     virtual void begin(Node&) {}
     virtual void end(Node&) {}
+    virtual void visit(TypeDecl&);
     virtual void visit(FuncDecl&);
+    void registerTypeDecl(TypeDecl*);
     void registerFuncDecl(FuncDecl*);
     void codegen(FuncDef* node);
     void codegen(Stmt* node);
     void codegen(IfStmt* node);
     void codegen(ReturnStmt* node);
     void codegen(VarDeclStmt* node);
-    llvm::Value* codegen(BinaryExpr* node, llvm::Type* type = 0);
-    llvm::Value* codegen(Expr* node, llvm::Type* type = 0);
-    llvm::Value* codegen(FuncCallExpr* node, llvm::Type* type = 0);
-    llvm::Value* codegen(LiteralExpr* node, llvm::Type* type = 0);
-    llvm::Value* codegen(TypeCtorExpr* node, llvm::Type* type = 0);
-    llvm::Value* codegen(VarExpr* node, llvm::Type* type = 0);
+    llvm::Value* codegen(BinaryExpr* node, TypeInfo* info = 0);
+    llvm::Value* codegen(Expr* node, TypeInfo* info = 0);
+    llvm::Value* codegen(FuncCallExpr* node, TypeInfo* info = 0);
+    llvm::Value* codegen(LiteralExpr* node, TypeInfo* info = 0);
+    llvm::Value* codegen(TypeCtorExpr* node, TypeInfo* info = 0);
+    llvm::Value* codegen(VarExpr* node, TypeInfo* info = 0);
     llvm::Type* toCodeGenType(const Token& tok) const;
+    TypeInfo* typeInfoForExpr(Expr* node) const;
     void comparisonOfSigns(const Token& tok, bool lSigned, bool rSigned);
 
 private:
@@ -61,6 +66,7 @@ private:
     Builder m_builder;
     bool m_declPass;
     QHash<QString, llvm::Value*> m_namedValues;
+    QHash<QString, TypeInfo*> m_namedTypes;
 };
 
 #endif // codegen_h

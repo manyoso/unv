@@ -20,6 +20,7 @@
 class LLVMString {
 public:
     LLVMString(const QString& string) : m_string(string.toLatin1()) { }
+    LLVMString(const QStringRef& string) : m_string(string.toLatin1()) { }
 
     llvm::StringRef toStringRef() const
     {
@@ -40,6 +41,11 @@ private:
     QByteArray m_string;
 };
 
+static QString toQString(llvm::StringRef ref)
+{
+    return QString::fromLocal8Bit(ref.data(), ref.size());
+}
+
 CodeGen::CodeGen(SourceBuffer* buffer)
     : m_source(buffer)
     , m_context(new llvm::LLVMContext)
@@ -58,7 +64,6 @@ CodeGen::CodeGen(SourceBuffer* buffer)
     info = m_source->typeSystem().toType("_builtin_int8_");
     Q_ASSERT(info);
     info->handle = llvm::Type::getInt8Ty(*m_context);
-    info->isSignedInt = true;
 
     info = m_source->typeSystem().toType("_builtin_uint16_");
     Q_ASSERT(info);
@@ -67,7 +72,6 @@ CodeGen::CodeGen(SourceBuffer* buffer)
     info = m_source->typeSystem().toType("_builtin_int16_");
     Q_ASSERT(info);
     info->handle = llvm::Type::getInt16Ty(*m_context);
-    info->isSignedInt = true;
 
     info = m_source->typeSystem().toType("_builtin_uint32_");
     Q_ASSERT(info);
@@ -76,7 +80,6 @@ CodeGen::CodeGen(SourceBuffer* buffer)
     info = m_source->typeSystem().toType("_builtin_int32_");
     Q_ASSERT(info);
     info->handle = llvm::Type::getInt32Ty(*m_context);
-    info->isSignedInt = true;
 
     info = m_source->typeSystem().toType("_builtin_uint64_");
     Q_ASSERT(info);
@@ -85,7 +88,6 @@ CodeGen::CodeGen(SourceBuffer* buffer)
     info = m_source->typeSystem().toType("_builtin_int64_");
     Q_ASSERT(info);
     info->handle = llvm::Type::getInt64Ty(*m_context);
-    info->isSignedInt = true;
 
     info = m_source->typeSystem().toType("_builtin_float_");
     Q_ASSERT(info);
@@ -115,6 +117,14 @@ QString CodeGen::generateLLVMIR()
     return QString::fromStdString(str);
 }
 
+void CodeGen::visit(TypeDecl& node)
+{
+    if (m_declPass) {
+        registerTypeDecl(&node);
+        return;
+    }
+}
+
 void CodeGen::visit(FuncDecl& node)
 {
     if (m_declPass) {
@@ -122,14 +132,18 @@ void CodeGen::visit(FuncDecl& node)
         return;
     }
 
-    LLVMString name(m_source->textForToken(node.name));
+    LLVMString name(node.name.toStringRef());
     llvm::Function *f = m_module->getFunction(name);
 
     int i = 0;
     m_namedValues.clear();
+    m_namedTypes.clear();
     for (llvm::Function::arg_iterator it = f->arg_begin(); it != f->arg_end(); ++it, ++i) {
         QSharedPointer<TypeObject> object = node.objects.at(i);
-        m_namedValues.insert(m_source->textForToken(object->name), it);
+        m_namedValues.insert(object->name.toString(), it);
+
+        TypeInfo* type = m_source->typeSystem().toTypeAndCheck(object->type);
+        m_namedTypes.insert(object->name.toString(), type);
     }
 
     llvm::BasicBlock *block = llvm::BasicBlock::Create(*m_context, "entry", f);
@@ -138,12 +152,19 @@ void CodeGen::visit(FuncDecl& node)
     llvm::verifyFunction(*f);
 }
 
-void CodeGen::registerFuncDecl(FuncDecl* node) {
-    LLVMString name(m_source->textForToken(node->name));
+void CodeGen::registerTypeDecl(TypeDecl* node)
+{
+    node->handle = toCodeGenType(node->name);
+}
+
+void CodeGen::registerFuncDecl(FuncDecl* node)
+{
+    LLVMString name(node->name.toStringRef());
     QList<llvm::Type*> params;
     foreach (QSharedPointer<TypeObject> object, node->objects)
         params.append(toCodeGenType(object->type));
-    llvm::Type* returnType = toCodeGenType(node->returnType);
+
+    llvm::Type* returnType = toCodeGenType(node->returnType->type);
     llvm::FunctionType *ft = llvm::FunctionType::get(returnType, params.toVector().toStdVector(), false /*varargs*/);
     llvm::Function *f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, name, m_module.data());
     Q_ASSERT(f->getName() == name);
@@ -151,7 +172,7 @@ void CodeGen::registerFuncDecl(FuncDecl* node) {
     int i = 0;
     for (llvm::Function::arg_iterator it = f->arg_begin(); it != f->arg_end(); ++it, ++i) {
         QSharedPointer<TypeObject> object = node->objects.at(i);
-        LLVMString name(m_source->textForToken(object->name));
+        LLVMString name(object->name.toStringRef());
         it->setName(name);
     }
 }
@@ -213,7 +234,20 @@ void CodeGen::codegen(ReturnStmt* node)
     if (!f)
         return;
 
-    if (llvm::Value* value = codegen(node->expr.data(), f->getReturnType())) {
+    TypeInfo* funcInfo = m_source->typeSystem().toType(toQString(f->getName()));
+    Q_ASSERT(funcInfo);
+    if (!funcInfo)
+        return;
+
+    Q_ASSERT(funcInfo->isNode());
+    FuncDecl* funcDecl = static_cast<FuncDecl*>(funcInfo);
+
+    TypeInfo* returnInfo = m_source->typeSystem().toTypeAndCheck(funcDecl->returnType->type);
+    Q_ASSERT(returnInfo);
+    if (!returnInfo)
+        return;
+
+    if (llvm::Value* value = codegen(node->expr.data(), returnInfo)) {
         m_builder->CreateRet(value);
         return;
     }
@@ -229,18 +263,19 @@ void CodeGen::codegen(VarDeclStmt* node)
     if (!f)
         return;
 
-    llvm::Type* type = toCodeGenType(node->type);
-    Q_ASSERT(type);
-    if (!type)
+    TypeInfo* info = m_source->typeSystem().toTypeAndCheck(node->type);
+    Q_ASSERT(info);
+    if (!info)
         return;
 
-    llvm::Value* value = codegen(node->expr.data(), type);
+    llvm::Value* value = codegen(node->expr.data(), info);
     Q_ASSERT(value);
     if (!value)
         return;
 
-    QString name = m_source->textForToken(node->name);
+    QString name = node->name.toString();
     m_namedValues.insert(name, value);
+    m_namedTypes.insert(name, info);
 }
 
 void CodeGen::comparisonOfSigns(const Token& tok, bool lSigned, bool rSigned)
@@ -249,14 +284,18 @@ void CodeGen::comparisonOfSigns(const Token& tok, bool lSigned, bool rSigned)
         m_source->error(tok, "comparison of signed and unsigned integers not supported", SourceBuffer::Fatal);
 }
 
-llvm::Value* CodeGen::codegen(BinaryExpr* node, llvm::Type* type)
+llvm::Value* CodeGen::codegen(BinaryExpr* node, TypeInfo* info)
 {
-    llvm::Value *l = 0;
-    llvm::Value *r = 0;
+    llvm::Value* l = 0;
+    llvm::Value* r = 0;
+    if (!info)
+        info = typeInfoForExpr(node);
+
     if (node->lhs->kind != Node::_LiteralExpr)
-        l = codegen(node->lhs.data(), type);
+        l = codegen(node->lhs.data(), info);
+
     if (node->rhs->kind != Node::_LiteralExpr)
-        r = codegen(node->rhs.data(), type);
+        r = codegen(node->rhs.data(), info);
 
     if (!l && !r) {
         m_source->error(static_cast<LiteralExpr*>(node->lhs.data())->literal,
@@ -266,9 +305,10 @@ llvm::Value* CodeGen::codegen(BinaryExpr* node, llvm::Type* type)
     }
 
     if (!l)
-        l = codegen(node->lhs.data(), r->getType());
+        l = codegen(node->lhs.data(), info);
+
     if (!r)
-        r = codegen(node->rhs.data(), l->getType());
+        r = codegen(node->rhs.data(), info);
 
     Q_ASSERT(l && r);
     if (!l && !r) return 0;
@@ -321,30 +361,33 @@ llvm::Value* CodeGen::codegen(BinaryExpr* node, llvm::Type* type)
     }
 }
 
-llvm::Value* CodeGen::codegen(Expr* node, llvm::Type* type)
+llvm::Value* CodeGen::codegen(Expr* node, TypeInfo* info)
 {
     switch (node->kind) {
     case Node::_BinaryExpr:
-        return codegen(static_cast<BinaryExpr*>(node), type);
+        return codegen(static_cast<BinaryExpr*>(node), info);
     case Node::_FuncCallExpr:
-        return codegen(static_cast<FuncCallExpr*>(node), type);
+        return codegen(static_cast<FuncCallExpr*>(node), info);
     case Node::_LiteralExpr:
-        return codegen(static_cast<LiteralExpr*>(node), type);
+        return codegen(static_cast<LiteralExpr*>(node), info);
     case Node::_VarExpr:
-        return codegen(static_cast<VarExpr*>(node), type);
+        return codegen(static_cast<VarExpr*>(node), info);
     case Node::_TypeCtorExpr:
-        return codegen(static_cast<TypeCtorExpr*>(node), type);
+        return codegen(static_cast<TypeCtorExpr*>(node), info);
     default:
         Q_ASSERT(false); // should not be reached
         return 0;
     }
 }
 
-llvm::Value* CodeGen::codegen(FuncCallExpr* node, llvm::Type* type)
+llvm::Value* CodeGen::codegen(FuncCallExpr* node, TypeInfo* info)
 {
-    LLVMString callee = m_source->textForToken(node->callee);
+    if (!info)
+        info = typeInfoForExpr(node);
+
+    LLVMString callee = node->callee.toStringRef();
     llvm::Function *calleeFunction = m_module->getFunction(callee);
-    if (calleeFunction->getReturnType() != type) {
+    if (calleeFunction->getReturnType() != info->handle) {
         m_source->error(node->callee, "function return type does not match caller", SourceBuffer::Fatal);
         return 0;
     }
@@ -359,13 +402,16 @@ llvm::Value* CodeGen::codegen(FuncCallExpr* node, llvm::Type* type)
         return 0;
     }
 
+    TypeInfo* function = m_source->typeSystem().toTypeAndCheck(node->callee);
+
     int i = 0;
     QList<llvm::Value*> args;
-    for (llvm::Function::arg_iterator it = calleeFunction->arg_begin();
-            it != calleeFunction->arg_end();
-            ++it, ++i) {
+    QList<TypeRef*> refs = function->typeRefList();
+    QList<TypeRef*>::const_iterator end = refs.constEnd();
+    for (QList<TypeRef*>::const_iterator it = refs.constBegin(); it != end;  ++it, ++i) {
         QSharedPointer<Expr> arg = node->args.at(i);
-        llvm::Value* value = codegen(arg.data(), it->getType());
+        TypeInfo* info = m_source->typeSystem().toType((*it)->typeName());
+        llvm::Value* value = codegen(arg.data(), info);
         Q_ASSERT(value);
         if (!value)
             return 0;
@@ -375,8 +421,13 @@ llvm::Value* CodeGen::codegen(FuncCallExpr* node, llvm::Type* type)
     return m_builder->CreateCall(calleeFunction, args.toVector().toStdVector(), "calltmp");
 }
 
-llvm::Value* CodeGen::codegen(LiteralExpr* node, llvm::Type* type)
+llvm::Value* CodeGen::codegen(LiteralExpr* node, TypeInfo* info)
 {
+    Q_ASSERT(info);
+    if (!info)
+        return 0;
+
+    llvm::Type* type = info->handle;
     Q_ASSERT(type);
     if (!type)
         return 0;
@@ -388,12 +439,11 @@ llvm::Value* CodeGen::codegen(LiteralExpr* node, llvm::Type* type)
         }
 
         llvm::IntegerType* integerType = static_cast<llvm::IntegerType*>(type);
-        QString digits = m_source->textForToken(node->literal);
+        QString digits = node->literal.toString();
         unsigned numbits = integerType->getBitWidth();
-        bool isSigned = integerType->getSignBit();
         bool success = false;
 
-        if (!isSigned) {
+        if (!info->isSignedInt()) {
             quint64 n = digits.toULongLong(&success);
 
             bool outOfRange = false;
@@ -433,20 +483,23 @@ llvm::Value* CodeGen::codegen(LiteralExpr* node, llvm::Type* type)
     return 0;
 }
 
-llvm::Value* CodeGen::codegen(TypeCtorExpr* node, llvm::Type* type)
+llvm::Value* CodeGen::codegen(TypeCtorExpr* node, TypeInfo* info)
 {
     if (node->type.type == Undefined)
-        return codegen(node->args.first().data(), type);
+        return codegen(node->args.first().data(), info);
     return 0;
 }
 
-llvm::Value* CodeGen::codegen(VarExpr* node, llvm::Type* type)
+llvm::Value* CodeGen::codegen(VarExpr* node, TypeInfo* info)
 {
-    QString name = m_source->textForToken(node->var);
+    if (!info)
+        info = typeInfoForExpr(node);
+
+    QString name = node->var.toString();
     llvm::Value *value = m_namedValues.contains(name) ? m_namedValues.value(name) : 0;
     if (!value)
         m_source->error(node->var, "unknown variable name", SourceBuffer::Fatal);
-    if (type && value->getType() != type)
+    if (!info || info->handle != value->getType())
         m_source->error(node->var, "unknown variable type", SourceBuffer::Fatal);
     return value;
 }
@@ -457,3 +510,61 @@ llvm::Type* CodeGen::toCodeGenType(const Token& tok) const
     Q_ASSERT(info);
     return info->handle;
 }
+
+TypeInfo* CodeGen::typeInfoForExpr(Expr* node) const
+{
+    switch (node->kind) {
+    case Node::_BinaryExpr:
+    {
+        BinaryExpr* expr = static_cast<BinaryExpr*>(node);
+
+        if (TypeInfo* info = typeInfoForExpr(expr->lhs.data()))
+            return info;
+
+        if (TypeInfo* info = typeInfoForExpr(expr->rhs.data()))
+            return info;
+
+        m_source->error(expr->lhs->start, "can not determine type for binary expression", SourceBuffer::Fatal);
+        return 0;
+    }
+    case Node::_FuncCallExpr:
+    {
+        FuncCallExpr* expr = static_cast<FuncCallExpr*>(node);
+        TypeInfo* function = m_source->typeSystem().toTypeAndCheck(expr->callee);
+        if (TypeRef* returnTypeRef = function->returnTypeRef())
+            if (TypeInfo* returnType = m_source->typeSystem().toType(returnTypeRef->typeName()))
+                return returnType;
+
+        m_source->error(expr->callee, "can not determine type for function call expression", SourceBuffer::Fatal);
+        return 0;
+    }
+    case Node::_LiteralExpr:
+        return 0;
+    case Node::_VarExpr:
+    {
+        VarExpr* expr = static_cast<VarExpr*>(node);
+        QString name = expr->var.toString();
+        if (m_namedTypes.contains(name))
+            return m_namedTypes.value(name);
+
+        m_source->error(expr->var, "can not determine type for variable expression", SourceBuffer::Fatal);
+        return 0;
+    }
+    case Node::_TypeCtorExpr:
+    {
+        TypeCtorExpr* expr = static_cast<TypeCtorExpr*>(node);
+        if (expr->type.type == Undefined)
+            return typeInfoForExpr(expr->args.first().data());
+
+        if (TypeInfo* info = m_source->typeSystem().toTypeAndCheck(expr->type))
+            return info;
+
+        m_source->error(expr->type, "can not determine type for type ctor expression", SourceBuffer::Fatal);
+        return 0;
+    }
+    default:
+        Q_ASSERT(false); // should not be reached
+        return 0;
+    }
+}
+

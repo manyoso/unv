@@ -122,7 +122,7 @@ void Parser::parseTypeDecl()
 
     Token name = tok;
 
-    QChar firstChar = m_source->textForToken(name).at(0);
+    QChar firstChar = name.toStringRef().at(0);
     if (firstChar.toUpper() != firstChar) {
         m_source->error(name, "type names must begin with an upper case char");
         return;
@@ -144,7 +144,11 @@ void Parser::parseTypeDecl()
     if (!expect(tok, Newline))
         return;
 
-    TypeDecl* decl = new TypeDecl;
+    Node::Kind k = Node::_ProductDecl;
+    if (objects.size() < 2)
+        k = Node::_AliasDecl;
+
+    TypeDecl* decl = new TypeDecl(k);
     decl->name = name;
     decl->objects = objects;
 
@@ -169,7 +173,7 @@ void Parser::parseFuncDecl()
 
     Token name = tok;
 
-    QChar firstChar = m_source->textForToken(name).at(0);
+    QChar firstChar = name.toStringRef().at(0);
     if (firstChar.toLower() != firstChar) {
         m_source->error(name, "function names must begin with a lower case char");
         return;
@@ -204,12 +208,12 @@ void Parser::parseFuncDecl()
         return;
 
     tok = advance(1);
-    if (!expect(tok, Identifier))
+
+    TypeObject* returnType = parseTypeObject();
+    if (!returnType)
         return;
 
-    Token returnType = tok;
-
-    tok = advance(1);
+    tok = current();
     if (!expect(tok, Newline))
         return;
 
@@ -221,7 +225,7 @@ void Parser::parseFuncDecl()
     decl->name = name;
     decl->objects = objects;
     decl->funcDef = QSharedPointer<FuncDef>(funcDef);
-    decl->returnType = returnType;
+    decl->returnType = QSharedPointer<TypeObject>(returnType);
 
     if (!m_source->typeSystem().addFunction(*decl))
         return;

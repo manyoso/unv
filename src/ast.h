@@ -4,6 +4,7 @@
 #include <QtCore>
 
 #include "token.h"
+#include "typesystem.h"
 
 // forward declarations
 struct BinaryExpr;
@@ -25,16 +26,18 @@ struct Visitor;
 
 struct Node {
     enum Kind {
+        _AliasDecl,
         _BinaryExpr,
+        _BuiltinDecl,
         _IfStmt,
         _FuncCallExpr,
         _FuncDef,
         _FuncDecl,
         _LiteralExpr,
         _ReturnStmt,
+        _ProductDecl,
         _TranslationUnit,
         _TypeCtorExpr,
-        _TypeDecl,
         _TypeObject,
         _VarDeclStmt,
         _VarExpr
@@ -43,16 +46,18 @@ struct Node {
     QString kindToString() const
     {
         switch (kind) {
+        case _AliasDecl:        return "AliasDecl";
         case _BinaryExpr:       return "BinaryExpr";
+        case _BuiltinDecl:      return "BuiltinDecl";
         case _IfStmt:           return "IfStmt";
         case _FuncCallExpr:     return "FuncCallExpr";
         case _FuncDef:          return "FuncDef";
         case _FuncDecl:         return "FuncDecl";
         case _LiteralExpr:      return "LiteralExpr";
+        case _ProductDecl:      return "ProductDecl";
         case _ReturnStmt:       return "ReturnStmt";
         case _TranslationUnit:  return "TranslationUnit";
-        case _TypeCtorExpr:         return "TypeCtorExpr";
-        case _TypeDecl:         return "TypeDecl";
+        case _TypeCtorExpr:     return "TypeCtorExpr";
         case _TypeObject:       return "TypeObject";
         case _VarDeclStmt:      return "VarDeclStmt";
         case _VarExpr:          return "VarExpr";
@@ -74,11 +79,37 @@ struct TranslationUnit : public Node {
     virtual void walk(Visitor&);
 };
 
-struct TypeDecl : public Node {
-    TypeDecl() : Node(_TypeDecl) {}
+struct TypeObject : public Node, public TypeRef {
+    TypeObject() : Node(_TypeObject) {}
+    Token name;
+    Token type;
+    virtual void walk(Visitor&);
+
+    // inherited from TypeRef
+    virtual QStringRef refName() const { return name.toStringRef(); }
+    virtual QStringRef typeName() const { return type.toStringRef(); }
+};
+
+struct TypeDecl : public Node, public TypeInfo {
+    TypeDecl(Kind kind) : Node(kind) {}
+
     Token name;
     QList<QSharedPointer<TypeObject> > objects;
     virtual void walk(Visitor&);
+
+    // inherited from TypeInfo
+    virtual QStringRef typeName() const { return name.toStringRef(); }
+    virtual bool isNode() const { return true; }
+    virtual bool isProduct() const { return kind == _ProductDecl; }
+    virtual bool isFunction() const { return kind == _FuncDecl; }
+    virtual bool isAlias() const { return kind == _AliasDecl; }
+    virtual QList<TypeRef*> typeRefList() const
+    {
+        QList<TypeRef*> list;
+        foreach (QSharedPointer<TypeObject> obj, objects)
+            list.append(obj.data());
+        return list;
+    }
 };
 
 struct Expr : public Node {
@@ -153,26 +184,20 @@ struct ReturnStmt : public Stmt {
     virtual void walk(Visitor&);
 };
 
-struct TypeObject : public Node {
-    TypeObject() : Node(_TypeObject) {}
-    Token name;
-    Token type;
-    virtual void walk(Visitor&);
-};
-
 struct FuncDef : public Node {
     FuncDef() : Node(_FuncDef) {}
     QList<QSharedPointer<Stmt> > stmts;
     virtual void walk(Visitor&);
 };
 
-struct FuncDecl : public Node {
-    FuncDecl() : Node(_FuncDecl) {}
-    Token name;
-    QList<QSharedPointer<TypeObject> > objects;
-    Token returnType;
+struct FuncDecl : public TypeDecl {
+    FuncDecl() : TypeDecl(_FuncDecl) {}
+    QSharedPointer<TypeObject> returnType;
     QSharedPointer<FuncDef> funcDef;
     virtual void walk(Visitor&);
+
+    // inherited from TypeInfo
+    virtual TypeRef* returnTypeRef() const { return returnType.data(); }
 };
 
 struct VarExpr : public Expr {
