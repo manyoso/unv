@@ -311,7 +311,7 @@ llvm::Value* CodeGen::codegen(BinaryExpr* node, TypeInfo* info)
         r = codegen(node->rhs.data(), info);
 
     Q_ASSERT(l && r);
-    if (!l && !r) return 0;
+    if (!l || !r) return 0;
 
     Token lhs = node->lhs->start;
     if (!l->getType()->isIntegerTy() || !r->getType()->isIntegerTy()) {
