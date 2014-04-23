@@ -319,6 +319,7 @@ llvm::Value* CodeGen::codegen(BinaryExpr* node, TypeInfo* info)
         return 0;
     }
 
+    // FIXME: This is still incorrect!
     bool lSigned = static_cast<llvm::IntegerType*>(l->getType())->getSignBit();
     bool rSigned = static_cast<llvm::IntegerType*>(r->getType())->getSignBit();
 
