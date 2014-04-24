@@ -126,8 +126,7 @@ public:
     {
         static int s_numberOfErrors = 0;
 
-        if (assert(tok.start.line != -1 && tok.start.column != -1 && tok.end.line != -1 && tok.end.column != -1))
-            return;
+        assert(tok.start.line != -1 && tok.start.column != -1 && tok.end.line != -1 && tok.end.column != -1);
 
         if (type == Error)
             s_numberOfErrors++;

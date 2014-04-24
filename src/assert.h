@@ -3,7 +3,7 @@
 
 #include <QtCore>
 
-static inline bool assert(bool b)
+static inline void assert(bool b)
 {
     if (!b) {
         QTextStream out(stderr);
@@ -15,7 +15,6 @@ static inline bool assert(bool b)
         out.flush();
         exit(EXIT_FAILURE);
     }
-    return !b;
 }
 
 #endif // assert_h
