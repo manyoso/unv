@@ -21,6 +21,10 @@ private slots:
     void testInt16Overflow();
     void testInt32Overflow();
     void testInt64Overflow();
+    void testUInt8Overflow();
+    void testUInt16Overflow();
+    void testUInt32Overflow();
+    void testUInt64Overflow();
 
 private:
     void compile(const QString& program, Expectation expect);

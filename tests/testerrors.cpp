@@ -143,3 +143,87 @@ void TestErrors::testInt64Overflow()
         compile(testInt64 + minInt64, ExpectFailure);
     }
 }
+
+void TestErrors::testUInt8Overflow()
+{
+    QString testUInt8 = "function main : () -> _builtin_uint8_\n\treturn ";
+    QString maxUInt8 = QString::number(255);
+    QString minUInt8 = QString::number(0);
+    compile(testUInt8 + maxUInt8, ExpectSuccess);
+    compile(testUInt8 + minUInt8, ExpectSuccess);
+
+    {
+        unsigned lastDigit = QString(maxUInt8.at(maxUInt8.count() - 1)).toUInt();
+        lastDigit++;
+        maxUInt8.replace(maxUInt8.count() - 1, 1, QString::number(lastDigit));
+        compile(testUInt8 + maxUInt8, ExpectFailure);
+    }
+
+    {
+        minUInt8 = QString("-1");
+        compile(testUInt8 + minUInt8, ExpectFailure);
+    }
+}
+
+void TestErrors::testUInt16Overflow()
+{
+    QString testUInt16 = "function main : () -> _builtin_uint16_\n\treturn ";
+    QString maxUInt16 = QString::number(std::numeric_limits<uint16_t>::max());
+    QString minUInt16 = QString::number(std::numeric_limits<uint16_t>::min());
+    compile(testUInt16 + maxUInt16, ExpectSuccess);
+    compile(testUInt16 + minUInt16, ExpectSuccess);
+
+    {
+        unsigned lastDigit = QString(maxUInt16.at(maxUInt16.count() - 1)).toUInt();
+        lastDigit++;
+        maxUInt16.replace(maxUInt16.count() - 1, 1, QString::number(lastDigit));
+        compile(testUInt16 + maxUInt16, ExpectFailure);
+    }
+
+    {
+        minUInt16 = QString("-1");
+        compile(testUInt16 + minUInt16, ExpectFailure);
+    }
+}
+
+void TestErrors::testUInt32Overflow()
+{
+    QString testUInt32 = "function main : () -> _builtin_uint32_\n\treturn ";
+    QString maxUInt32 = QString::number(std::numeric_limits<uint32_t>::max());
+    QString minUInt32 = QString::number(std::numeric_limits<uint32_t>::min());
+    compile(testUInt32 + maxUInt32, ExpectSuccess);
+    compile(testUInt32 + minUInt32, ExpectSuccess);
+
+    {
+        unsigned lastDigit = QString(maxUInt32.at(maxUInt32.count() - 1)).toUInt();
+        lastDigit++;
+        maxUInt32.replace(maxUInt32.count() - 1, 1, QString::number(lastDigit));
+        compile(testUInt32 + maxUInt32, ExpectFailure);
+    }
+
+    {
+        minUInt32 = QString("-1");
+        compile(testUInt32 + minUInt32, ExpectFailure);
+    }
+}
+
+void TestErrors::testUInt64Overflow()
+{
+    QString testUInt64 = "function main : () -> _builtin_uint64_\n\treturn ";
+    QString maxUInt64 = QString::number(std::numeric_limits<uint64_t>::max());
+    QString minUInt64 = QString::number(std::numeric_limits<uint64_t>::min());
+    compile(testUInt64 + maxUInt64, ExpectSuccess);
+    compile(testUInt64 + minUInt64, ExpectSuccess);
+
+    {
+        unsigned lastDigit = QString(maxUInt64.at(maxUInt64.count() - 1)).toInt();
+        lastDigit++;
+        maxUInt64.replace(maxUInt64.count() - 1, 1, QString::number(lastDigit));
+        compile(testUInt64 + maxUInt64, ExpectFailure);
+    }
+
+    {
+        minUInt64 = QString("-1");
+        compile(testUInt64 + minUInt64, ExpectFailure);
+    }
+}
