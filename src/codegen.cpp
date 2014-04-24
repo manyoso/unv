@@ -54,47 +54,36 @@ CodeGen::CodeGen(SourceBuffer* buffer)
     , m_declPass(true)
 {
     TypeInfo* info = m_source->typeSystem().toType("_builtin_bit_");
-    Q_ASSERT(info);
     info->handle = llvm::Type::getInt1Ty(*m_context);
 
     info = m_source->typeSystem().toType("_builtin_uint8_");
-    Q_ASSERT(info);
     info->handle = llvm::Type::getInt8Ty(*m_context);
 
     info = m_source->typeSystem().toType("_builtin_int8_");
-    Q_ASSERT(info);
     info->handle = llvm::Type::getInt8Ty(*m_context);
 
     info = m_source->typeSystem().toType("_builtin_uint16_");
-    Q_ASSERT(info);
     info->handle = llvm::Type::getInt16Ty(*m_context);
 
     info = m_source->typeSystem().toType("_builtin_int16_");
-    Q_ASSERT(info);
     info->handle = llvm::Type::getInt16Ty(*m_context);
 
     info = m_source->typeSystem().toType("_builtin_uint32_");
-    Q_ASSERT(info);
     info->handle = llvm::Type::getInt32Ty(*m_context);
 
     info = m_source->typeSystem().toType("_builtin_int32_");
-    Q_ASSERT(info);
     info->handle = llvm::Type::getInt32Ty(*m_context);
 
     info = m_source->typeSystem().toType("_builtin_uint64_");
-    Q_ASSERT(info);
     info->handle = llvm::Type::getInt64Ty(*m_context);
 
     info = m_source->typeSystem().toType("_builtin_int64_");
-    Q_ASSERT(info);
     info->handle = llvm::Type::getInt64Ty(*m_context);
 
     info = m_source->typeSystem().toType("_builtin_float_");
-    Q_ASSERT(info);
     info->handle = llvm::Type::getFloatTy(*m_context);
 
     info = m_source->typeSystem().toType("_builtin_double_");
-    Q_ASSERT(info);
     info->handle = llvm::Type::getDoubleTy(*m_context);
 }
 
@@ -167,7 +156,6 @@ void CodeGen::registerFuncDecl(FuncDecl* node)
     llvm::Type* returnType = toCodeGenType(node->returnType->type);
     llvm::FunctionType *ft = llvm::FunctionType::get(returnType, params.toVector().toStdVector(), false /*varargs*/);
     llvm::Function *f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, name, m_module.data());
-    Q_ASSERT(f->getName() == name);
 
     int i = 0;
     for (llvm::Function::arg_iterator it = f->arg_begin(); it != f->arg_end(); ++it, ++i) {
@@ -196,7 +184,7 @@ void CodeGen::codegen(Stmt* node)
         codegen(static_cast<VarDeclStmt*>(node));
         break;
     default:
-        Q_ASSERT(false); // should not be reached
+        assert(false); // should not be reached
         return;
     }
 }
@@ -204,14 +192,10 @@ void CodeGen::codegen(Stmt* node)
 void CodeGen::codegen(IfStmt* node)
 {
     llvm::Value *condition = codegen(node->expr.data());
-    Q_ASSERT(condition);
-    if (!condition)
-        return;
+    assert(condition);
 
     llvm::Function* f = m_builder->GetInsertBlock()->getParent();
-    Q_ASSERT(f);
-    if (!f)
-        return;
+    assert(f);
 
     llvm::BasicBlock* then = llvm::BasicBlock::Create(*m_context, "then", f);
     llvm::BasicBlock* ifcont = llvm::BasicBlock::Create(*m_context, "ifcont");
@@ -229,24 +213,18 @@ void CodeGen::codegen(IfStmt* node)
 void CodeGen::codegen(ReturnStmt* node)
 {
     llvm::Function* f = m_builder->GetInsertBlock()->getParent();
-
-    Q_ASSERT(f);
-    if (!f)
-        return;
+    assert(f);
 
     TypeInfo* funcInfo = m_source->typeSystem().toType(toQString(f->getName()));
-    Q_ASSERT(funcInfo);
-    if (!funcInfo)
+    if (!funcInfo) {
+        m_source->error(node->keyword, "return statement for function with unknown type", SourceBuffer::Fatal);
         return;
+    }
 
-    Q_ASSERT(funcInfo->isNode());
+    assert(funcInfo->isNode());
     FuncDecl* funcDecl = static_cast<FuncDecl*>(funcInfo);
 
     TypeInfo* returnInfo = m_source->typeSystem().toTypeAndCheck(funcDecl->returnType->type);
-    Q_ASSERT(returnInfo);
-    if (!returnInfo)
-        return;
-
     if (llvm::Value* value = codegen(node->expr.data(), returnInfo)) {
         m_builder->CreateRet(value);
         return;
@@ -258,20 +236,11 @@ void CodeGen::codegen(ReturnStmt* node)
 void CodeGen::codegen(VarDeclStmt* node)
 {
     llvm::Function* f = m_builder->GetInsertBlock()->getParent();
-
-    Q_ASSERT(f);
-    if (!f)
-        return;
+    assert(f);
 
     TypeInfo* info = m_source->typeSystem().toTypeAndCheck(node->type);
-    Q_ASSERT(info);
-    if (!info)
-        return;
-
     llvm::Value* value = codegen(node->expr.data(), info);
-    Q_ASSERT(value);
-    if (!value)
-        return;
+    assert(value);
 
     QString name = node->name.toString();
     m_namedValues.insert(name, value);
@@ -310,8 +279,7 @@ llvm::Value* CodeGen::codegen(BinaryExpr* node, TypeInfo* info)
     if (!r)
         r = codegen(node->rhs.data(), info);
 
-    Q_ASSERT(l && r);
-    if (!l || !r) return 0;
+    assert(l && r);
 
     Token lhs = node->lhs->start;
     if (!l->getType()->isIntegerTy() || !r->getType()->isIntegerTy()) {
@@ -357,7 +325,7 @@ llvm::Value* CodeGen::codegen(BinaryExpr* node, TypeInfo* info)
     case BinaryExpr::OpMultiplication:
         return m_builder->CreateMul(l, r, "multmp");
     case BinaryExpr::OpDivision:
-        Q_ASSERT(false); // should not be reached
+        assert(false); // should not be reached
         return 0;
     }
 }
@@ -376,7 +344,7 @@ llvm::Value* CodeGen::codegen(Expr* node, TypeInfo* info)
     case Node::_TypeCtorExpr:
         return codegen(static_cast<TypeCtorExpr*>(node), info);
     default:
-        Q_ASSERT(false); // should not be reached
+        assert(false); // should not be reached
         return 0;
     }
 }
@@ -413,9 +381,7 @@ llvm::Value* CodeGen::codegen(FuncCallExpr* node, TypeInfo* info)
         QSharedPointer<Expr> arg = node->args.at(i);
         TypeInfo* info = m_source->typeSystem().toType((*it)->typeName());
         llvm::Value* value = codegen(arg.data(), info);
-        Q_ASSERT(value);
-        if (!value)
-            return 0;
+        assert(value);
         args.append(value);
     }
 
@@ -424,15 +390,10 @@ llvm::Value* CodeGen::codegen(FuncCallExpr* node, TypeInfo* info)
 
 llvm::Value* CodeGen::codegen(LiteralExpr* node, TypeInfo* info)
 {
-    Q_ASSERT(info);
-    if (!info)
-        return 0;
+    assert(info);
+    assert(info->handle);
 
     llvm::Type* type = info->handle;
-    Q_ASSERT(type);
-    if (!type)
-        return 0;
-
     if (node->literal.type == Digits) {
         if (!type->isIntegerTy()) {
             m_source->error(node->literal, "non-integer literal not supported yet", SourceBuffer::Fatal);
@@ -480,7 +441,7 @@ llvm::Value* CodeGen::codegen(LiteralExpr* node, TypeInfo* info)
             return llvm::ConstantInt::get(*m_context, llvm::APInt(numbits, n, true));
         }
     }
-    Q_ASSERT(false); // should not be reached
+    assert(false); // should not be reached
     return 0;
 }
 
@@ -508,7 +469,7 @@ llvm::Value* CodeGen::codegen(VarExpr* node, TypeInfo* info)
 llvm::Type* CodeGen::toCodeGenType(const Token& tok) const
 {
     TypeInfo* info = m_source->typeSystem().toTypeAndCheck(tok);
-    Q_ASSERT(info);
+    assert(info);
     return info->handle;
 }
 
@@ -564,8 +525,7 @@ TypeInfo* CodeGen::typeInfoForExpr(Expr* node) const
         return 0;
     }
     default:
-        Q_ASSERT(false); // should not be reached
+        assert(false); // should not be reached
         return 0;
     }
 }
-

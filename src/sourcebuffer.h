@@ -3,6 +3,7 @@
 
 #include <QtCore>
 
+#include "assert.h"
 #include "ast.h"
 #include "options.h"
 #include "token.h"
@@ -125,10 +126,8 @@ public:
     {
         static int s_numberOfErrors = 0;
 
-        Q_ASSERT(tok.start.line != -1);
-        Q_ASSERT(tok.start.column != -1);
-        Q_ASSERT(tok.end.line != -1);
-        Q_ASSERT(tok.end.column != -1);
+        if (assert(tok.start.line != -1 && tok.start.column != -1 && tok.end.line != -1 && tok.end.column != -1))
+            return;
 
         if (type == Error)
             s_numberOfErrors++;

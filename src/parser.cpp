@@ -56,15 +56,14 @@ Token Parser::advance(int i, bool skipComments)
 
 Token Parser::current() const
 {
-    Q_ASSERT(m_index >= 0);
-    Q_ASSERT(m_index < m_source->tokenCount());
+    assert(m_index >= 0 && m_index < m_source->tokenCount());
     return look(0);
 }
 
 Token Parser::look(int i) const
 {
     int index = m_index + i;
-    Q_ASSERT(m_index >= 0);
+    assert(m_index >= 0);
     if (index >= m_source->tokenCount())
         return Token();
     return m_source->tokenAt(index);

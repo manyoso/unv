@@ -172,15 +172,14 @@ QChar Lexer::advance(int i)
 
 QChar Lexer::current() const
 {
-    Q_ASSERT(m_index >= 0);
-    Q_ASSERT(m_index < m_source->count());
+    assert(m_index >= 0 && m_index < m_source->count());
     return look(0);
 }
 
 QChar Lexer::look(int i) const
 {
     int index = m_index + i;
-    Q_ASSERT(index >= 0);
+    assert(m_index >= 0);
     if (index >= m_source->count())
         return QChar();
     return m_source->at(index);
