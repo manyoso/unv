@@ -2,6 +2,7 @@
 #define assert_h
 
 #include <QtCore>
+#include <signal.h>
 
 static inline void assert(bool b)
 {
@@ -13,7 +14,7 @@ static inline void assert(bool b)
         out << "ASSERT: Oops, this is really embarrassing...\n";
 #endif
         out.flush();
-        exit(EXIT_FAILURE);
+        raise(SIGSEGV);
     }
 }
 
