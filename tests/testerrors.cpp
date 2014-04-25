@@ -238,3 +238,10 @@ void TestErrors::testTwoLiteralExprForBinaryExpr()
     compile("type Int : (_builtin_int32_)\nfunction main : () -> Int\n\tif (0 > 1) return 1\n\treturn 0", ExpectFailure);
 }
 
+void TestErrors::testFunctionWithNoReturn()
+{
+    compile("type Int : (_builtin_int32_)\nfunction main : () -> Int\n\tInt i = 0\n\tif (i < 0) return 1", ExpectFailure);
+}
+
+
+

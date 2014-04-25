@@ -138,6 +138,10 @@ void CodeGen::visit(FuncDecl& node)
     llvm::BasicBlock *block = llvm::BasicBlock::Create(*m_context, "entry", f);
     m_builder->SetInsertPoint(block);
     codegen(node.funcDef.data());
+
+    if (node.funcDef->stmts.last()->kind != Node::_ReturnStmt)
+        m_source->error(node.name, "function must end with return statement", SourceBuffer::Fatal);
+
     llvm::verifyFunction(*f);
 }
 

@@ -27,6 +27,7 @@ private slots:
     void testUInt64Overflow();
     void testLiteralExprForIfStmt();
     void testTwoLiteralExprForBinaryExpr();
+    void testFunctionWithNoReturn();
 
 private:
     void compile(const QString& program, Expectation expect);
