@@ -489,6 +489,11 @@ TypeInfo* CodeGen::typeInfoForExpr(Expr* node) const
     {
         BinaryExpr* expr = static_cast<BinaryExpr*>(node);
 
+        if (expr->lhs->kind == Node::_LiteralExpr && expr->rhs->kind == Node::_LiteralExpr) {
+            m_source->error(expr->lhs->start, "both sides of binary expression are literal expressions", SourceBuffer::Fatal);
+            return 0;
+        }
+
         if (TypeInfo* info = typeInfoForExpr(expr->lhs.data()))
             return info;
 
