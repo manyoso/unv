@@ -44,6 +44,13 @@ void Parser::newline()
 
 Token Parser::advance(int i, bool skipComments)
 {
+    if (m_index + 1 >= m_source->tokenCount()) {
+        TokenPosition pos;
+        pos.line = m_source->newlineCount() + 1;
+        pos.column = 0;
+        return Token(EndOfFile, pos, pos, QStringRef());
+    }
+
     m_index += i;
     if (!skipComments)
         return current();

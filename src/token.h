@@ -54,6 +54,7 @@ enum TokenType {
     /* identifier */
     Identifier,
     Digits,
+    EndOfFile,
     Undefined
 };
 
@@ -105,6 +106,7 @@ static inline QString typeToString(TokenType type)
     case Type:              return "\'type\'";
     case Identifier:        return "\'identifier\'";
     case Digits:            return "\'digits\'";
+    case EndOfFile:         return "\'end of file\'";
     case Undefined:         return "\'undefined\'";
     }
 }
