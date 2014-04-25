@@ -227,3 +227,8 @@ void TestErrors::testUInt64Overflow()
         compile(testUInt64 + minUInt64, ExpectFailure);
     }
 }
+
+void TestErrors::testLiteralExprForIfStmt()
+{
+    compile("type Int : (_builtin_int32_)\nfunction main : () -> Int\n\tif (0) return 1\n\treturn 0", ExpectFailure);
+}

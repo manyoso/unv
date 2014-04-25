@@ -49,12 +49,12 @@ private:
     void codegen(IfStmt* node);
     void codegen(ReturnStmt* node);
     void codegen(VarDeclStmt* node);
-    llvm::Value* codegen(BinaryExpr* node, TypeInfo* info = 0);
-    llvm::Value* codegen(Expr* node, TypeInfo* info = 0);
-    llvm::Value* codegen(FuncCallExpr* node, TypeInfo* info = 0);
-    llvm::Value* codegen(LiteralExpr* node, TypeInfo* info = 0);
-    llvm::Value* codegen(TypeCtorExpr* node, TypeInfo* info = 0);
-    llvm::Value* codegen(VarExpr* node, TypeInfo* info = 0);
+    llvm::Value* codegen(BinaryExpr* node, TypeInfo* info);
+    llvm::Value* codegen(Expr* node, TypeInfo* info);
+    llvm::Value* codegen(FuncCallExpr* node, TypeInfo* info);
+    llvm::Value* codegen(LiteralExpr* node, TypeInfo* info);
+    llvm::Value* codegen(TypeCtorExpr* node, TypeInfo* info);
+    llvm::Value* codegen(VarExpr* node, TypeInfo* info);
     llvm::Type* toCodeGenType(const Token& tok) const;
     TypeInfo* typeInfoForExpr(Expr* node) const;
     void comparisonOfSigns(const Token& tok, bool lSigned, bool rSigned);

@@ -191,7 +191,16 @@ void CodeGen::codegen(Stmt* node)
 
 void CodeGen::codegen(IfStmt* node)
 {
-    llvm::Value *condition = codegen(node->expr.data());
+    if (node->expr->kind == Node::_LiteralExpr) {
+        m_source->error(node->expr->start,
+            "literal expression can not be used as the only expression of an if statement",
+            SourceBuffer::Fatal);
+        return;
+    }
+
+    TypeInfo* info = typeInfoForExpr(node->expr.data());
+    assert(info);
+    llvm::Value *condition = codegen(node->expr.data(), info);
     assert(condition);
 
     llvm::Function* f = m_builder->GetInsertBlock()->getParent();

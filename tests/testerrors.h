@@ -25,6 +25,7 @@ private slots:
     void testUInt16Overflow();
     void testUInt32Overflow();
     void testUInt64Overflow();
+    void testLiteralExprForIfStmt();
 
 private:
     void compile(const QString& program, Expectation expect);
