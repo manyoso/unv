@@ -5,6 +5,7 @@ void TestErrors::compile(const QString& program, Expectation expect)
     m_compiler = new QProcess;
     m_compiler->setProgram(QCoreApplication::applicationDirPath() + "/unv");
     m_compiler->setArguments(QStringList() << "-e" << "llvm" << "-stdin");
+//    m_compiler->setProcessChannelMode(QProcess::ForwardedErrorChannel);
     m_compiler->start();
     QVERIFY(m_compiler->waitForStarted());
     m_compiler->write(program.toLatin1());
@@ -243,5 +244,8 @@ void TestErrors::testFunctionWithNoReturn()
     compile("type Int : (_builtin_int32_)\nfunction main : () -> Int\n\tInt i = 0\n\tif (i < 0) return 1", ExpectFailure);
 }
 
-
+void TestErrors::testNonBooleanInIfStmt()
+{
+    compile("type Int : (_builtin_int32_)\nfunction main : () -> Int\n\tInt a = 1\n\tInt b = 2\n\tif (a + b) return 0\n\treturn 1", ExpectFailure);
+}
 

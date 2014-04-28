@@ -375,6 +375,9 @@ Expr* Parser::parseBasicExpr()
     case Digits:
         expr = parseLiteralExpr();
         break;
+    case True:
+        expr = parseLiteralExpr();
+        break;
     default:
         break;
     };
@@ -436,6 +439,7 @@ Expr* Parser::parseBinaryOpExpr(int precedence, Expr* lhs)
     binaryExpr->op = op;
     binaryExpr->lhs = QSharedPointer<Expr>(lhs);
     binaryExpr->rhs = QSharedPointer<Expr>(rhs);
+    binaryExpr->start = lhs->start;
     return binaryExpr;
 }
 

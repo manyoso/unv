@@ -207,6 +207,12 @@ void CodeGen::codegen(IfStmt* node)
     llvm::Value *condition = codegen(node->expr.data(), info);
     assert(condition);
 
+    if (condition->getType() != llvm::Type::getInt1Ty(*m_context)) {
+        m_source->error(node->expr->start,
+            "expression in if statement does not evaluate to true or false",
+            SourceBuffer::Fatal);
+    }
+
     llvm::Function* f = m_builder->GetInsertBlock()->getParent();
     assert(f);
 
@@ -407,9 +413,13 @@ llvm::Value* CodeGen::codegen(LiteralExpr* node, TypeInfo* info)
     assert(info->handle);
 
     llvm::Type* type = info->handle;
-    if (node->literal.type == Digits) {
+    if (node->literal.type == True) {
+        return llvm::ConstantInt::getTrue(*m_context);
+    } else if (node->literal.type == False) {
+        return llvm::ConstantInt::getFalse(*m_context);
+    } else if (node->literal.type == Digits) {
         if (!type->isIntegerTy()) {
-            m_source->error(node->literal, "non-integer literal not supported yet", SourceBuffer::Fatal);
+            m_source->error(node->literal, "non-integer numeric literal not supported yet", SourceBuffer::Fatal);
             return 0;
         }
 

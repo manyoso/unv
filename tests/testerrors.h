@@ -28,6 +28,7 @@ private slots:
     void testLiteralExprForIfStmt();
     void testTwoLiteralExprForBinaryExpr();
     void testFunctionWithNoReturn();
+    void testNonBooleanInIfStmt();
 
 private:
     void compile(const QString& program, Expectation expect);
