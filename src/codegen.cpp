@@ -466,7 +466,9 @@ llvm::Value* CodeGen::codegen(LiteralExpr* node, TypeInfo* info)
             bool success = false;
             float f = literal.toFloat(&success);
 
-            if (!success || !llvm::ConstantFP::isValueValidForType(type, llvm::APFloat(f))) {
+            bool outOfRange = f > std::numeric_limits<float>::max();
+
+            if (!success || outOfRange || !llvm::ConstantFP::isValueValidForType(type, llvm::APFloat(f))) {
                 m_source->error(node->literal, "float literal out of range", SourceBuffer::Fatal);
                 return 0;
             }
@@ -476,7 +478,10 @@ llvm::Value* CodeGen::codegen(LiteralExpr* node, TypeInfo* info)
             bool success = false;
             double d = literal.toDouble(&success);
 
-            if (!success || !llvm::ConstantFP::isValueValidForType(type, llvm::APFloat(d))) {
+            bool outOfRange = d > std::numeric_limits<double>::max();
+                outOfRange = true;
+
+            if (!success || outOfRange || !llvm::ConstantFP::isValueValidForType(type, llvm::APFloat(d))) {
                 m_source->error(node->literal, "double literal out of range", SourceBuffer::Fatal);
                 return 0;
             }
@@ -488,7 +493,9 @@ llvm::Value* CodeGen::codegen(LiteralExpr* node, TypeInfo* info)
         || node->literal.type == HexLiteral
         || node->literal.type == OctLiteral ) {
 
-        assert(type->isIntegerTy());
+        if (!type->isIntegerTy())
+            m_source->error(node->literal, "expression for integer literal has incompatible type", SourceBuffer::Fatal);
+
         llvm::IntegerType* integerType = static_cast<llvm::IntegerType*>(type);
         QString digits = integerLiteralToString(node->literal);
         unsigned numbits = integerType->getBitWidth();

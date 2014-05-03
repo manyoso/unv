@@ -31,7 +31,7 @@ private slots:
     void testNonBooleanInIfStmt();
 
 private:
-    void compile(const QString& program, Expectation expect);
+    void compile(const QString& program, Expectation expect, bool printError = false);
 
 private:
     QProcess* m_compiler;
