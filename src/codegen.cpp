@@ -375,13 +375,13 @@ llvm::Value* CodeGen::codegen(FuncCallExpr* node, TypeInfo* info)
 
     LLVMString callee = node->callee.toStringRef();
     llvm::Function *calleeFunction = m_module->getFunction(callee);
-    if (calleeFunction->getReturnType() != info->handle) {
-        m_source->error(node->callee, "function return type does not match caller", SourceBuffer::Fatal);
+    if (!calleeFunction) {
+        m_source->error(node->callee, "unknown function reference", SourceBuffer::Fatal);
         return 0;
     }
 
-    if (!calleeFunction) {
-        m_source->error(node->callee, "unknown function reference", SourceBuffer::Fatal);
+    if (calleeFunction->getReturnType() != info->handle) {
+        m_source->error(node->callee, "function return type does not match caller", SourceBuffer::Fatal);
         return 0;
     }
 
