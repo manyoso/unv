@@ -61,19 +61,29 @@ Token Parser::advance(int i, bool skipComments)
     return current();
 }
 
-Token Parser::current() const
+Token Parser::current(bool skipComments) const
 {
     assert(m_index >= 0 && m_index < m_source->tokenCount());
-    return look(0);
+    return look(0, skipComments);
 }
 
-Token Parser::look(int i) const
+Token Parser::look(int i, bool skipComments) const
 {
     int index = m_index + i;
+
     assert(m_index >= 0);
     if (index >= m_source->tokenCount())
         return Token();
-    return m_source->tokenAt(index);
+
+    Token tok = m_source->tokenAt(index);
+
+    if (!skipComments)
+        return tok;
+
+    if (tok.type == Comment || (tok.type == Whitespace && look(i + 1, false).type == Comment))
+        return look(i + 1);
+
+    return tok;
 }
 
 bool Parser::expect(Token tok, TokenType type) const

@@ -67,8 +67,8 @@ private:
     void clear();
     void newline();
     Token advance(int i, bool skipComments = true);
-    Token current() const;
-    Token look(int) const;
+    Token current(bool skipComments = true) const;
+    Token look(int i, bool skipComments = true) const;
 
     bool expect(Token tok, TokenType t) const;
     bool checkLeadingWhitespace(const Token&);
