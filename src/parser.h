@@ -14,19 +14,6 @@ public:
     void parse(SourceBuffer* source);
 
 private:
-    enum BinOpPrecedence {
-        OpEquality = 1,
-        OpNotEquality = 1,
-        OpLessThanOrEquality = 1,
-        OpGreaterThanOrEquality = 1,
-        OpLessThan = 1,
-        OpGreaterThan = 1,
-        OpAddition = 2,
-        OpSubtraction = 2,
-        OpMultiplication = 3,
-        OpDivision = 3
-    };
-
     enum Indent {
         Spaces,
         Tabs,

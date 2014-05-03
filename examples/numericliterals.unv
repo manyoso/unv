@@ -51,4 +51,7 @@ function main : () -> Int
     if (pi == -3.1415926535)
         return 1
 
+    if (hexFive != binOne + binOne + binOne + binOne + binOne)
+        return 1
+
     return 0
