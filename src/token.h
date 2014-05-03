@@ -10,7 +10,7 @@ enum TokenType {
     Newline,
     /* punctuators */
 //    Tilda,
-//    Bang,
+    Bang,
 //    At,
 //    Hash,
 //    Dollar,
@@ -53,7 +53,11 @@ enum TokenType {
     Type,
     /* identifier */
     Identifier,
-    Digits,
+    BinLiteral,
+    DecLiteral,
+    FloatLiteral,
+    HexLiteral,
+    OctLiteral,
     EndOfFile,
     Undefined
 };
@@ -65,7 +69,7 @@ static inline QString typeToString(TokenType type)
     case Tab:               return "\'\\t\'";
     case Newline:           return "\'\\n\'";
 //    case Tilda:             return "\'~\'";
-//    case Bang:              return "\'!\'";
+    case Bang:              return "\'!\'";
 //    case At:                return "\'@\'";
 //    case Hash:              return "\'#\'";
 //    case Dollar:            return "\'$\'";
@@ -105,7 +109,11 @@ static inline QString typeToString(TokenType type)
     case True:              return "\'true\'";
     case Type:              return "\'type\'";
     case Identifier:        return "\'identifier\'";
-    case Digits:            return "\'digits\'";
+    case BinLiteral:        return "\'bin literal\'";
+    case DecLiteral:        return "\'int literal\'";
+    case FloatLiteral:      return "\'float literal\'";
+    case HexLiteral:        return "\'hex literal\'";
+    case OctLiteral:        return "\'oct literal\'";
     case EndOfFile:         return "\'end of file\'";
     case Undefined:         return "\'undefined\'";
     }

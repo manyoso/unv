@@ -56,8 +56,6 @@ private:
     llvm::Value* codegen(TypeCtorExpr* node, TypeInfo* info);
     llvm::Value* codegen(VarExpr* node, TypeInfo* info);
     llvm::Type* toCodeGenType(const Token& tok) const;
-    TypeInfo* typeInfoForExpr(Expr* node) const;
-    void comparisonOfSigns(const Token& tok, bool lSigned, bool rSigned);
 
 private:
     SourceBuffer* m_source;
@@ -66,7 +64,6 @@ private:
     Builder m_builder;
     bool m_declPass;
     QHash<QString, llvm::Value*> m_namedValues;
-    QHash<QString, TypeInfo*> m_namedTypes;
 };
 
 #endif // codegen_h

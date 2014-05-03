@@ -1,4 +1,5 @@
 #include "typesystem.h"
+#include "ast.h"
 #include "sourcebuffer.h"
 
 TypeSystem::TypeSystem(SourceBuffer* source)
@@ -102,4 +103,87 @@ TypeInfo* TypeSystem::toTypeAndCheck(const Token& tok) const
         return 0;
     }
     return m_typeHash.value(type);
+}
+
+TypeInfo* TypeSystem::typeInfoForExpr(Expr* node) const
+{
+    switch (node->kind) {
+    case Node::_BinaryExpr:
+    {
+        BinaryExpr* expr = static_cast<BinaryExpr*>(node);
+
+        if (expr->lhs->kind == Node::_LiteralExpr && expr->rhs->kind == Node::_LiteralExpr) {
+            m_source->error(expr->lhs->start, "both sides of binary expression are literal expressions", SourceBuffer::Fatal);
+            return 0;
+        }
+
+        if (TypeInfo* info = typeInfoForExpr(expr->lhs.data()))
+            return info;
+
+        if (TypeInfo* info = typeInfoForExpr(expr->rhs.data()))
+            return info;
+
+        m_source->error(expr->lhs->start, "can not determine type for binary expression", SourceBuffer::Fatal);
+        return 0;
+    }
+    case Node::_FuncCallExpr:
+    {
+        FuncCallExpr* expr = static_cast<FuncCallExpr*>(node);
+        TypeInfo* function = toTypeAndCheck(expr->callee);
+        if (TypeRef* returnTypeRef = function->returnTypeRef())
+            if (TypeInfo* returnType = toType(returnTypeRef->typeName()))
+                return returnType;
+
+        m_source->error(expr->callee, "can not determine type for function call expression", SourceBuffer::Fatal);
+        return 0;
+    }
+    case Node::_LiteralExpr:
+        return 0;
+    case Node::_VarExpr:
+    {
+        VarExpr* expr = static_cast<VarExpr*>(node);
+        QString name = expr->var.toString();
+        if (m_namedTypes.contains(name))
+            return m_namedTypes.value(name);
+
+        m_source->error(expr->var, "can not determine type for variable expression", SourceBuffer::Fatal);
+        return 0;
+    }
+    case Node::_TypeCtorExpr:
+    {
+        TypeCtorExpr* expr = static_cast<TypeCtorExpr*>(node);
+        if (expr->type.type == Undefined)
+            return typeInfoForExpr(expr->args.first().data());
+
+        if (TypeInfo* info = toTypeAndCheck(expr->type))
+            return info;
+
+        m_source->error(expr->type, "can not determine type for type ctor expression", SourceBuffer::Fatal);
+        return 0;
+    }
+    default:
+        assert(false); // should not be reached
+        return 0;
+    }
+}
+
+void TypeSystem::checkCompatibleTypes(Expr* expr1, Expr* expr2) const
+{
+    assert(expr1);
+    assert(expr2);
+
+    TypeInfo* infoForExpr1 = typeInfoForExpr(expr1);
+    TypeInfo* infoForExpr2 = typeInfoForExpr(expr2);
+
+    if (!infoForExpr1 || !infoForExpr2)
+        return;
+
+    if (infoForExpr1->isBuiltin() != infoForExpr2->isBuiltin()
+        || infoForExpr1->isProduct() != infoForExpr2->isProduct()
+        || infoForExpr1->isFunction() != infoForExpr2->isFunction()
+        || infoForExpr1->isAlias() != infoForExpr2->isAlias())
+        m_source->error(expr1->start, "type incompatibility for binary expression operands", SourceBuffer::Fatal);
+
+    if (infoForExpr1->isSignedInt() != infoForExpr2->isSignedInt())
+        m_source->error(expr1->start, "comparison of signed and unsigned integers not supported", SourceBuffer::Fatal);
 }

@@ -23,8 +23,21 @@ private:
     bool consumeCStyleComment();
     bool consumeCPPStyleComment();
     bool consumeIdentifier();
+
+    bool isNumericLiteral() const;
+    void handleNumericLiteral();
+    void handleOctalOrFloatLiteral(const TokenPosition&);
+    void handleDecimalOrFloatLiteral(const TokenPosition&);
+
     bool isDigit(const QChar&) const;
-    TokenPosition consumeDigits();
+    bool isHexDigit(const QChar&) const;
+    bool isBinDigit(const QChar&) const;
+    bool isOctDigit(const QChar&) const;
+    TokenPosition consumeHexLiteral();
+    TokenPosition consumeBinLiteral();
+    TokenPosition consumeOctLiteral();
+    TokenPosition consumeFloatLiteral();
+    TokenPosition consumeDecLiteral();
     Token createToken(TokenType t, const TokenPosition& s, const TokenPosition& e) const;
     void appendToken(TokenType t, const TokenPosition& s, const TokenPosition& e);
 

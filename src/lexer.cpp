@@ -27,7 +27,7 @@ void Lexer::lex(SourceBuffer* source)
         case '\n': appendToken(Newline, pos, pos); newline(); break;
         /* punctuators */
 //        case '~': appendToken(Tilda, pos, pos); break;
-//        case '!': appendToken(Bang, pos, pos); break;
+        case '!': appendToken(Bang, pos, pos); break;
 //        case '@': appendToken(At, pos, pos); break;
 //        case '#': appendToken(Hash, pos, pos); break;
 //        case '$': appendToken(Dollar, pos, pos); break;
@@ -48,8 +48,8 @@ void Lexer::lex(SourceBuffer* source)
         case '>': appendToken(GreaterThan, pos, pos); break;
 //        case '?': appendToken(QuestionMark, pos, pos); break;
         case '-':
-            if (isDigit(look(1)))
-                appendToken(Digits, pos, consumeDigits());
+            if (isNumericLiteral())
+                handleNumericLiteral();
             else
                 appendToken(Minus, pos, pos);
             break;
@@ -60,18 +60,20 @@ void Lexer::lex(SourceBuffer* source)
 //        case ';': appendToken(SemiColon, pos, pos); break;
 //        case '\'': appendToken(SingleQuote, pos, pos); break;
         case ',': appendToken(Comma, pos, pos); break;
-        case '.': appendToken(Period, pos, pos); break;
+        case '.':
+            if (isNumericLiteral())
+                handleNumericLiteral();
+            else
+                appendToken(Period, pos, pos);
+            break;
         case '/':
-            if (look(1) == '*' && consumeCStyleComment()) {
+            if (look(1) == '*' && consumeCStyleComment())
                 appendToken(Comment, pos, tokenPosition());
-                break;
-            } else if (look(1) == '/' && consumeCPPStyleComment()) {
+            else if (look(1) == '/' && consumeCPPStyleComment())
                 appendToken(Comment, pos, tokenPosition());
-                break;
-            } else {
+            else
                 appendToken(Slash, pos, pos);
-                break;
-            }
+            break;
         /*
          * keywords: in alphabetical order
          */
@@ -147,7 +149,8 @@ void Lexer::lex(SourceBuffer* source)
             }
         case '0': case '1': case '2': case '3': case '4':
         case '5': case '6': case '7': case '8': case '9':
-            appendToken(Digits, pos, consumeDigits()); break;
+            handleNumericLiteral();
+            break;
         default:
             m_source->error(createToken(Undefined, pos, pos),
                             "unexpected character when tokenizing file",
@@ -259,6 +262,78 @@ bool Lexer::consumeIdentifier()
     return m_index < m_source->count();
 }
 
+bool Lexer::isNumericLiteral() const
+{
+    return isDigit(current()) // [0-9]
+        || (current() == '-' && isDigit(look(1))) // -[0-9]
+        || (current() == '.' && isDigit(look(1))) // .[0-9]
+        || (current() == '-' && look(1) == '.' && isDigit(look(2))); // -.[0-9]
+}
+
+void Lexer::handleNumericLiteral()
+{
+    TokenPosition pos = tokenPosition();
+
+    QChar ch = current();
+    bool foundDecimalPoint = false;
+    if (ch == '-') {
+        ch = advance(1);
+        if (ch == '.') {
+            foundDecimalPoint = true;
+            ch = advance(1);
+        }
+    } else if (ch == '.') {
+        foundDecimalPoint = true;
+        ch = advance(1);
+    }
+
+    if (ch == '0') {
+        QChar n = look(1);
+        if ((n == 'x' || n == 'X') && isHexDigit(look(2)))
+            appendToken(HexLiteral, pos, consumeHexLiteral());
+        else if ((n == 'b' || n == 'B') && isBinDigit(look(2)))
+            appendToken(BinLiteral, pos, consumeBinLiteral());
+        else if (foundDecimalPoint)
+            appendToken(FloatLiteral, pos, consumeDecLiteral());
+        else
+            handleOctalOrFloatLiteral(pos);
+    } else if (foundDecimalPoint) {
+        appendToken(FloatLiteral, pos, consumeDecLiteral());
+    } else {
+        handleDecimalOrFloatLiteral(pos);
+    }
+}
+
+void Lexer::handleOctalOrFloatLiteral(const TokenPosition& startPos)
+{
+    bool foundDecimalPoint = false;
+    while (m_index < m_source->count()) {
+        if (!foundDecimalPoint && look(1) == '.') {
+            foundDecimalPoint = true;
+            advance(1);
+            continue;
+        } else if (!isOctDigit(look(1)))
+            break;
+        advance(1);
+    }
+    appendToken(foundDecimalPoint ? FloatLiteral : OctLiteral, startPos, tokenPosition());
+}
+
+void Lexer::handleDecimalOrFloatLiteral(const TokenPosition& startPos)
+{
+    bool foundDecimalPoint = false;
+    while (m_index < m_source->count()) {
+        if (!foundDecimalPoint && look(1) == '.') {
+            foundDecimalPoint = true;
+            advance(1);
+            continue;
+        } else if (!isDigit(look(1)))
+            break;
+        advance(1);
+    }
+    appendToken(foundDecimalPoint ? FloatLiteral : DecLiteral, startPos, tokenPosition());
+}
+
 bool Lexer::isDigit(const QChar& ch) const
 {
     static QList<QChar> allowedChars = QList<QChar>()
@@ -267,11 +342,62 @@ bool Lexer::isDigit(const QChar& ch) const
     return allowedChars.contains(ch);
 }
 
-TokenPosition Lexer::consumeDigits()
+bool Lexer::isHexDigit(const QChar& ch) const
 {
-    if (current() == '-')
-        advance(1);
+    static QList<QChar> allowedChars = QList<QChar>()
+        << 'a' << 'A' << 'b' << 'B' << 'c' << 'C'
+        << 'd' << 'D' << 'e' << 'E' << 'f' << 'F';
+    return isDigit(ch) || allowedChars.contains(ch);
+}
 
+bool Lexer::isBinDigit(const QChar& ch) const
+{
+    static QList<QChar> allowedChars = QList<QChar>()
+        << '0' << '1';
+    return allowedChars.contains(ch);
+}
+
+bool Lexer::isOctDigit(const QChar& ch) const
+{
+    static QList<QChar> allowedChars = QList<QChar>()
+        << '0' << '1' << '2' << '3' << '4' << '5' << '6' << '7';
+    return allowedChars.contains(ch);
+}
+
+TokenPosition Lexer::consumeHexLiteral()
+{
+    advance(1); // past the x or X char
+    while (m_index < m_source->count()) {
+        if (!isHexDigit(look(1)))
+            break;
+        advance(1);
+    }
+    return tokenPosition();
+}
+
+TokenPosition Lexer::consumeBinLiteral()
+{
+    advance(1); // past the b or B char
+    while (m_index < m_source->count()) {
+        if (!isBinDigit(look(1)))
+            break;
+        advance(1);
+    }
+    return tokenPosition();
+}
+
+TokenPosition Lexer::consumeOctLiteral()
+{
+    while (m_index < m_source->count()) {
+        if (!isOctDigit(look(1)))
+            break;
+        advance(1);
+    }
+    return tokenPosition();
+}
+
+TokenPosition Lexer::consumeDecLiteral()
+{
     while (m_index < m_source->count()) {
         if (!isDigit(look(1)))
             break;

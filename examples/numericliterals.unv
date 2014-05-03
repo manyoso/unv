@@ -1,0 +1,54 @@
+/*
+ * Example of calculating fibonacci in unv syntax.
+ * http://en.wikipedia.org/wiki/Fibonacci_number
+ */
+type Int : (_builtin_int32_)
+type Float : (_builtin_float_)
+
+function main : () -> Int
+    Int binZero = 0b0
+    Int binOne = 0B1
+    Int octNegTwo = -02
+    Int octTwo = 02
+    Int decNegThree = -3
+    Int decThree = 3
+    Int hexNegFour = -0x4
+    Int hexFour = 0x4
+    Int hexNegFive = -0X5
+    Int hexFive = 0X5
+    Float pi = 3.1415926535
+
+    if (binZero != 0)       // binary to octal comparison
+        return 1
+
+    if (binOne != 1)        // binary to decimal comparison
+        return 1
+
+    if (octNegTwo != -2)    // octal to decimal comparison
+        return 1
+
+    if (octTwo != 2)        // octal to decimal comparison
+        return 1
+
+    if (decNegThree != -03) // decimal to octal comparison
+        return 1
+
+    if (decThree != 03)     // decimal to octal comparison
+        return 1
+
+    if (hexNegFour != -4)   // hexadecimal to decimal comparison
+        return 1
+
+    if (hexFour != 04)      // hexadecimal to octal comparison
+        return 1
+
+    if (hexNegFive != -5)   // hexadecimal to decimal comparison
+        return 1
+
+    if (hexFive != 05)      // hexadecimal to octal comparison
+        return 1
+
+    if (pi == -3.1415926535)
+        return 1
+
+    return 0

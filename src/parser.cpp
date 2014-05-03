@@ -382,9 +382,12 @@ Expr* Parser::parseBasicExpr()
         else
             expr = parseVarExpr();
         break;
-    case Digits:
-        expr = parseLiteralExpr();
-        break;
+    case BinLiteral:
+    case DecLiteral:
+    case FloatLiteral:
+    case HexLiteral:
+    case OctLiteral:
+    case False:
     case True:
         expr = parseLiteralExpr();
         break;
@@ -410,6 +413,11 @@ Expr* Parser::parseBinaryOpExpr(int precedence, Expr* lhs)
     if (tok.type == Equals && look(1).type == Equals
         && precedence <= 1) {
         op = BinaryExpr::OpEquality;
+        tok = advance(2);
+        foundBinaryOp = true;
+    } else if (tok.type == Bang && look(1).type == Equals
+        && precedence <= 1) {
+        op = BinaryExpr::OpNotEquality;
         tok = advance(2);
         foundBinaryOp = true;
     } else if ((tok.type == LessThan || tok.type == GreaterThan)
@@ -531,6 +539,9 @@ TypeCtorExpr* Parser::parseTypeCtorExpr()
 Stmt* Parser::parseStmt()
 {
     ParserContext context(this, "statement");
+
+    while (current().type == Newline && look(1).type == Newline)
+        advance(1);
 
     if (current().type == Newline && !parseIndent(m_expectedScope))
         return 0;

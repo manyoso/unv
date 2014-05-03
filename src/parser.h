@@ -16,6 +16,7 @@ public:
 private:
     enum BinOpPrecedence {
         OpEquality = 1,
+        OpNotEquality = 1,
         OpLessThanOrEquality = 1,
         OpGreaterThanOrEquality = 1,
         OpLessThan = 1,

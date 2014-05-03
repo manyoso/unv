@@ -120,6 +120,7 @@ struct Expr : public Node {
 struct BinaryExpr : public Expr {
     enum BinaryOp {
         OpEquality,
+        OpNotEquality,
         OpLessThanOrEquality,
         OpGreaterThanOrEquality,
         OpLessThan,
@@ -134,6 +135,7 @@ struct BinaryExpr : public Expr {
     {
         switch (op) {
         case OpEquality:              return "==";
+        case OpNotEquality:           return "!=";
         case OpLessThanOrEquality:    return "<=";
         case OpGreaterThanOrEquality: return ">=";
         case OpLessThan:              return "<";

@@ -6,6 +6,7 @@
 #include "token.h"
 
 class SourceBuffer;
+struct Expr;
 struct TypeDecl;
 struct FuncDecl;
 
@@ -56,6 +57,13 @@ public:
     TypeInfo* toType(const QString& name) const;
     TypeInfo* toType(const QStringRef& name) const;
     TypeInfo* toTypeAndCheck(const Token& name) const;
+    TypeInfo* typeInfoForExpr(Expr* node) const;
+    void checkCompatibleTypes(Expr*, Expr*) const;
+
+    void clearNamedTypes()
+    { m_namedTypes.clear(); }
+    void insertNamedType(const QString& name, TypeInfo* info)
+    { m_namedTypes.insert(name, info); }
 
 private:
     void addBuiltin(const QString& typeName, bool isSignedInt = false);
@@ -65,6 +73,7 @@ private:
     QHash<QString, TypeInfo*> m_typeHash;
     QList<QSharedPointer<Builtin> > m_builtins;
     SourceBuffer* m_source;
+    QHash<QString, TypeInfo*> m_namedTypes;
 };
 
 #endif // typesystem_h

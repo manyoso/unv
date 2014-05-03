@@ -126,13 +126,13 @@ void CodeGen::visit(FuncDecl& node)
 
     int i = 0;
     m_namedValues.clear();
-    m_namedTypes.clear();
+    m_source->typeSystem().clearNamedTypes();
     for (llvm::Function::arg_iterator it = f->arg_begin(); it != f->arg_end(); ++it, ++i) {
         QSharedPointer<TypeObject> object = node.objects.at(i);
         m_namedValues.insert(object->name.toString(), it);
 
         TypeInfo* type = m_source->typeSystem().toTypeAndCheck(object->type);
-        m_namedTypes.insert(object->name.toString(), type);
+        m_source->typeSystem().insertNamedType(object->name.toString(), type);
     }
 
     llvm::BasicBlock *block = llvm::BasicBlock::Create(*m_context, "entry", f);
@@ -202,7 +202,7 @@ void CodeGen::codegen(IfStmt* node)
         return;
     }
 
-    TypeInfo* info = typeInfoForExpr(node->expr.data());
+    TypeInfo* info = m_source->typeSystem().typeInfoForExpr(node->expr.data());
     assert(info);
     llvm::Value *condition = codegen(node->expr.data(), info);
     assert(condition);
@@ -263,13 +263,7 @@ void CodeGen::codegen(VarDeclStmt* node)
 
     QString name = node->name.toString();
     m_namedValues.insert(name, value);
-    m_namedTypes.insert(name, info);
-}
-
-void CodeGen::comparisonOfSigns(const Token& tok, bool lSigned, bool rSigned)
-{
-    if (lSigned != rSigned)
-        m_source->error(tok, "comparison of signed and unsigned integers not supported", SourceBuffer::Fatal);
+    m_source->typeSystem().insertNamedType(name, info);
 }
 
 llvm::Value* CodeGen::codegen(BinaryExpr* node, TypeInfo* info)
@@ -277,7 +271,7 @@ llvm::Value* CodeGen::codegen(BinaryExpr* node, TypeInfo* info)
     llvm::Value* l = 0;
     llvm::Value* r = 0;
     if (!info)
-        info = typeInfoForExpr(node);
+        info = m_source->typeSystem().typeInfoForExpr(node);
 
     if (node->lhs->kind != Node::_LiteralExpr)
         l = codegen(node->lhs.data(), info);
@@ -287,7 +281,7 @@ llvm::Value* CodeGen::codegen(BinaryExpr* node, TypeInfo* info)
 
     if (!l && !r) {
         m_source->error(static_cast<LiteralExpr*>(node->lhs.data())->literal,
-            "we do not support binary expressions involving two literals yet",
+            "we do not support binary expressions involving two literals",
             SourceBuffer::Fatal);
         return 0;
     }
@@ -300,43 +294,65 @@ llvm::Value* CodeGen::codegen(BinaryExpr* node, TypeInfo* info)
 
     assert(l && r);
 
-    Token lhs = node->lhs->start;
-    if (!l->getType()->isIntegerTy() || !r->getType()->isIntegerTy()) {
-        m_source->error(lhs, "non-integer binary expressions not supported yet", SourceBuffer::Fatal);
-        return 0;
-    }
+    m_source->typeSystem().checkCompatibleTypes(node->lhs.data(), node->rhs.data());
 
-    // FIXME: This is still incorrect!
-    bool lSigned = static_cast<llvm::IntegerType*>(l->getType())->getSignBit();
-    bool rSigned = static_cast<llvm::IntegerType*>(r->getType())->getSignBit();
+    TypeInfo* infoForLHS = m_source->typeSystem().typeInfoForExpr(node->lhs.data());
+    TypeInfo* infoForRHS = m_source->typeSystem().typeInfoForExpr(node->rhs.data());
+    TypeInfo* infoForExpressions = infoForLHS ? infoForLHS : infoForRHS;
 
+    assert(infoForExpressions);
+    assert(infoForExpressions->handle);
+
+    bool isInteger = infoForExpressions->handle->isIntegerTy();
+    bool isSignedInteger = infoForExpressions->isSignedInt();
+    bool isFloat = infoForExpressions->handle->isFloatTy();
+    bool isDouble = infoForExpressions->handle->isDoubleTy();
+
+    // FIXME: Still need to take ordered vs unordered comparisons into
+    // account for floating point types
     switch (node->op) {
     case BinaryExpr::OpEquality:
-        return m_builder->CreateICmpEQ(l, r, "equaltmp");
+        if (isInteger)
+            return m_builder->CreateICmpEQ(l, r, "equaltmp");
+        else if (isFloat || isDouble)
+            return m_builder->CreateFCmpOEQ(l, r, "oequaltmp");
+    case BinaryExpr::OpNotEquality:
+        if (isInteger)
+            return m_builder->CreateICmpNE(l, r, "notequaltmp");
+        else if (isFloat || isDouble)
+            return m_builder->CreateFCmpONE(l, r, "onotequaltmp");
     case BinaryExpr::OpLessThanOrEquality:
-        comparisonOfSigns(lhs, lSigned, rSigned);
-        if (lSigned)
-            return m_builder->CreateICmpSLE(l, r, "sletmp");
-        else
-            return m_builder->CreateICmpULE(l, r, "uletmp");
+        if (isInteger) {
+            if (isSignedInteger)
+                return m_builder->CreateICmpSLE(l, r, "sletmp");
+            else
+                return m_builder->CreateICmpULE(l, r, "uletmp");
+        } else if (isFloat || isDouble)
+            return m_builder->CreateFCmpOLE(l, r, "oletmp");
     case BinaryExpr::OpGreaterThanOrEquality:
-        comparisonOfSigns(lhs, lSigned, rSigned);
-        if (lSigned)
-            return m_builder->CreateICmpSGE(l, r, "sgetmp");
-        else
-            return m_builder->CreateICmpUGE(l, r, "ugetmp");
+        if (isInteger) {
+            if (isSignedInteger)
+                return m_builder->CreateICmpSGE(l, r, "sgetmp");
+            else
+                return m_builder->CreateICmpUGE(l, r, "ugetmp");
+        } else if (isFloat || isDouble)
+            return m_builder->CreateFCmpOGE(l, r, "ogetmp");
     case BinaryExpr::OpLessThan:
-        comparisonOfSigns(lhs, lSigned, rSigned);
-        if (lSigned)
-            return m_builder->CreateICmpSLT(l, r, "slttmp");
-        else
-            return m_builder->CreateICmpULT(l, r, "ulttmp");
+        if (isInteger) {
+            if (isSignedInteger)
+                return m_builder->CreateICmpSLT(l, r, "slttmp");
+            else
+                return m_builder->CreateICmpULT(l, r, "ulttmp");
+        } else if (isFloat || isDouble)
+            return m_builder->CreateFCmpOLT(l, r, "olttmp");
     case BinaryExpr::OpGreaterThan:
-        comparisonOfSigns(lhs, lSigned, rSigned);
-        if (lSigned)
-            return m_builder->CreateICmpSGT(l, r, "sgttmp");
-        else
-            return m_builder->CreateICmpUGT(l, r, "ugttmp");
+        if (isInteger) {
+            if (isSignedInteger)
+                return m_builder->CreateICmpSGT(l, r, "sgttmp");
+            else
+                return m_builder->CreateICmpUGT(l, r, "ugttmp");
+        } else if (isFloat || isDouble)
+            return m_builder->CreateFCmpOGT(l, r, "ogttmp");
     case BinaryExpr::OpAddition:
         return m_builder->CreateAdd(l, r, "addtmp");
     case BinaryExpr::OpSubtraction:
@@ -371,7 +387,7 @@ llvm::Value* CodeGen::codegen(Expr* node, TypeInfo* info)
 llvm::Value* CodeGen::codegen(FuncCallExpr* node, TypeInfo* info)
 {
     if (!info)
-        info = typeInfoForExpr(node);
+        info = m_source->typeSystem().typeInfoForExpr(node);
 
     LLVMString callee = node->callee.toStringRef();
     llvm::Function *calleeFunction = m_module->getFunction(callee);
@@ -407,6 +423,31 @@ llvm::Value* CodeGen::codegen(FuncCallExpr* node, TypeInfo* info)
     return m_builder->CreateCall(calleeFunction, args.toVector().toStdVector(), "calltmp");
 }
 
+static int integerTypeToBase(TokenType type)
+{
+    switch (type) {
+    case BinLiteral: return 2;
+    case OctLiteral: return 8;
+    case DecLiteral: return 10;
+    case HexLiteral: return 16;
+    default:
+        assert(false); // should not be reached
+        return 0;
+    }
+}
+
+static QString integerLiteralToString(Token token)
+{
+    QString literal = token.toString();
+    if (token.type == BinLiteral || token.type == HexLiteral) {
+        if (!literal.startsWith('-'))
+            return literal.remove(0, 2);
+        else
+            return literal.remove(1, 2);
+    }
+    return literal;
+}
+
 llvm::Value* CodeGen::codegen(LiteralExpr* node, TypeInfo* info)
 {
     assert(info);
@@ -417,19 +458,44 @@ llvm::Value* CodeGen::codegen(LiteralExpr* node, TypeInfo* info)
         return llvm::ConstantInt::getTrue(*m_context);
     } else if (node->literal.type == False) {
         return llvm::ConstantInt::getFalse(*m_context);
-    } else if (node->literal.type == Digits) {
-        if (!type->isIntegerTy()) {
-            m_source->error(node->literal, "non-integer numeric literal not supported yet", SourceBuffer::Fatal);
-            return 0;
-        }
+    } else if (node->literal.type == FloatLiteral) {
+        assert(type->isFloatTy() || type->isDoubleTy());
 
+        QString literal = node->literal.toString();
+        if (type->isFloatTy()) {
+            bool success = false;
+            float f = literal.toFloat(&success);
+
+            if (!success || !llvm::ConstantFP::isValueValidForType(type, llvm::APFloat(f))) {
+                m_source->error(node->literal, "float literal out of range", SourceBuffer::Fatal);
+                return 0;
+            }
+
+            return llvm::ConstantFP::get(*m_context, llvm::APFloat(f));
+        } else {
+            bool success = false;
+            double d = literal.toDouble(&success);
+
+            if (!success || !llvm::ConstantFP::isValueValidForType(type, llvm::APFloat(d))) {
+                m_source->error(node->literal, "double literal out of range", SourceBuffer::Fatal);
+                return 0;
+            }
+
+            return llvm::ConstantFP::get(*m_context, llvm::APFloat(d));
+        }
+    } else if (node->literal.type == BinLiteral
+        || node->literal.type == DecLiteral
+        || node->literal.type == HexLiteral
+        || node->literal.type == OctLiteral ) {
+
+        assert(type->isIntegerTy());
         llvm::IntegerType* integerType = static_cast<llvm::IntegerType*>(type);
-        QString digits = node->literal.toString();
+        QString digits = integerLiteralToString(node->literal);
         unsigned numbits = integerType->getBitWidth();
         bool success = false;
 
         if (!info->isSignedInt()) {
-            quint64 n = digits.toULongLong(&success);
+            quint64 n = digits.toULongLong(&success, integerTypeToBase(node->literal.type));
 
             bool outOfRange = false;
             if ((numbits == 1 && n > 1)
@@ -446,7 +512,7 @@ llvm::Value* CodeGen::codegen(LiteralExpr* node, TypeInfo* info)
 
             return llvm::ConstantInt::get(*m_context, llvm::APInt(numbits, n, false));
         } else {
-            qint64 n = digits.toLongLong(&success);
+            qint64 n = digits.toLongLong(&success, integerTypeToBase(node->literal.type));
 
             bool outOfRange = false;
             if ((numbits == 1 && (n < 0 || n > 1))
@@ -478,7 +544,7 @@ llvm::Value* CodeGen::codegen(TypeCtorExpr* node, TypeInfo* info)
 llvm::Value* CodeGen::codegen(VarExpr* node, TypeInfo* info)
 {
     if (!info)
-        info = typeInfoForExpr(node);
+        info = m_source->typeSystem().typeInfoForExpr(node);
 
     QString name = node->var.toString();
     llvm::Value *value = m_namedValues.contains(name) ? m_namedValues.value(name) : 0;
@@ -494,66 +560,4 @@ llvm::Type* CodeGen::toCodeGenType(const Token& tok) const
     TypeInfo* info = m_source->typeSystem().toTypeAndCheck(tok);
     assert(info);
     return info->handle;
-}
-
-TypeInfo* CodeGen::typeInfoForExpr(Expr* node) const
-{
-    switch (node->kind) {
-    case Node::_BinaryExpr:
-    {
-        BinaryExpr* expr = static_cast<BinaryExpr*>(node);
-
-        if (expr->lhs->kind == Node::_LiteralExpr && expr->rhs->kind == Node::_LiteralExpr) {
-            m_source->error(expr->lhs->start, "both sides of binary expression are literal expressions", SourceBuffer::Fatal);
-            return 0;
-        }
-
-        if (TypeInfo* info = typeInfoForExpr(expr->lhs.data()))
-            return info;
-
-        if (TypeInfo* info = typeInfoForExpr(expr->rhs.data()))
-            return info;
-
-        m_source->error(expr->lhs->start, "can not determine type for binary expression", SourceBuffer::Fatal);
-        return 0;
-    }
-    case Node::_FuncCallExpr:
-    {
-        FuncCallExpr* expr = static_cast<FuncCallExpr*>(node);
-        TypeInfo* function = m_source->typeSystem().toTypeAndCheck(expr->callee);
-        if (TypeRef* returnTypeRef = function->returnTypeRef())
-            if (TypeInfo* returnType = m_source->typeSystem().toType(returnTypeRef->typeName()))
-                return returnType;
-
-        m_source->error(expr->callee, "can not determine type for function call expression", SourceBuffer::Fatal);
-        return 0;
-    }
-    case Node::_LiteralExpr:
-        return 0;
-    case Node::_VarExpr:
-    {
-        VarExpr* expr = static_cast<VarExpr*>(node);
-        QString name = expr->var.toString();
-        if (m_namedTypes.contains(name))
-            return m_namedTypes.value(name);
-
-        m_source->error(expr->var, "can not determine type for variable expression", SourceBuffer::Fatal);
-        return 0;
-    }
-    case Node::_TypeCtorExpr:
-    {
-        TypeCtorExpr* expr = static_cast<TypeCtorExpr*>(node);
-        if (expr->type.type == Undefined)
-            return typeInfoForExpr(expr->args.first().data());
-
-        if (TypeInfo* info = m_source->typeSystem().toTypeAndCheck(expr->type))
-            return info;
-
-        m_source->error(expr->type, "can not determine type for type ctor expression", SourceBuffer::Fatal);
-        return 0;
-    }
-    default:
-        assert(false); // should not be reached
-        return 0;
-    }
 }
