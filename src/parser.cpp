@@ -51,12 +51,16 @@ Token Parser::advance(int i, bool skipComments)
         return Token(EndOfFile, pos, pos, QStringRef());
     }
 
-    m_index += i;
-    if (!skipComments)
-        return current();
+    if (!skipComments) {
+        m_index += i;
+        return current(skipComments);
+    }
 
-    while (current().type == Comment || (current().type == Whitespace && look(1).type == Comment))
+    for (int j = 0; j < i; j++) {
         m_index++;
+        while (current(false).type == Comment || (current(false).type == Whitespace && look(1, false).type == Comment))
+            m_index++;
+    }
 
     return current();
 }
