@@ -414,42 +414,41 @@ Expr* Parser::parseBinaryOpExpr(int precedence, Expr* lhs)
             return lhs;
 
         int newPrecedence = precedence;
-        Token tok = advance(2);
+        Token tok = look(2);
 
         BinaryExpr::BinaryOp op;
         bool foundBinaryOp = false;
 
-        if (tok.type == Equals && look(1).type == Equals
+        if (tok.type == Equals && look(3).type == Equals
             && precedence <= 1) {
             op = BinaryExpr::OpEquality;
-            tok = advance(2);
+            tok = advance(4);
             foundBinaryOp = true;
-        } else if (tok.type == Bang && look(1).type == Equals
+        } else if (tok.type == Bang && look(3).type == Equals
             && precedence <= 1) {
             op = BinaryExpr::OpNotEquality;
-            tok = advance(2);
+            tok = advance(4);
             foundBinaryOp = true;
-        } else if ((tok.type == LessThan || tok.type == GreaterThan)
-            && look(1).type == Equals
+        } else if ((tok.type == LessThan || tok.type == GreaterThan) && look(3).type == Equals
             && precedence <= 1) {
             op = tok.type == LessThan ? BinaryExpr::OpLessThanOrEquality : BinaryExpr::OpGreaterThanOrEquality;
-            tok = advance(2);
+            tok = advance(4);
             foundBinaryOp = true;
         } else if ((tok.type == LessThan || tok.type == GreaterThan)
             && precedence <= 1) {
             op = tok.type == LessThan ? BinaryExpr::OpLessThan : BinaryExpr::OpGreaterThan;
-            tok = advance(1);
+            tok = advance(3);
             foundBinaryOp = true;
         } else if ((tok.type == Plus || tok.type == Minus)
             && precedence <= 2) {
             op = tok.type == Plus ? BinaryExpr::OpAddition : BinaryExpr::OpSubtraction;
-            tok = advance(1);
+            tok = advance(3);
             foundBinaryOp = true;
             newPrecedence = 2;
         } else if ((tok.type == Star || tok.type == Slash)
             && precedence <= 3) {
             op = tok.type == Star ? BinaryExpr::OpMultiplication : BinaryExpr::OpDivision;
-            tok = advance(1);
+            tok = advance(3);
             foundBinaryOp = true;
             newPrecedence = 3;
         }
