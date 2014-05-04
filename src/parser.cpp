@@ -73,21 +73,33 @@ Token Parser::current(bool skipComments) const
 
 Token Parser::look(int i, bool skipComments) const
 {
-    int index = m_index + i;
+    if (!skipComments) {
+        int index = m_index + i;
+        assert(index >= 0);
+        if (index >= m_source->tokenCount())
+            return Token();
 
-    assert(m_index >= 0);
-    if (index >= m_source->tokenCount())
-        return Token();
+        return m_source->tokenAt(index);
+    }
 
-    Token tok = m_source->tokenAt(index);
+    int index = m_index;
+    for (int j = 0; j < i; j++) {
+        index++;
+        for (;;) {
+            assert(index >= 0);
+            if (index >= m_source->tokenCount())
+                return Token();
 
-    if (!skipComments)
-        return tok;
+            Token tok = m_source->tokenAt(index);
+            Token next = index + 1 >= m_source->tokenCount() ? Token() : m_source->tokenAt(index + 1);
+            if (tok.type == Comment || (tok.type == Whitespace && next.type == Comment))
+                index++;
+            else
+                break;
+        }
+    }
 
-    if (tok.type == Comment || (tok.type == Whitespace && look(i + 1, false).type == Comment))
-        return look(i + 1);
-
-    return tok;
+    return m_source->tokenAt(index);
 }
 
 bool Parser::expect(Token tok, TokenType type) const

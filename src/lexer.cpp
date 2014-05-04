@@ -182,7 +182,7 @@ QChar Lexer::current() const
 QChar Lexer::look(int i) const
 {
     int index = m_index + i;
-    assert(m_index >= 0);
+    assert(index >= 0);
     if (index >= m_source->count())
         return QChar();
     return m_source->at(index);
