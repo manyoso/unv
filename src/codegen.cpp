@@ -486,7 +486,6 @@ llvm::Value* CodeGen::codegen(LiteralExpr* node, TypeInfo* info)
             double d = literal.toDouble(&success);
 
             bool outOfRange = d > std::numeric_limits<double>::max();
-                outOfRange = true;
 
             if (!success || outOfRange || !llvm::ConstantFP::isValueValidForType(type, llvm::APFloat(d))) {
                 m_source->error(node->literal, "double literal out of range", SourceBuffer::Fatal);
