@@ -513,15 +513,7 @@ llvm::Value* CodeGen::codegen(LiteralExpr* node, TypeInfo* info)
         if (!info->isSignedInt()) {
             quint64 n = digits.toULongLong(&success, integerTypeToBase(node->literal.type));
 
-            bool outOfRange = false;
-            if ((numbits == 1 && n > 1)
-                || (numbits == 8 && n > 255)
-                || (numbits == 16 && n > std::numeric_limits<uint16_t>::max())
-                || (numbits == 32 && n > std::numeric_limits<uint32_t>::max())
-                || (numbits == 64 && n > std::numeric_limits<uint64_t>::max()))
-                outOfRange = true;
-
-            if (!success || outOfRange) {
+            if (!success || !llvm::ConstantInt::isValueValidForType(type, n)) {
                 m_source->error(node->literal, "unsigned integer literal out of range", SourceBuffer::Fatal);
                 return 0;
             }
@@ -530,15 +522,7 @@ llvm::Value* CodeGen::codegen(LiteralExpr* node, TypeInfo* info)
         } else {
             qint64 n = digits.toLongLong(&success, integerTypeToBase(node->literal.type));
 
-            bool outOfRange = false;
-            if ((numbits == 1 && (n < 0 || n > 1))
-                || (numbits == 8 && (n < -128 || n > 127))
-                || (numbits == 16 && (n < std::numeric_limits<int16_t>::min() || n > std::numeric_limits<int16_t>::max()))
-                || (numbits == 32 && (n < std::numeric_limits<int32_t>::min() || n > std::numeric_limits<int32_t>::max()))
-                || (numbits == 64 && (n < std::numeric_limits<int64_t>::min() || n > std::numeric_limits<int64_t>::max())))
-                outOfRange = true;
-
-            if (!success || outOfRange) {
+            if (!success || !llvm::ConstantInt::isValueValidForType(type, n)) {
                 m_source->error(node->literal, "signed integer literal out of range", SourceBuffer::Fatal);
                 return 0;
             }
