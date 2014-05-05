@@ -43,7 +43,11 @@ void Lexer::lex(SourceBuffer* source)
 //        case '}': appendToken(ClosedCurly, pos, pos); break;
 //        case '|': appendToken(Pipe, pos, pos); break;
         case ':': appendToken(Colon, pos, pos); break;
-//        case '"': appendToken(DoubleQuote, pos, pos); break;
+        case '"':
+            if (consumeStringLiteral()) {
+                appendToken(StringLiteral, pos, tokenPosition());
+                break;
+            }
         case '<': appendToken(LessThan, pos, pos); break;
         case '>': appendToken(GreaterThan, pos, pos); break;
 //        case '?': appendToken(QuestionMark, pos, pos); break;
@@ -256,6 +260,17 @@ bool Lexer::consumeIdentifier()
 
     while (m_index < m_source->count()) {
         if (!allowedChars.contains(look(1)))
+            break;
+        advance(1);
+    }
+    return m_index < m_source->count();
+}
+
+bool Lexer::consumeStringLiteral()
+{
+    advance(1);
+    while (m_index < m_source->count()) {
+        if (current() == '"')
             break;
         advance(1);
     }

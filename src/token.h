@@ -51,13 +51,14 @@ enum TokenType {
     Return,
     True,
     Type,
-    /* identifier */
+    /* identifier and literal*/
     Identifier,
     BinLiteral,
     DecLiteral,
     FloatLiteral,
     HexLiteral,
     OctLiteral,
+    StringLiteral,
     EndOfFile,
     Undefined
 };
@@ -114,6 +115,7 @@ static inline QString typeToString(TokenType type)
     case FloatLiteral:      return "\'float literal\'";
     case HexLiteral:        return "\'hex literal\'";
     case OctLiteral:        return "\'oct literal\'";
+    case StringLiteral:     return "\'string literal\'";
     case EndOfFile:         return "\'end of file\'";
     case Undefined:         return "\'undefined\'";
     }

@@ -451,14 +451,21 @@ static QString integerLiteralToString(Token token)
 llvm::Value* CodeGen::codegen(LiteralExpr* node, TypeInfo* info)
 {
     assert(info);
-    assert(info->handle);
 
-    llvm::Type* type = info->handle;
     if (node->literal.type == True) {
         return llvm::ConstantInt::getTrue(*m_context);
     } else if (node->literal.type == False) {
         return llvm::ConstantInt::getFalse(*m_context);
+    } else if (node->literal.type == StringLiteral) {
+        QString literal = node->literal.toString();
+        literal.remove(0, 1); // remove leading quote
+        literal.chop(1); // remove trailing quote
+        llvm::Constant* constant = llvm::ConstantDataArray::getString(*m_context, LLVMString(literal));
+        info->handle = constant->getType();
+        return constant;
     } else if (node->literal.type == FloatLiteral) {
+        assert(info->handle);
+        llvm::Type* type = info->handle;
         assert(type->isFloatTy() || type->isDoubleTy());
 
         QString literal = node->literal.toString();
@@ -493,6 +500,8 @@ llvm::Value* CodeGen::codegen(LiteralExpr* node, TypeInfo* info)
         || node->literal.type == HexLiteral
         || node->literal.type == OctLiteral ) {
 
+        assert(info->handle);
+        llvm::Type* type = info->handle;
         if (!type->isIntegerTy())
             m_source->error(node->literal, "expression for integer literal has incompatible type", SourceBuffer::Fatal);
 

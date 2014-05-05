@@ -29,6 +29,9 @@ TypeSystem::TypeSystem(SourceBuffer* source)
 
     // 64-bit floating point type
     addBuiltin("_builtin_double_");
+
+    // 8 bit constant array
+    addBuiltin("_builtin_uint8_array_");
 }
 
 void TypeSystem::addBuiltin(const QString& typeName, bool isSignedInt)

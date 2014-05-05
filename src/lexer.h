@@ -23,6 +23,7 @@ private:
     bool consumeCStyleComment();
     bool consumeCPPStyleComment();
     bool consumeIdentifier();
+    bool consumeStringLiteral();
 
     bool isNumericLiteral() const;
     void handleNumericLiteral();

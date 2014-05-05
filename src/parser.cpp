@@ -391,10 +391,11 @@ Expr* Parser::parseBasicExpr()
         break;
     case BinLiteral:
     case DecLiteral:
+    case False:
     case FloatLiteral:
     case HexLiteral:
     case OctLiteral:
-    case False:
+    case StringLiteral:
     case True:
         expr = parseLiteralExpr();
         break;
