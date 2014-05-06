@@ -25,6 +25,7 @@ struct TypeInfo {
     TypeInfo() : handle(0) {}
     virtual ~TypeInfo() {}
     virtual QStringRef typeName() const = 0;
+    virtual QString qualifiedTypeName() const = 0;
 
     virtual bool isNode() const { return false; }
     virtual bool isBuiltin() const { return false; }
@@ -40,6 +41,7 @@ struct TypeInfo {
 
 struct Builtin : public TypeInfo {
     virtual QStringRef typeName() const { return &_typeName; }
+    virtual QString qualifiedTypeName() const { return _typeName; }
     virtual bool isBuiltin() const { return true; }
     virtual bool isSignedInt() const { return _isSignedInt; }
 

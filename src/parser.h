@@ -64,6 +64,7 @@ private:
 
     void parseTypeDecl();
     void parseFuncDecl();
+    void parseNamespace();
     QList<QSharedPointer<TypeObject> > parseTypeObjects();
     TypeObject* parseTypeObject();
     FuncDef* parseFuncDef();
@@ -88,6 +89,7 @@ private:
     Indent m_indent;
     SourceBuffer* m_source;
     QStack<QString> m_context;
+    QString m_namespace;
 };
 
 #endif // parser_h

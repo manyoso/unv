@@ -112,6 +112,9 @@ void Lexer::lex(SourceBuffer* source)
             if (consumeString("ew")) {
                 appendToken(New, pos, tokenPosition());
                 break;
+            } else if (consumeString("amespace")) {
+                appendToken(Namespace, pos, tokenPosition());
+                break;
             } else if (consumeIdentifier()) {
                 appendToken(Identifier, pos, tokenPosition());
                 break;

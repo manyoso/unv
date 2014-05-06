@@ -13,8 +13,8 @@ struct IfStmt;
 struct FuncCallExpr;
 struct FuncDef;
 struct FuncDecl;
-struct ReturnStmt;
 struct LiteralExpr;
+struct ReturnStmt;
 struct Stmt;
 struct TranslationUnit;
 struct TypeCtorExpr;
@@ -94,11 +94,13 @@ struct TypeDecl : public Node, public TypeInfo {
     TypeDecl(Kind kind) : Node(kind) {}
 
     Token name;
+    QString _namespace;
     QList<QSharedPointer<TypeObject> > objects;
     virtual void walk(Visitor&);
 
     // inherited from TypeInfo
     virtual QStringRef typeName() const { return name.toStringRef(); }
+    virtual QString qualifiedTypeName() const { return _namespace + "::" + name.toString(); }
     virtual bool isNode() const { return true; }
     virtual bool isProduct() const { return kind == _ProductDecl; }
     virtual bool isFunction() const { return kind == _FuncDecl; }

@@ -33,6 +33,8 @@ void Parser::parse(SourceBuffer* source)
             parseTypeDecl();
         else if (tok.type == Function)
             parseFuncDecl();
+        else if (tok.type == Namespace)
+            parseNamespace();
         else
             m_source->error(tok, "unexpected token when parsing translation unit", SourceBuffer::Fatal);
     }
@@ -182,6 +184,7 @@ void Parser::parseTypeDecl()
 
     TypeDecl* decl = new TypeDecl(k);
     decl->name = name;
+    decl->_namespace = m_namespace;
     decl->objects = objects;
 
     if (!m_source->typeSystem().addType(*decl))
@@ -255,6 +258,7 @@ void Parser::parseFuncDecl()
 
     FuncDecl* decl = new FuncDecl;
     decl->name = name;
+    decl->_namespace = m_namespace;
     decl->objects = objects;
     decl->funcDef = QSharedPointer<FuncDef>(funcDef);
     decl->returnType = QSharedPointer<TypeObject>(returnType);
@@ -263,6 +267,37 @@ void Parser::parseFuncDecl()
         return;
 
     m_source->translationUnit().funcDecl.append(QSharedPointer<FuncDecl>(decl));
+}
+
+// namespace Name::Space
+void Parser::parseNamespace()
+{
+    ParserContext context(this, "namespace declaration");
+
+    Token tok = advance(1);
+    if (!expect(tok, Whitespace))
+        return;
+
+    QString _namespace;
+    for (;;) {
+        tok = advance(1);
+        if (!expect(tok, Identifier))
+            return;
+
+        _namespace += tok.toString();
+
+        if (look(1).type != Colon)
+            break;
+
+        tok = advance(2);
+        if (!expect(tok, Colon))
+            return;
+
+        _namespace += "::";
+
+    }
+
+    m_namespace = _namespace;
 }
 
 QList<QSharedPointer<TypeObject> > Parser::parseTypeObjects()
