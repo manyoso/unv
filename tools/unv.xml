@@ -19,10 +19,13 @@
     <item> false </item>
     <item> function </item>
     <item> if </item>
+    <item> import </item>
+    <item> namespace </item>
     <item> new </item>
     <item> return </item>
     <item> true </item>
     <item> type </item>
+    <item> using </item>
   </list>
   <list name="types">
     <item> _builtin_bit_ </item>
@@ -36,15 +39,32 @@
     <item> _builtin_int64_ </item>
     <item> _builtin_float_ </item>
     <item> _builtin_double_ </item>
+    <item> _builtin_uint8_array_ </item>
   </list>
   <contexts>
     <context attribute="Normal Text" lineEndContext="#stay" name="Normal">
       <keyword attribute="Keyword" context="#stay" String="keywords" />
-      <RegExpr attribute="Data Type" String="[A-Z][a-zA-Z0-9]*" />
+      <RegExpr attribute="Data Type" String="\b[A-Z][a-zA-Z0-9]*" />
       <keyword attribute="Data Type" context="#stay" String="types" />
+      <HlCChar attribute="Char" context="#stay"/>
+      <DetectChar attribute="String" context="String" char="&quot;"/>
+      <StringDetect attribute="Include" context="Include" String="include" insensitive="false" />
+      <Float attribute="Float" context="#stay">
+        <AnyChar String="fF" attribute="Float" context="#stay"/>
+      </Float>
+      <HlCOct attribute="Octal" context="#stay"/>
+      <HlCHex attribute="Hex" context="#stay"/>
       <Int attribute="Decimal" context="#stay" />
+      <IncludeRules context="##Doxygen" />
       <Detect2Chars attribute="Comment" context="Commentar 1" char="/" char1="/"/>
       <Detect2Chars attribute="Comment" context="Commentar 2" char="/" char1="*" beginRegion="Comment"/>
+    </context>
+    <context attribute="String" lineEndContext="#pop" name="String">
+      <HlCStringChar attribute="String Char" context="#stay"/>
+      <DetectChar attribute="String" context="#pop" char="&quot;"/>
+    </context>
+    <context attribute="Include" lineEndContext="#pop" name="Include">
+      <RangeDetect attribute="Include" context="#pop" char="&quot;" char1="&quot;"/>
     </context>
     <context attribute="Comment" lineEndContext="#pop" name="Commentar 1">
       <DetectSpaces />
@@ -68,6 +88,7 @@
     <itemData name="String"       defStyleNum="dsString"/>
     <itemData name="String Char"  defStyleNum="dsChar"/>
     <itemData name="Comment"      defStyleNum="dsComment"/>
+    <itemData name="Include"      defStyleNum="dsOthers" bold="true"/>
   </itemDatas>
 </highlighting>
 
