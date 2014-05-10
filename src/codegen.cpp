@@ -193,7 +193,18 @@ void CodeGen::registerBuiltins()
 
 void CodeGen::registerTypeDecl(TypeDecl* node)
 {
-    node->handle = toCodeGenType(node->name);
+    TypeInfo* info = m_source->typeSystem().toTypeAndCheck(node->name);
+    assert(info);
+
+    if (info->isStructure()) {
+        m_source->error(node->name, "structure types are not supported just yet", SourceBuffer::Fatal);
+        return;
+    }
+
+    if (!node->handle) {
+        assert(info->handle);
+        node->handle = info->handle;
+    }
 }
 
 void CodeGen::registerFuncDecl(FuncDecl* node)
@@ -604,12 +615,6 @@ llvm::Type* CodeGen::toCodeGenType(const Token& tok) const
 {
     TypeInfo* info = m_source->typeSystem().toTypeAndCheck(tok);
     assert(info);
-
-    if (info->isStructure()) {
-        m_source->error(tok, "structure types are not supported just yet", SourceBuffer::Fatal);
-        return 0;
-    }
-
     assert(info->handle);
     return info->handle;
 }
