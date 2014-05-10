@@ -26,6 +26,9 @@ void Options::parseCommandLine()
     parser.addVersionOption();
     parser.addPositionalArgument("files", "Files to compile.", "[files...]");
 
+    QCommandLineOption include(QStringList() << "i" << "include", "Include directories.", "include", "");
+    parser.addOption(include);
+
     QCommandLineOption errorLimit("error-limit", "Stop after N errors. [Default: 20]", "N", "20");
     parser.addOption(errorLimit);
 
@@ -43,6 +46,7 @@ void Options::parseCommandLine()
     parser.process(*QCoreApplication::instance());
 
     m_files = parser.positionalArguments();
+    m_includeDirs = parser.values(include);
     m_errorLimit = parser.value(errorLimit).toInt();
     m_outputFile = parser.value(outputFile);
     m_outputType = parser.value(outputType);

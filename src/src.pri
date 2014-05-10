@@ -4,6 +4,7 @@ INCLUDEPATH += $$PWD
 HEADERS += $$PWD/ast.h \
            $$PWD/astprinter.h \
            $$PWD/codegen.h \
+           $$PWD/filesources.h \
            $$PWD/lexer.h \
            $$PWD/options.h \
            $$PWD/output.h \
@@ -16,6 +17,7 @@ HEADERS += $$PWD/ast.h \
 SOURCES += $$PWD/ast.cpp \
            $$PWD/astprinter.cpp \
            $$PWD/codegen.cpp \
+           $$PWD/filesources.cpp \
            $$PWD/lexer.cpp \
            $$PWD/options.cpp \
            $$PWD/output.cpp \

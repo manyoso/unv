@@ -104,6 +104,9 @@ void Lexer::lex(SourceBuffer* source)
             if (consumeString("f")) {
                 appendToken(If, pos, tokenPosition());
                 break;
+            } else if (consumeString("nclude")) {
+                appendToken(Include, pos, tokenPosition());
+                break;
             } else if (consumeIdentifier()) {
                 appendToken(Identifier, pos, tokenPosition());
                 break;

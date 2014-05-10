@@ -2,8 +2,8 @@
  * Example of calculating fibonacci in unv syntax.
  * http://en.wikipedia.org/wiki/Fibonacci_number
  */
-type Int : (_builtin_int32_)
-type Float : (_builtin_float_)
+
+include "core.unv"
 
 function main : () -> Int
     Int binZero = 0b0

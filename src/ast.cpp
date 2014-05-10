@@ -19,6 +19,13 @@ void IfStmt::walk(Visitor& visitor)
     visitor.end(*this);
 }
 
+void IncludeDecl::walk(Visitor& visitor)
+{
+    visitor.begin(*this);
+    visitor.visit(*this);
+    visitor.end(*this);
+}
+
 void FuncCallExpr::walk(Visitor& visitor)
 {
     visitor.begin(*this);
@@ -67,6 +74,8 @@ void TranslationUnit::walk(Visitor& visitor)
 {
     visitor.begin(*this);
     visitor.visit(*this);
+    foreach (QSharedPointer<IncludeDecl> include, includeDecl)
+        include->walk(visitor);
     foreach (QSharedPointer<TypeDecl> type, typeDecl)
         type->walk(visitor);
     foreach (QSharedPointer<FuncDecl> func, funcDecl)

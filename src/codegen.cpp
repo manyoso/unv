@@ -1,4 +1,7 @@
 #include "codegen.h"
+#include "filesources.h"
+#include "lexer.h"
+#include "parser.h"
 #include "options.h"
 #include "sourcebuffer.h"
 
@@ -53,38 +56,17 @@ CodeGen::CodeGen(SourceBuffer* buffer)
     , m_builder(new llvm::Builder(*m_context))
     , m_declPass(true)
 {
-    TypeInfo* info = m_source->typeSystem().toType("_builtin_bit_");
-    info->handle = llvm::Type::getInt1Ty(*m_context);
+    registerBuiltins();
+}
 
-    info = m_source->typeSystem().toType("_builtin_uint8_");
-    info->handle = llvm::Type::getInt8Ty(*m_context);
-
-    info = m_source->typeSystem().toType("_builtin_int8_");
-    info->handle = llvm::Type::getInt8Ty(*m_context);
-
-    info = m_source->typeSystem().toType("_builtin_uint16_");
-    info->handle = llvm::Type::getInt16Ty(*m_context);
-
-    info = m_source->typeSystem().toType("_builtin_int16_");
-    info->handle = llvm::Type::getInt16Ty(*m_context);
-
-    info = m_source->typeSystem().toType("_builtin_uint32_");
-    info->handle = llvm::Type::getInt32Ty(*m_context);
-
-    info = m_source->typeSystem().toType("_builtin_int32_");
-    info->handle = llvm::Type::getInt32Ty(*m_context);
-
-    info = m_source->typeSystem().toType("_builtin_uint64_");
-    info->handle = llvm::Type::getInt64Ty(*m_context);
-
-    info = m_source->typeSystem().toType("_builtin_int64_");
-    info->handle = llvm::Type::getInt64Ty(*m_context);
-
-    info = m_source->typeSystem().toType("_builtin_float_");
-    info->handle = llvm::Type::getFloatTy(*m_context);
-
-    info = m_source->typeSystem().toType("_builtin_double_");
-    info->handle = llvm::Type::getDoubleTy(*m_context);
+CodeGen::CodeGen(SourceBuffer* buffer, Context context, Module module)
+    : m_source(buffer)
+    , m_context(context)
+    , m_module(module)
+    , m_builder(new llvm::Builder(*m_context))
+    , m_declPass(true)
+{
+    registerBuiltins();
 }
 
 CodeGen::~CodeGen()
@@ -103,7 +85,34 @@ QString CodeGen::generateLLVMIR()
     llvm::raw_string_ostream stream(str);
     m_module->print(stream, 0);
     stream.flush();
-    return QString::fromStdString(str);
+    return m_includedIR + QString::fromStdString(str);
+}
+
+void CodeGen::visit(IncludeDecl& node)
+{
+    if (!m_declPass)
+        return;
+
+    QString include = node.include.toString();
+    include.remove(0, 1); // remove leading quote
+    include.chop(1); // remove trailing quote
+
+    SourceBuffer* buffer = FileSources::instance()->sourceBuffer(include);
+    if (!buffer) {
+        m_source->error(node.include, "Could not find or open include file", SourceBuffer::Fatal);
+        return;
+    }
+
+    Lexer lexer;
+    lexer.lex(buffer);
+
+    Parser parser;
+    parser.parse(buffer);
+
+    CodeGen codegen(buffer, m_context, m_module);
+    m_includedIR += codegen.generateLLVMIR();
+
+    m_source->typeSystem().importTypes(buffer->typeSystem());
 }
 
 void CodeGen::visit(TypeDecl& node)
@@ -143,6 +152,42 @@ void CodeGen::visit(FuncDecl& node)
         m_source->error(node.name, "function must end with return statement", SourceBuffer::Fatal);
 
     llvm::verifyFunction(*f);
+}
+
+void CodeGen::registerBuiltins()
+{
+    TypeInfo* info = m_source->typeSystem().toType("_builtin_bit_");
+    info->handle = llvm::Type::getInt1Ty(*m_context);
+
+    info = m_source->typeSystem().toType("_builtin_uint8_");
+    info->handle = llvm::Type::getInt8Ty(*m_context);
+
+    info = m_source->typeSystem().toType("_builtin_int8_");
+    info->handle = llvm::Type::getInt8Ty(*m_context);
+
+    info = m_source->typeSystem().toType("_builtin_uint16_");
+    info->handle = llvm::Type::getInt16Ty(*m_context);
+
+    info = m_source->typeSystem().toType("_builtin_int16_");
+    info->handle = llvm::Type::getInt16Ty(*m_context);
+
+    info = m_source->typeSystem().toType("_builtin_uint32_");
+    info->handle = llvm::Type::getInt32Ty(*m_context);
+
+    info = m_source->typeSystem().toType("_builtin_int32_");
+    info->handle = llvm::Type::getInt32Ty(*m_context);
+
+    info = m_source->typeSystem().toType("_builtin_uint64_");
+    info->handle = llvm::Type::getInt64Ty(*m_context);
+
+    info = m_source->typeSystem().toType("_builtin_int64_");
+    info->handle = llvm::Type::getInt64Ty(*m_context);
+
+    info = m_source->typeSystem().toType("_builtin_float_");
+    info->handle = llvm::Type::getFloatTy(*m_context);
+
+    info = m_source->typeSystem().toType("_builtin_double_");
+    info->handle = llvm::Type::getDoubleTy(*m_context);
 }
 
 void CodeGen::registerTypeDecl(TypeDecl* node)
@@ -558,5 +603,6 @@ llvm::Type* CodeGen::toCodeGenType(const Token& tok) const
 {
     TypeInfo* info = m_source->typeSystem().toTypeAndCheck(tok);
     assert(info);
+    assert(info->handle);
     return info->handle;
 }

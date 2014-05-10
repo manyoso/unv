@@ -40,6 +40,12 @@ void ASTPrinter::visit(BinaryExpr& node)
     m_stream->flush();
 }
 
+void ASTPrinter::visit(IncludeDecl& node)
+{
+    *m_stream << indent() << "include " << node.include.toString() << "\n";
+    m_stream->flush();
+}
+
 void ASTPrinter::visit(FuncCallExpr& node)
 {
     *m_stream << indent() << node.callee.toString() << "\n";

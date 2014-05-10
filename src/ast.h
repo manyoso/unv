@@ -10,6 +10,7 @@
 struct BinaryExpr;
 struct Expr;
 struct IfStmt;
+struct IncludeDecl;
 struct FuncCallExpr;
 struct FuncDef;
 struct FuncDecl;
@@ -30,6 +31,7 @@ struct Node {
         _BinaryExpr,
         _BuiltinDecl,
         _IfStmt,
+        _IncludeDecl,
         _FuncCallExpr,
         _FuncDef,
         _FuncDecl,
@@ -50,6 +52,7 @@ struct Node {
         case _BinaryExpr:       return "BinaryExpr";
         case _BuiltinDecl:      return "BuiltinDecl";
         case _IfStmt:           return "IfStmt";
+        case _IncludeDecl:      return "IncludeDecl";
         case _FuncCallExpr:     return "FuncCallExpr";
         case _FuncDef:          return "FuncDef";
         case _FuncDecl:         return "FuncDecl";
@@ -74,8 +77,15 @@ struct Node {
 
 struct TranslationUnit : public Node {
     TranslationUnit() : Node(_TranslationUnit) {}
+    QList<QSharedPointer<IncludeDecl> > includeDecl;
     QList<QSharedPointer<TypeDecl> > typeDecl;
     QList<QSharedPointer<FuncDecl> > funcDecl;
+    virtual void walk(Visitor&);
+};
+
+struct IncludeDecl : public Node {
+    IncludeDecl() : Node(_IncludeDecl) {}
+    Token include;
     virtual void walk(Visitor&);
 };
 

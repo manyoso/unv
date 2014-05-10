@@ -29,7 +29,9 @@ void Parser::parse(SourceBuffer* source)
         Token tok = advance(1);
         if (tok.type == Newline)
             continue;
-        if (tok.type == Type)
+        if (tok.type == Include)
+            parseIncludeDecl();
+        else if (tok.type == Type)
             parseTypeDecl();
         else if (tok.type == Function)
             parseFuncDecl();
@@ -139,6 +141,24 @@ bool Parser::checkLeadingTab(const Token& tok)
     m_indent = Tabs;
     m_scope = tok.end.column - tok.start.column + 1;
     return true;
+}
+
+void Parser::parseIncludeDecl()
+{
+    ParserContext context(this, "include declaration");
+
+    Token tok = advance(1);
+    if (!expect(tok, Whitespace))
+        return;
+
+    tok = advance(1);
+    if (!expect(tok, StringLiteral))
+        return;
+
+    IncludeDecl* decl = new IncludeDecl;
+    decl->include = tok;
+
+    m_source->translationUnit().includeDecl.append(QSharedPointer<IncludeDecl>(decl));
 }
 
 // type foo : (b1:bar(, b2:baz)?)

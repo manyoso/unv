@@ -16,6 +16,7 @@ public:
     virtual void end(Node&);
 
     virtual void visit(BinaryExpr&);
+    virtual void visit(IncludeDecl&);
     virtual void visit(FuncCallExpr&);
     virtual void visit(FuncDecl&);
     virtual void visit(LiteralExpr&);

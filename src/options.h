@@ -10,6 +10,7 @@ public:
     void parseCommandLine();
 
     QStringList files() const { return m_files; }
+    QStringList includeDirs() const { return m_includeDirs; }
     int errorLimit() const { return m_errorLimit; }
     QString outputFile() const { return m_outputFile; }
     QString outputType() const { return m_outputType; }
@@ -20,6 +21,7 @@ private:
     ~Options();
 
     QStringList m_files;
+    QStringList m_includeDirs;
     int m_errorLimit;
     QString m_outputFile;
     QString m_outputType;

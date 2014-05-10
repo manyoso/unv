@@ -29,6 +29,7 @@ struct TypeInfo;
 class CodeGen : public Visitor {
 public:
     CodeGen(SourceBuffer* source);
+    CodeGen(SourceBuffer* source, Context, Module);
     ~CodeGen();
 
     /*!
@@ -40,8 +41,10 @@ public:
 private:
     virtual void begin(Node&) {}
     virtual void end(Node&) {}
+    virtual void visit(IncludeDecl&);
     virtual void visit(TypeDecl&);
     virtual void visit(FuncDecl&);
+    void registerBuiltins();
     void registerTypeDecl(TypeDecl*);
     void registerFuncDecl(FuncDecl*);
     void codegen(FuncDef* node);
@@ -64,6 +67,7 @@ private:
     Builder m_builder;
     bool m_declPass;
     QHash<QString, llvm::Value*> m_namedValues;
+    QString m_includedIR;
 };
 
 #endif // codegen_h

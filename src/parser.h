@@ -62,6 +62,7 @@ private:
     bool checkLeadingWhitespace(const Token&);
     bool checkLeadingTab(const Token&);
 
+    void parseIncludeDecl();
     void parseTypeDecl();
     void parseFuncDecl();
     void parseNamespace();

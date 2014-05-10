@@ -12,6 +12,7 @@ struct Visitor {
 
     virtual void visit(BinaryExpr&) {}
     virtual void visit(IfStmt&) {}
+    virtual void visit(IncludeDecl&) {}
     virtual void visit(FuncCallExpr&) {}
     virtual void visit(FuncDef&) {}
     virtual void visit(FuncDecl&) {}

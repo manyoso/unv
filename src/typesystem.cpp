@@ -34,6 +34,12 @@ TypeSystem::TypeSystem(SourceBuffer* source)
     addBuiltin("_builtin_uint8_array_");
 }
 
+void TypeSystem::importTypes(const TypeSystem& typeSystem)
+{
+    m_aliasHash.unite(typeSystem.m_aliasHash);
+    m_typeHash.unite(typeSystem.m_typeHash);
+}
+
 void TypeSystem::addBuiltin(const QString& typeName, bool isSignedInt)
 {
     Builtin* info = new Builtin;

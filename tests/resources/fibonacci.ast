@@ -1,8 +1,6 @@
 TranslationUnit
-  AliasDecl
-    Int
-    TypeObject
-      _builtin_int32_
+  IncludeDecl
+    include "core.unv"
   FuncDecl
     main
     TypeObject

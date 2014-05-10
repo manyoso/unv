@@ -53,6 +53,8 @@ class TypeSystem {
 public:
     TypeSystem(SourceBuffer*);
 
+    void importTypes(const TypeSystem&);
+
     bool addType(TypeDecl&);
     bool addFunction(FuncDecl&);
 
