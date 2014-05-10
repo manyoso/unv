@@ -66,6 +66,7 @@ private:
     void parseTypeDecl();
     void parseFuncDecl();
     void parseNamespace();
+    void parseTypeAttr();
     QList<QSharedPointer<TypeObject> > parseTypeObjects();
     TypeObject* parseTypeObject();
     FuncDef* parseFuncDef();

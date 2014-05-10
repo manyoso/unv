@@ -58,8 +58,8 @@ void Lexer::lex(SourceBuffer* source)
                 appendToken(Minus, pos, pos);
             break;
         case '=': appendToken(Equals, pos, pos); break;
-//        case '[': appendToken(OpenSquare, pos, pos); break;
-//        case ']': appendToken(ClosedSquare, pos, pos); break;
+        case '[': appendToken(OpenSquare, pos, pos); break;
+        case ']': appendToken(ClosedSquare, pos, pos); break;
 //        case '\\': appendToken(BackSlash, pos, pos); break;
 //        case ';': appendToken(SemiColon, pos, pos); break;
 //        case '\'': appendToken(SingleQuote, pos, pos); break;

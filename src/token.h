@@ -32,8 +32,8 @@ enum TokenType {
 //    QuestionMark,
     Minus,
     Equals,
-//    OpenSquare,
-//    ClosedSquare,
+    OpenSquare,
+    ClosedSquare,
 //    BackSlash,
 //    SemiColon,
 //    SingleQuote,
@@ -94,8 +94,8 @@ static inline QString typeToString(TokenType type)
 //    case QuestionMark:      return "\'?\'";
     case Minus:             return "\'-\'";
     case Equals:            return "\'=\'";
-//    case OpenSquare:        return "\'[\'";
-//    case ClosedSquare:      return "\']\'";
+    case OpenSquare:        return "\'[\'";
+    case ClosedSquare:      return "\']\'";
 //    case BackSlash:         return "\'\\\'";
 //    case SemiColon:         return "\';\'";
 //    case SingleQuote:       return "\'\'\'";

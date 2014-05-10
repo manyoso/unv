@@ -37,6 +37,8 @@ void Parser::parse(SourceBuffer* source)
             parseFuncDecl();
         else if (tok.type == Namespace)
             parseNamespace();
+        else if (tok.type == OpenSquare)
+            parseTypeAttr();
         else
             m_source->error(tok, "unexpected token when parsing translation unit", SourceBuffer::Fatal);
     }
@@ -314,10 +316,48 @@ void Parser::parseNamespace()
             return;
 
         _namespace += "::";
-
     }
 
     m_namespace = _namespace;
+}
+
+// [id, id]\ntype|function
+void Parser::parseTypeAttr()
+{
+    ParserContext context(this, "type attribute");
+
+    Token tok = advance(1);
+    if (!expect(tok, Identifier))
+        return;
+
+    QList<Token> attributes;
+    for (;;) {
+        if (look(1).type != Comma)
+            break;
+
+        Token tok = advance(2);
+        if (!expect(tok, Whitespace))
+            return;
+
+        tok = advance(1);
+        if (!expect(tok, Identifier))
+            return;
+
+        attributes.append(tok);
+    }
+
+    tok = advance(1);
+    if (!expect(tok, ClosedSquare))
+        return;
+
+    tok = advance(1);
+    if (!expect(tok, Newline))
+        return;
+
+    if (look(1).type != Type && look(1).type != Function) {
+        m_source->error(tok, "expecting type or function to follow type attribute", SourceBuffer::Fatal);
+        return;
+    }
 }
 
 QList<QSharedPointer<TypeObject> > Parser::parseTypeObjects()
