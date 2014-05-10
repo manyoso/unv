@@ -99,7 +99,7 @@ TypeInfo* TypeSystem::toType(const QString& name) const
 TypeInfo* TypeSystem::toTypeAndCheck(const Token& tok) const
 {
     QString type = tok.toString();
-    if (m_aliasHash.contains(type))
+    while (m_aliasHash.contains(type))
         type = m_aliasHash.value(type);
     if (!m_typeHash.contains(type)) {
         m_source->error(tok, "type has not been declared", SourceBuffer::Fatal);
