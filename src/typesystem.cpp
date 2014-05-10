@@ -60,7 +60,9 @@ bool TypeSystem::addType(TypeDecl& decl)
     if (decl.objects.size() < 1) {
         m_source->error(decl.name, "type declaration must declare a type");
         return false;
-    } else if (decl.objects.size() < 2) {
+    }
+
+    if (decl.isAlias()) {
         QString alias = name;
         if (m_aliasHash.contains(alias)) {
             m_source->error(decl.name, "alias for name previously declared");

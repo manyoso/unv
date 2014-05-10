@@ -1,21 +1,20 @@
 // Numeric types
-type Bit : (_builtin_bit_)
+type Bit    : _builtin_bit_
+type Int8   : _builtin_int8_
+type Int16  : _builtin_int16_
+type Int32  : _builtin_int32_
+type Int64  : _builtin_int64_
 
-type Int8 : (_builtin_int8_)
-type Int16 : (_builtin_int16_)
-type Int32 : (_builtin_int32_)
-type Int64 : (_builtin_int64_)
+type UInt8  : _builtin_uint8_
+type UInt16 : _builtin_uint16_
+type UInt32 : _builtin_uint32_
+type UInt64 : _builtin_uint64_
 
-type UInt8 : (_builtin_uint8_)
-type UInt16 : (_builtin_uint16_)
-type UInt32 : (_builtin_uint32_)
-type UInt64 : (_builtin_uint64_)
-
-type Float : (_builtin_float_)
-type Double : (_builtin_double_)
+type Float  : _builtin_float_
+type Double : _builtin_double_
 
 // Common numeric aliases
-type Int : (Int32)
-type Byte : (UInt8)
-type Char : (UInt8)
-type SizeT : (UInt64) // FIXME: This needs to be conditional compilation based on platform
+type Int    : Int32
+type Byte   : UInt8
+type Char   : UInt8
+type SizeT  : UInt64 // FIXME: This needs to be conditional compilation based on platform

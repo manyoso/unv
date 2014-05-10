@@ -232,21 +232,21 @@ void TestErrors::testUInt64Overflow()
 
 void TestErrors::testLiteralExprForIfStmt()
 {
-    compile("type Int : (_builtin_int32_)\nfunction main : () -> Int\n\tif (0) return 1\n\treturn 0", ExpectFailure);
+    compile("type Int : _builtin_int32_\nfunction main : () -> Int\n\tif (0) return 1\n\treturn 0", ExpectFailure);
 }
 
 void TestErrors::testTwoLiteralExprForBinaryExpr()
 {
-    compile("type Int : (_builtin_int32_)\nfunction main : () -> Int\n\tif (0 > 1) return 1\n\treturn 0", ExpectFailure);
+    compile("type Int : _builtin_int32_\nfunction main : () -> Int\n\tif (0 > 1) return 1\n\treturn 0", ExpectFailure);
 }
 
 void TestErrors::testFunctionWithNoReturn()
 {
-    compile("type Int : (_builtin_int32_)\nfunction main : () -> Int\n\tInt i = 0\n\tif (i < 0) return 1", ExpectFailure);
+    compile("type Int : _builtin_int32_\nfunction main : () -> Int\n\tInt i = 0\n\tif (i < 0) return 1", ExpectFailure);
 }
 
 void TestErrors::testNonBooleanInIfStmt()
 {
-    compile("type Int : (_builtin_int32_)\nfunction main : () -> Int\n\tInt a = 1\n\tInt b = 2\n\tif (a + b) return 0\n\treturn 1", ExpectFailure);
+    compile("type Int : _builtin_int32_\nfunction main : () -> Int\n\tInt a = 1\n\tInt b = 2\n\tif (a + b) return 0\n\treturn 1", ExpectFailure);
 }
 

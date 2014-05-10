@@ -110,7 +110,7 @@ Token Parser::look(int i, bool skipComments) const
 
 bool Parser::expect(Token tok, TokenType type) const
 {
-    if (tok.type == type && (tok.type != Whitespace || tok.start.column == tok.end.column))
+    if (tok.type == type)
         return true;
     m_source->error(tok, "expecting " + typeToString(type) + " for " + m_context.top());
     return false;
@@ -192,17 +192,32 @@ void Parser::parseTypeDecl()
     if (!expect(tok, Colon))
         return;
 
+    bool isAlias = false;
     QList<QSharedPointer<TypeObject> > objects;
-    if (look(1).type == Whitespace && look(2).type == OpenParenthesis)
+    if (look(1).type == Whitespace && look(2).type == OpenParenthesis) {
         objects = parseTypeObjects();
+        tok = advance(1);
+    } else {
+        isAlias = true;
 
-    tok = advance(1);
+        tok = advance(1);
+        if (!expect(tok, Whitespace))
+            return;
+
+        tok = advance(1);
+        TypeObject* object = parseTypeObject();
+        if (!object) {
+            m_source->error(tok, "expected single type for type alias declaration", SourceBuffer::Fatal);
+            return;
+        }
+        objects.append(QSharedPointer<TypeObject>(object));
+        tok = current();
+    }
+
     if (!expect(tok, Newline))
         return;
 
-    Node::Kind k = Node::_ProductDecl;
-    if (objects.size() < 2)
-        k = Node::_AliasDecl;
+    Node::Kind k = isAlias ? Node::_AliasDecl : Node::_ProductDecl;
 
     TypeDecl* decl = new TypeDecl(k);
     decl->name = name;
