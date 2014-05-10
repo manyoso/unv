@@ -604,6 +604,12 @@ llvm::Type* CodeGen::toCodeGenType(const Token& tok) const
 {
     TypeInfo* info = m_source->typeSystem().toTypeAndCheck(tok);
     assert(info);
+
+    if (info->isStructure()) {
+        m_source->error(tok, "structure types are not supported just yet", SourceBuffer::Fatal);
+        return 0;
+    }
+
     assert(info->handle);
     return info->handle;
 }

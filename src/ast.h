@@ -37,7 +37,7 @@ struct Node {
         _FuncDecl,
         _LiteralExpr,
         _ReturnStmt,
-        _ProductDecl,
+        _StructDecl,
         _TranslationUnit,
         _TypeCtorExpr,
         _TypeObject,
@@ -57,7 +57,7 @@ struct Node {
         case _FuncDef:          return "FuncDef";
         case _FuncDecl:         return "FuncDecl";
         case _LiteralExpr:      return "LiteralExpr";
-        case _ProductDecl:      return "ProductDecl";
+        case _StructDecl:       return "StructDecl";
         case _ReturnStmt:       return "ReturnStmt";
         case _TranslationUnit:  return "TranslationUnit";
         case _TypeCtorExpr:     return "TypeCtorExpr";
@@ -112,7 +112,7 @@ struct TypeDecl : public Node, public TypeInfo {
     virtual QStringRef typeName() const { return name.toStringRef(); }
     virtual QString qualifiedTypeName() const { return _namespace + "::" + name.toString(); }
     virtual bool isNode() const { return true; }
-    virtual bool isProduct() const { return kind == _ProductDecl; }
+    virtual bool isStructure() const { return kind == _StructDecl; }
     virtual bool isFunction() const { return kind == _FuncDecl; }
     virtual bool isAlias() const { return kind == _AliasDecl; }
     virtual QList<TypeRef*> typeRefList() const

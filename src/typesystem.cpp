@@ -190,7 +190,7 @@ void TypeSystem::checkCompatibleTypes(Expr* expr1, Expr* expr2) const
         return;
 
     if (infoForExpr1->isBuiltin() != infoForExpr2->isBuiltin()
-        || infoForExpr1->isProduct() != infoForExpr2->isProduct()
+        || infoForExpr1->isStructure() != infoForExpr2->isStructure()
         || infoForExpr1->isFunction() != infoForExpr2->isFunction()
         || infoForExpr1->isAlias() != infoForExpr2->isAlias())
         m_source->error(expr1->start, "type incompatibility for binary expression operands", SourceBuffer::Fatal);

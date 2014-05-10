@@ -29,7 +29,7 @@ struct TypeInfo {
 
     virtual bool isNode() const { return false; }
     virtual bool isBuiltin() const { return false; }
-    virtual bool isProduct() const { return false; }
+    virtual bool isStructure() const { return false; }
     virtual bool isFunction() const { return false; }
     virtual bool isAlias() const { return false; }
     virtual bool isSignedInt() const { return false; }

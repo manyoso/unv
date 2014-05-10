@@ -217,7 +217,7 @@ void Parser::parseTypeDecl()
     if (!expect(tok, Newline))
         return;
 
-    Node::Kind k = isAlias ? Node::_AliasDecl : Node::_ProductDecl;
+    Node::Kind k = isAlias ? Node::_AliasDecl : Node::_StructDecl;
 
     TypeDecl* decl = new TypeDecl(k);
     decl->name = name;
