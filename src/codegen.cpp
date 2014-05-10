@@ -113,6 +113,7 @@ void CodeGen::visit(IncludeDecl& node)
     m_includedIR += codegen.generateLLVMIR();
 
     m_source->typeSystem().importTypes(buffer->typeSystem());
+    m_source->addErrors(buffer->numberOfErrors());
 }
 
 void CodeGen::visit(TypeDecl& node)

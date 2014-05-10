@@ -22,7 +22,7 @@ public:
         m_name = name;
         m_translationUnit = QSharedPointer<TranslationUnit>(new TranslationUnit);
         m_typeSystem = QSharedPointer<TypeSystem>(new TypeSystem(this));
-        m_hasErrors = false;
+        m_numberOfErrors = 0;
     }
 
     QString name() const { return m_name; }
@@ -124,12 +124,10 @@ public:
 
     void error(const Token& tok, const QString& str, ErrorType type = Error)
     {
-        static int s_numberOfErrors = 0;
-
         assert(tok.start.line != -1 && tok.start.column != -1 && tok.end.line != -1 && tok.end.column != -1);
 
         if (type == Error)
-            s_numberOfErrors++;
+            m_numberOfErrors++;
         QString err = type == Error ? "error" : "fatal error";
         QString location = name()
             + ":" + QString::number(tok.start.line)
@@ -150,11 +148,9 @@ public:
         caret += QString(tok.end.column - tok.start.column + 1, '^');
 #endif
 
-        m_hasErrors = true;
-
         QTextStream out(stderr);
         out << location << '\n' << context << '\n' << caret << '\n';
-        if (type == Fatal || s_numberOfErrors > Options::instance()->errorLimit()) {
+        if (type == Fatal || m_numberOfErrors > Options::instance()->errorLimit()) {
             out.flush();
             exit(EXIT_FAILURE);
         }
@@ -164,7 +160,9 @@ public:
 
     TypeSystem& typeSystem() const { return *m_typeSystem; }
 
-    bool hasErrors() const { return m_hasErrors; }
+    bool hasErrors() const { return m_numberOfErrors > 0; }
+    int numberOfErrors() const { return m_numberOfErrors; }
+    void addErrors(int errors) { m_numberOfErrors += errors; }
 
 private:
     QString m_source;
@@ -173,7 +171,7 @@ private:
     QList<int> m_lineInfo;
     QSharedPointer<TranslationUnit> m_translationUnit;
     QSharedPointer<TypeSystem> m_typeSystem;
-    bool m_hasErrors;
+    int m_numberOfErrors;
 };
 
 #endif // sourcebuffer_h
