@@ -169,7 +169,10 @@ void CodeGen::visit(FuncDecl& node)
 
 void CodeGen::registerBuiltins()
 {
-    TypeInfo* info = m_source->typeSystem().toType("_builtin_bit_");
+    TypeInfo* info = m_source->typeSystem().toType("_builtin_void_");
+    info->handle = llvm::Type::getVoidTy(*m_context);
+
+    info = m_source->typeSystem().toType("_builtin_bit_");
     info->handle = llvm::Type::getInt1Ty(*m_context);
 
     info = m_source->typeSystem().toType("_builtin_uint8_");
@@ -226,6 +229,11 @@ void CodeGen::registerFuncDecl(FuncDecl* node)
         params.append(toCodeGenType(object->type));
 
     llvm::Type* returnType = toCodeGenType(node->returnType->type);
+    if (returnType->isVoidTy()) {
+        m_source->error(node->returnType->type, "function can not return void", SourceBuffer::Fatal);
+        return;
+    }
+
     llvm::FunctionType *ft = llvm::FunctionType::get(returnType, params.toVector().toStdVector(), false /*varargs*/);
     llvm::Function *f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, name, m_module.data());
 

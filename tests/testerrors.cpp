@@ -245,8 +245,12 @@ void TestErrors::testFunctionWithNoReturn()
     compile("type Int : _builtin_int32_\nfunction main : () -> Int\n\tInt i = 0\n\tif (i < 0) return 1", ExpectFailure);
 }
 
+void TestErrors::testFunctionReturnsVoid()
+{
+    compile("type Void : (_builtin_void_)\nfunction main : () -> Void\n\treturn 0", ExpectFailure);
+}
+
 void TestErrors::testNonBooleanInIfStmt()
 {
     compile("type Int : _builtin_int32_\nfunction main : () -> Int\n\tInt a = 1\n\tInt b = 2\n\tif (a + b) return 0\n\treturn 1", ExpectFailure);
 }
-

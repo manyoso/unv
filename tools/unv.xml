@@ -28,6 +28,7 @@
     <item> using </item>
   </list>
   <list name="types">
+    <item> _builtin_void_ </item>
     <item> _builtin_bit_ </item>
     <item> _builtin_uint8_ </item>
     <item> _builtin_int8_ </item>

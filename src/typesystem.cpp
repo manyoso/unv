@@ -5,6 +5,9 @@
 TypeSystem::TypeSystem(SourceBuffer* source)
     : m_source(source)
 {
+    // void type
+    addBuiltin("_builtin_void_");
+
     // 1 bit integer types
     addBuiltin("_builtin_bit_");
 
