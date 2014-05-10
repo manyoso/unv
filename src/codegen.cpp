@@ -122,6 +122,18 @@ void CodeGen::visit(TypeDecl& node)
         registerTypeDecl(&node);
         return;
     }
+
+    if (!node.isStructure())
+        return;
+
+    QList<llvm::Type*> elements;
+    foreach (QSharedPointer<TypeObject> object, node.objects)
+        elements.append(toCodeGenType(object->type));
+
+    llvm::StructType* structure = static_cast<llvm::StructType*>(node.handle);
+    assert(structure);
+
+    structure->setBody(elements.toVector().toStdVector(), false /*isPacked*/);
 }
 
 void CodeGen::visit(FuncDecl& node)
@@ -196,15 +208,14 @@ void CodeGen::registerTypeDecl(TypeDecl* node)
     TypeInfo* info = m_source->typeSystem().toTypeAndCheck(node->name);
     assert(info);
 
-    if (info->isStructure()) {
-        m_source->error(node->name, "structure types are not supported just yet", SourceBuffer::Fatal);
+    if (!node->handle && info->handle) {
+        node->handle = info->handle;
         return;
     }
 
-    if (!node->handle) {
-        assert(info->handle);
-        node->handle = info->handle;
-    }
+    assert(info->isStructure());
+    LLVMString name(node->name.toStringRef());
+    node->handle = info->handle = llvm::StructType::create(*m_context, name);
 }
 
 void CodeGen::registerFuncDecl(FuncDecl* node)
