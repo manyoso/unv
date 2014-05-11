@@ -4,10 +4,16 @@
 - Produce error when functions decl have duplicate names for parameters
 - Modules
 - Inline C/C++
-- Types
+- Dependent Types
 - String literal types, better support
 - Debugging support
 - AUTHORS/COPYING files and VERSION/CHANGELOG
 - Documentation and doxygen support for both compiler and for language
 - Pick a better name?
 - Support exponent type float literals
+- Reflection, extended type attribute support
+- Generics
+- Uniqueness Types
+- else, while, for, foreach, code-flow statements
+- lists, vectors, hashes, containers
+- threads
