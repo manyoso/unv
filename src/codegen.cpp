@@ -85,7 +85,7 @@ QString CodeGen::generateLLVMIR()
     llvm::raw_string_ostream stream(str);
     m_module->print(stream, 0);
     stream.flush();
-    return m_includedIR + QString::fromStdString(str);
+    return QString::fromStdString(str);
 }
 
 void CodeGen::visit(IncludeDecl& node)
@@ -113,7 +113,7 @@ void CodeGen::visit(IncludeDecl& node)
         parser.parse(buffer);
 
         CodeGen codegen(buffer, m_context, m_module);
-        m_includedIR += codegen.generateLLVMIR();
+        codegen.generateLLVMIR();
         m_source->addErrors(buffer->numberOfErrors());
     }
 

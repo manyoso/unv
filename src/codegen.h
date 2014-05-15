@@ -67,7 +67,6 @@ private:
     Builder m_builder;
     bool m_declPass;
     QHash<QString, llvm::Value*> m_namedValues;
-    QString m_includedIR;
 };
 
 #endif // codegen_h
