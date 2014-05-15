@@ -6,7 +6,7 @@
 static void error(const QString& err)
 {
     QTextStream out(stderr);
-    out << err;
+    out << err << '\n';
     out.flush();
     exit(EXIT_FAILURE);
 }
