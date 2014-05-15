@@ -1,4 +1,3 @@
 include "numerictypes.unv"
 
-// Void type
-type Void : (_builtin_void_)
+type Void : _builtin_void_
