@@ -103,17 +103,21 @@ void CodeGen::visit(IncludeDecl& node)
         return;
     }
 
-    Lexer lexer;
-    lexer.lex(buffer);
+    if (!buffer->isCompiled()) {
+        buffer->setCompiled(true);
 
-    Parser parser;
-    parser.parse(buffer);
+        Lexer lexer;
+        lexer.lex(buffer);
 
-    CodeGen codegen(buffer, m_context, m_module);
-    m_includedIR += codegen.generateLLVMIR();
+        Parser parser;
+        parser.parse(buffer);
+
+        CodeGen codegen(buffer, m_context, m_module);
+        m_includedIR += codegen.generateLLVMIR();
+        m_source->addErrors(buffer->numberOfErrors());
+    }
 
     m_source->typeSystem().importTypes(buffer->typeSystem());
-    m_source->addErrors(buffer->numberOfErrors());
 }
 
 void CodeGen::visit(TypeDecl& node)

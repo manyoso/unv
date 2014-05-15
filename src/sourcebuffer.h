@@ -23,6 +23,7 @@ public:
         m_translationUnit = QSharedPointer<TranslationUnit>(new TranslationUnit);
         m_typeSystem = QSharedPointer<TypeSystem>(new TypeSystem(this));
         m_numberOfErrors = 0;
+        m_isCompiled = false;
     }
 
     QString name() const { return m_name; }
@@ -163,6 +164,8 @@ public:
     bool hasErrors() const { return m_numberOfErrors > 0; }
     int numberOfErrors() const { return m_numberOfErrors; }
     void addErrors(int errors) { m_numberOfErrors += errors; }
+    bool isCompiled() const { return m_isCompiled; }
+    void setCompiled(bool compiled) { m_isCompiled = compiled; }
 
 private:
     QString m_source;
@@ -172,6 +175,7 @@ private:
     QSharedPointer<TranslationUnit> m_translationUnit;
     QSharedPointer<TypeSystem> m_typeSystem;
     int m_numberOfErrors;
+    bool m_isCompiled;
 };
 
 #endif // sourcebuffer_h
