@@ -163,7 +163,7 @@ void Parser::parseIncludeDecl()
     m_source->translationUnit().includeDecl.append(QSharedPointer<IncludeDecl>(decl));
 }
 
-// type foo : (b1:bar(, b2:baz)?)
+// type foo<T, U>? : (b1:bar(, b2:baz)?)
 void Parser::parseTypeDecl()
 {
     ParserContext context(this, "type declaration");
@@ -185,6 +185,15 @@ void Parser::parseTypeDecl()
     }
 
     tok = advance(1);
+
+    QList<QSharedPointer<TypeParam> > params;
+    if (tok.type == LessThan) {
+        if (!expect(look(1), Identifier))
+            return;
+        params = parseTypeParams();
+        tok = advance(1);
+    }
+
     if (!expect(tok, Whitespace))
         return;
 
@@ -230,7 +239,7 @@ void Parser::parseTypeDecl()
     m_source->translationUnit().typeDecl.append(QSharedPointer<TypeDecl>(decl));
 }
 
-// function foo : (foo:Foo?, bar:Bar?, ...)? ->? Baz
+// function foo<T, U>? : (foo:Foo?, bar:Bar?, ...)? ->? Baz
 void Parser::parseFuncDecl()
 {
     ParserContext context(this, "function declaration");
@@ -252,6 +261,15 @@ void Parser::parseFuncDecl()
     }
 
     tok = advance(1);
+
+    QList<QSharedPointer<TypeParam> > params;
+    if (tok.type == LessThan) {
+        if (!expect(look(1), Identifier))
+            return;
+        params = parseTypeParams();
+        tok = advance(1);
+    }
+
     if (!expect(tok, Whitespace))
         return;
 
@@ -420,12 +438,27 @@ TypeObject* Parser::parseTypeObject()
     Token identifier1 = tok;
     Token identifier2;
 
-    if (look(1).type == Colon) {
+    QList<QSharedPointer<TypeParam> > params;
+    if (look(1).type == LessThan) {
+        tok = advance(1);
+        if (!expect(look(1), Identifier))
+            return 0;
+
+        params = parseTypeParams();
+    } else if (look(1).type == Colon) {
         tok = advance(2);
         if (!expect(tok, Identifier))
             return 0;
 
         identifier2 = tok;
+
+        if (look(1).type == LessThan) {
+            tok = advance(1);
+            if (!expect(look(1), Identifier))
+                return 0;
+
+            params = parseTypeParams();
+        }
     }
 
     advance(1);
@@ -434,6 +467,39 @@ TypeObject* Parser::parseTypeObject()
     arg->name = identifier2.type == Undefined ? Token() : identifier1;
     arg->type = identifier2.type == Identifier ? identifier2 : identifier1;
     return arg;
+}
+
+QList<QSharedPointer<TypeParam> > Parser::parseTypeParams()
+{
+    advance(1); // consume less than
+    QList<QSharedPointer<TypeParam> > params;
+    while(TypeParam* param = parseTypeParam())
+        params.append(QSharedPointer<TypeParam>(param));
+
+    expect(current(1), GreaterThan);
+    return params;
+}
+
+TypeParam* Parser::parseTypeParam()
+{
+    Token tok = current();
+    if (tok.type == Comma) {
+        tok = advance(1);
+        if (!expect(tok, Whitespace))
+            return 0;
+        tok = advance(1);
+    } else if (tok.type == GreaterThan)
+        return 0;
+
+    if (!expect(tok, Identifier))
+        return 0;
+
+    Token identifier = tok;
+    advance(1);
+
+    TypeParam* param = new TypeParam;
+    param->name = identifier;
+    return param;
 }
 
 FuncDef* Parser::parseFuncDef()

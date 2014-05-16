@@ -21,6 +21,7 @@ struct TranslationUnit;
 struct TypeCtorExpr;
 struct TypeDecl;
 struct TypeObject;
+struct TypeParam;
 struct VarExpr;
 struct VarDeclStmt;
 struct Visitor;
@@ -41,6 +42,7 @@ struct Node {
         _TranslationUnit,
         _TypeCtorExpr,
         _TypeObject,
+        _TypeParam,
         _VarDeclStmt,
         _VarExpr
     };
@@ -62,6 +64,7 @@ struct Node {
         case _TranslationUnit:  return "TranslationUnit";
         case _TypeCtorExpr:     return "TypeCtorExpr";
         case _TypeObject:       return "TypeObject";
+        case _TypeParam:        return "TypeParam";
         case _VarDeclStmt:      return "VarDeclStmt";
         case _VarExpr:          return "VarExpr";
         }
@@ -100,12 +103,19 @@ struct TypeObject : public Node, public TypeRef {
     virtual QStringRef typeName() const { return type.toStringRef(); }
 };
 
+struct TypeParam : public Node {
+    TypeParam() : Node(_TypeParam) {}
+    Token name;
+    virtual void walk(Visitor&);
+};
+
 struct TypeDecl : public Node, public TypeInfo {
     TypeDecl(Kind kind) : Node(kind) {}
 
     Token name;
     QString _namespace;
     QList<QSharedPointer<TypeObject> > objects;
+    QList<QSharedPointer<TypeParam> > params;
     virtual void walk(Visitor&);
 
     // inherited from TypeInfo

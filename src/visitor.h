@@ -22,6 +22,7 @@ struct Visitor {
     virtual void visit(TypeCtorExpr&) {}
     virtual void visit(TypeDecl&) {}
     virtual void visit(TypeObject&) {}
+    virtual void visit(TypeParam&) {}
     virtual void visit(VarExpr&) {}
     virtual void visit(VarDeclStmt&) {}
 };

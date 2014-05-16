@@ -48,6 +48,8 @@ void FuncDecl::walk(Visitor& visitor)
 {
     visitor.begin(*this);
     visitor.visit(*this);
+    foreach (QSharedPointer<TypeParam> param, params)
+        param->walk(visitor);
     foreach (QSharedPointer<TypeObject> obj, objects)
         obj->walk(visitor);
     returnType->walk(visitor);
@@ -96,12 +98,21 @@ void TypeDecl::walk(Visitor& visitor)
 {
     visitor.begin(*this);
     visitor.visit(*this);
+    foreach (QSharedPointer<TypeParam> param, params)
+        param->walk(visitor);
     foreach (QSharedPointer<TypeObject> obj, objects)
         obj->walk(visitor);
     visitor.end(*this);
 }
 
 void TypeObject::walk(Visitor& visitor)
+{
+    visitor.begin(*this);
+    visitor.visit(*this);
+    visitor.end(*this);
+}
+
+void TypeParam::walk(Visitor& visitor)
 {
     visitor.begin(*this);
     visitor.visit(*this);

@@ -69,6 +69,8 @@ private:
     void parseTypeAttr();
     QList<QSharedPointer<TypeObject> > parseTypeObjects();
     TypeObject* parseTypeObject();
+    QList<QSharedPointer<TypeParam> > parseTypeParams();
+    TypeParam* parseTypeParam();
     FuncDef* parseFuncDef();
     bool parseIndent(unsigned expect);
     Expr* parseExpr();

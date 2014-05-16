@@ -22,6 +22,7 @@ public:
     virtual void visit(LiteralExpr&);
     virtual void visit(TypeCtorExpr&);
     virtual void visit(TypeDecl&);
+    virtual void visit(TypeParam&);
     virtual void visit(TypeObject&);
     virtual void visit(VarExpr&);
     virtual void visit(VarDeclStmt&);

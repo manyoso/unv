@@ -86,6 +86,12 @@ void ASTPrinter::visit(TypeObject& node)
     m_stream->flush();
 }
 
+void ASTPrinter::visit(TypeParam& node)
+{
+    *m_stream << indent() << node.name.toString() << "\n";
+    m_stream->flush();
+}
+
 void ASTPrinter::visit(VarExpr& node)
 {
     *m_stream << indent() << node.var.toString() << "\n";
