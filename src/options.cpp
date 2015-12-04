@@ -53,4 +53,7 @@ void Options::parseCommandLine()
     if (m_outputType != "obj" && m_outputType != "llvm" && m_outputType != "ast")
         m_outputType = "obj";
     m_readFromStdin = parser.isSet(readFromStdin);
+
+    if (m_files.isEmpty() && !m_readFromStdin)
+        parser.showHelp();
 }
