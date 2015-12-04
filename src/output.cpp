@@ -53,7 +53,7 @@ void Output::write(const QString& llvmIR)
         }
 
         QProcess config;
-        config.setProgram("llvm-config");
+        config.setProgram("llvm-config-3.6");
         config.setArguments(QStringList() << "--bindir");
         config.start(QIODevice::ReadOnly);
         if (!config.waitForFinished())
@@ -62,7 +62,7 @@ void Output::write(const QString& llvmIR)
         bindir.remove('\n');
 
         QProcess llc;
-        llc.setProgram(bindir + QDir::separator() + "llc");
+        llc.setProgram("llc-3.6");
         llc.setArguments(QStringList() << "-filetype=obj");
         llc.start();
         if (!llc.waitForStarted())

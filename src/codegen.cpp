@@ -10,7 +10,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
 
-#include <llvm/Analysis/Verifier.h>
+#include <llvm/IR/Verifier.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
@@ -592,7 +592,7 @@ llvm::Value* CodeGen::codegen(LiteralExpr* node, TypeInfo* info)
         if (!info->isSignedInt()) {
             quint64 n = digits.toULongLong(&success, integerTypeToBase(node->literal.type));
 
-            if (!success || !llvm::ConstantInt::isValueValidForType(type, n)) {
+            if (!success || !llvm::ConstantInt::isValueValidForType(type, uint64_t(n))) {
                 m_source->error(node->literal, "unsigned integer literal out of range", SourceBuffer::Fatal);
                 return 0;
             }
@@ -601,7 +601,7 @@ llvm::Value* CodeGen::codegen(LiteralExpr* node, TypeInfo* info)
         } else {
             qint64 n = digits.toLongLong(&success, integerTypeToBase(node->literal.type));
 
-            if (!success || !llvm::ConstantInt::isValueValidForType(type, n)) {
+            if (!success || !llvm::ConstantInt::isValueValidForType(type, int64_t(n))) {
                 m_source->error(node->literal, "signed integer literal out of range", SourceBuffer::Fatal);
                 return 0;
             }
