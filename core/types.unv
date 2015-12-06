@@ -1,3 +1,4 @@
 include "numerictypes.unv"
 
 type Void : _builtin_void_
+type Pointer<Int8> : _builtin_pointer_int8_

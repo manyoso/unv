@@ -21,6 +21,8 @@ contains(DEBUG_MODE, 1) {
   CONFIG += debug
 }
 
+QMAKE_CXXFLAGS += -Wno-inconsistent-missing-override
+
 OBJECTS_DIR = tmp
 MOC_DIR = tmp
 

@@ -85,6 +85,9 @@ void Lexer::lex(SourceBuffer* source)
             if (consumeString("lse")) {
                 appendToken(Else, pos, tokenPosition());
                 break;
+            } else if (consumeString("xtern")) {
+                appendToken(Extern, pos, tokenPosition());
+                break;
             } else if (consumeIdentifier()) {
                 appendToken(Identifier, pos, tokenPosition());
                 break;

@@ -161,12 +161,15 @@ void CodeGen::visit(FuncDecl& node)
         m_source->typeSystem().insertNamedType(object->name.toString(), type);
     }
 
-    llvm::BasicBlock *block = llvm::BasicBlock::Create(*m_context, "entry", f);
-    m_builder->SetInsertPoint(block);
-    codegen(node.funcDef.data());
+    if (FuncDef* funcDef = node.funcDef.data()) {
+        llvm::BasicBlock *block = llvm::BasicBlock::Create(*m_context, "entry", f);
+        m_builder->SetInsertPoint(block);
 
-    if (node.funcDef->stmts.last()->kind != Node::_ReturnStmt)
-        m_source->error(node.name, "function must end with return statement", SourceBuffer::Fatal);
+        codegen(funcDef);
+
+        if (funcDef->stmts.last()->kind != Node::_ReturnStmt)
+            m_source->error(node.name, "function must end with return statement", SourceBuffer::Fatal);
+    }
 
     llvm::verifyFunction(*f);
 }
@@ -178,36 +181,58 @@ void CodeGen::registerBuiltins()
 
     info = m_source->typeSystem().toType("_builtin_bit_");
     info->handle = llvm::Type::getInt1Ty(*m_context);
+    info = m_source->typeSystem().toType("_builtin_pointer_bit_");
+    info->handle = llvm::Type::getInt1PtrTy(*m_context);
 
     info = m_source->typeSystem().toType("_builtin_uint8_");
     info->handle = llvm::Type::getInt8Ty(*m_context);
+    info = m_source->typeSystem().toType("_builtin_pointer_uint8_");
+    info->handle = llvm::Type::getInt8PtrTy(*m_context);
 
     info = m_source->typeSystem().toType("_builtin_int8_");
     info->handle = llvm::Type::getInt8Ty(*m_context);
+    info = m_source->typeSystem().toType("_builtin_pointer_int8_");
+    info->handle = llvm::Type::getInt8PtrTy(*m_context);
 
     info = m_source->typeSystem().toType("_builtin_uint16_");
     info->handle = llvm::Type::getInt16Ty(*m_context);
+    info = m_source->typeSystem().toType("_builtin_pointer_uint16_");
+    info->handle = llvm::Type::getInt16PtrTy(*m_context);
 
     info = m_source->typeSystem().toType("_builtin_int16_");
     info->handle = llvm::Type::getInt16Ty(*m_context);
+    info = m_source->typeSystem().toType("_builtin_pointer_int16_");
+    info->handle = llvm::Type::getInt16PtrTy(*m_context);
 
     info = m_source->typeSystem().toType("_builtin_uint32_");
     info->handle = llvm::Type::getInt32Ty(*m_context);
+    info = m_source->typeSystem().toType("_builtin_pointer_uint32_");
+    info->handle = llvm::Type::getInt32PtrTy(*m_context);
 
     info = m_source->typeSystem().toType("_builtin_int32_");
     info->handle = llvm::Type::getInt32Ty(*m_context);
+    info = m_source->typeSystem().toType("_builtin_pointer_int32_");
+    info->handle = llvm::Type::getInt32PtrTy(*m_context);
 
     info = m_source->typeSystem().toType("_builtin_uint64_");
     info->handle = llvm::Type::getInt64Ty(*m_context);
+    info = m_source->typeSystem().toType("_builtin_pointer_uint64_");
+    info->handle = llvm::Type::getInt64PtrTy(*m_context);
 
     info = m_source->typeSystem().toType("_builtin_int64_");
     info->handle = llvm::Type::getInt64Ty(*m_context);
+    info = m_source->typeSystem().toType("_builtin_pointer_int64_");
+    info->handle = llvm::Type::getInt64PtrTy(*m_context);
 
     info = m_source->typeSystem().toType("_builtin_float_");
     info->handle = llvm::Type::getFloatTy(*m_context);
+    info = m_source->typeSystem().toType("_builtin_pointer_float_");
+    info->handle = llvm::Type::getFloatPtrTy(*m_context);
 
     info = m_source->typeSystem().toType("_builtin_double_");
     info->handle = llvm::Type::getDoubleTy(*m_context);
+    info = m_source->typeSystem().toType("_builtin_pointer_double_");
+    info->handle = llvm::Type::getDoublePtrTy(*m_context);
 }
 
 void CodeGen::registerTypeDecl(TypeDecl* node)
@@ -540,9 +565,9 @@ llvm::Value* CodeGen::codegen(LiteralExpr* node, TypeInfo* info)
         QString literal = node->literal.toString();
         literal.remove(0, 1); // remove leading quote
         literal.chop(1); // remove trailing quote
-        llvm::Constant* constant = llvm::ConstantDataArray::getString(*m_context, LLVMString(literal));
-        info->handle = constant->getType();
-        return constant;
+        llvm::Value *string = m_builder->CreateGlobalStringPtr(LLVMString(literal));
+        info->handle = string->getType();
+        return string;
     } else if (node->literal.type == FloatLiteral) {
         assert(info->handle);
         llvm::Type* type = info->handle;

@@ -25,22 +25,28 @@ void Parser::parse(SourceBuffer* source)
     clear();
     m_source = source;
 
+    QList<Token> currentAttributes;
     while (m_index < m_source->tokenCount() - 1) {
         Token tok = advance(1);
         if (tok.type == Newline)
             continue;
-        if (tok.type == Include)
+        if (tok.type == Include) {
             parseIncludeDecl();
-        else if (tok.type == Type)
-            parseTypeDecl();
-        else if (tok.type == Function)
-            parseFuncDecl();
-        else if (tok.type == Namespace)
+        } else if (tok.type == Namespace) {
             parseNamespace();
-        else if (tok.type == OpenSquare)
-            parseTypeAttr();
-        else
+        } else if (tok.type == OpenSquare) {
+            currentAttributes = parseTypeAttrs();
+        } else if (tok.type == Type) {
+            QList<Token> attr = currentAttributes;
+            currentAttributes = QList<Token>();
+            parseTypeDecl(attr);
+        } else if (tok.type == Function) {
+            QList<Token> attr = currentAttributes;
+            currentAttributes = QList<Token>();
+            parseFuncDecl(attr);
+        } else {
             m_source->error(tok, "unexpected token when parsing translation unit", SourceBuffer::Fatal);
+        }
     }
 }
 
@@ -116,6 +122,28 @@ bool Parser::expect(Token tok, TokenType type) const
     return false;
 }
 
+bool Parser::expect(Token tok, const QList<TokenType>& types) const
+{
+    foreach (TokenType type, types)
+        if (tok.type == type)
+            return true;
+
+    QStringList typesToString;
+    foreach (TokenType type, types)
+        typesToString.append(typeToString(type));
+
+    m_source->error(tok, "expecting " + typesToString.join("|") + " for " + m_context.top());
+    return false;
+}
+
+bool Parser::hasTokenType(const QList<Token>& tokens, TokenType type) const
+{
+    foreach (Token tok, tokens)
+        if (tok.type == type)
+            return true;
+    return false;
+}
+
 bool Parser::checkLeadingWhitespace(const Token& tok)
 {
     if (m_indent == Tabs) {
@@ -164,7 +192,7 @@ void Parser::parseIncludeDecl()
 }
 
 // type foo<T, U>? : (b1:bar(, b2:baz)?)
-void Parser::parseTypeDecl()
+void Parser::parseTypeDecl(const QList<Token>& attributes)
 {
     ParserContext context(this, "type declaration");
 
@@ -232,6 +260,7 @@ void Parser::parseTypeDecl()
     decl->name = name;
     decl->_namespace = m_namespace;
     decl->objects = objects;
+    decl->attributes = attributes;
 
     if (!m_source->typeSystem().addType(*decl))
         return;
@@ -240,7 +269,7 @@ void Parser::parseTypeDecl()
 }
 
 // function foo<T, U>? : (foo:Foo?, bar:Bar?, ...)? ->? Baz
-void Parser::parseFuncDecl()
+void Parser::parseFuncDecl(const QList<Token>& attributes)
 {
     ParserContext context(this, "function declaration");
 
@@ -307,9 +336,14 @@ void Parser::parseFuncDecl()
     if (!expect(tok, Newline))
         return;
 
-    FuncDef* funcDef = parseFuncDef();
-    if (!funcDef)
-        return;
+    FuncDef* funcDef = 0;
+    if (hasTokenType(attributes, Extern)) {
+        funcDef = parseEmptyFuncDef();
+    } else {
+        funcDef = parseFuncDef();
+        if (!funcDef)
+            return;
+    }
 
     FuncDecl* decl = new FuncDecl;
     decl->name = name;
@@ -317,6 +351,7 @@ void Parser::parseFuncDecl()
     decl->objects = objects;
     decl->funcDef = QSharedPointer<FuncDef>(funcDef);
     decl->returnType = QSharedPointer<TypeObject>(returnType);
+    decl->attributes = attributes;
 
     if (!m_source->typeSystem().addFunction(*decl))
         return;
@@ -354,43 +389,50 @@ void Parser::parseNamespace()
     m_namespace = _namespace;
 }
 
-// [id, id]\ntype|function
-void Parser::parseTypeAttr()
+// [attr+]\n
+QList<Token> Parser::parseTypeAttrs()
 {
     ParserContext context(this, "type attribute");
 
+    QList<TokenType> expectedAttributes;
+    expectedAttributes.append(Extern);
+
     Token tok = advance(1);
-    if (!expect(tok, Identifier))
-        return;
+    if (!expect(tok, expectedAttributes))
+        return QList<Token>();
 
     QList<Token> attributes;
+    attributes.append(tok);
+
     for (;;) {
         if (look(1).type != Comma)
             break;
 
         Token tok = advance(2);
         if (!expect(tok, Whitespace))
-            return;
+            return QList<Token>();
 
         tok = advance(1);
-        if (!expect(tok, Identifier))
-            return;
+        if (!expect(tok, expectedAttributes))
+            return QList<Token>();
 
         attributes.append(tok);
     }
 
     tok = advance(1);
     if (!expect(tok, ClosedSquare))
-        return;
+        return QList<Token>();
 
     tok = advance(1);
     if (!expect(tok, Newline))
-        return;
+        return QList<Token>();
 
     if (look(1).type != Type && look(1).type != Function) {
         m_source->error(tok, "expecting type or function to follow type attribute", SourceBuffer::Fatal);
-        return;
+        return QList<Token>();
     }
+
+    return attributes;
 }
 
 QList<QSharedPointer<TypeObject> > Parser::parseTypeObjects()
@@ -520,6 +562,21 @@ FuncDef* Parser::parseFuncDef()
     FuncDef* funcDef = new FuncDef;
     funcDef->stmts = stmts;
     return funcDef;
+}
+
+FuncDef* Parser::parseEmptyFuncDef()
+{
+    ParserContext context(this, "function definition");
+    IndentLevel indent(this);
+
+    Token tok = current();
+    QList<QSharedPointer<Stmt> > stmts;
+    while (Stmt* stmt = parseStmt())
+        stmts.append(QSharedPointer<Stmt>(stmt));
+
+    if (!stmts.isEmpty())
+        m_source->error(tok, "function with extern attribute must not define any statements");
+    return 0;
 }
 
 bool Parser::parseIndent(unsigned expected)

@@ -1,0 +1,11 @@
+/*
+ * Example of helloworld in unv syntax.
+ */
+
+include "core.unv"
+
+[extern]
+function puts : (n:Pointer<Int8>) -> Int
+
+function main : () -> Int
+    return puts("helloworld")

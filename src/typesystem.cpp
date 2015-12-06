@@ -10,31 +10,39 @@ TypeSystem::TypeSystem(SourceBuffer* source)
 
     // 1 bit integer types
     addBuiltin("_builtin_bit_");
+    addBuiltin("_builtin_pointer_bit_");
 
     // 8 bit integer types
     addBuiltin("_builtin_uint8_");
     addBuiltin("_builtin_int8_", true /*signedInt*/);
+    addBuiltin("_builtin_pointer_uint8_");
+    addBuiltin("_builtin_pointer_int8_", true /*signedInt*/);
 
     // 16 bit integer types
     addBuiltin("_builtin_uint16_");
     addBuiltin("_builtin_int16_", true /*signedInt*/);
+    addBuiltin("_builtin_pointer_uint16_");
+    addBuiltin("_builtin_pointer_int16_", true /*signedInt*/);
 
     // 32 bit integer types
     addBuiltin("_builtin_uint32_");
     addBuiltin("_builtin_int32_", true /*signedInt*/);
+    addBuiltin("_builtin_pointer_uint32_");
+    addBuiltin("_builtin_pointer_int32_", true /*signedInt*/);
 
     // 64 bit integer types
     addBuiltin("_builtin_uint64_");
     addBuiltin("_builtin_int64_", true /*signedInt*/);
+    addBuiltin("_builtin_pointer_uint64_");
+    addBuiltin("_builtin_pointer_int64_", true /*signedInt*/);
 
     // 32-bit floating point type
     addBuiltin("_builtin_float_");
+    addBuiltin("_builtin_pointer_float_");
 
     // 64-bit floating point type
     addBuiltin("_builtin_double_");
-
-    // 8 bit constant array
-    addBuiltin("_builtin_uint8_array_");
+    addBuiltin("_builtin_pointer_double_");
 }
 
 void TypeSystem::importTypes(const TypeSystem& typeSystem)

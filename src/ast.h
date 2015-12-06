@@ -116,6 +116,7 @@ struct TypeDecl : public Node, public TypeInfo {
     QString _namespace;
     QList<QSharedPointer<TypeObject> > objects;
     QList<QSharedPointer<TypeParam> > params;
+    QList<Token> attributes;
     virtual void walk(Visitor&);
 
     // inherited from TypeInfo
@@ -218,6 +219,7 @@ struct FuncDecl : public TypeDecl {
     FuncDecl() : TypeDecl(_FuncDecl) {}
     QSharedPointer<TypeObject> returnType;
     QSharedPointer<FuncDef> funcDef;
+    QList<Token> attributes;
     virtual void walk(Visitor&);
 
     // inherited from TypeInfo

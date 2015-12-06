@@ -59,19 +59,22 @@ private:
     Token look(int i, bool skipComments = true) const;
 
     bool expect(Token tok, TokenType t) const;
+    bool expect(Token tok, const QList<TokenType>& types) const;
+    bool hasTokenType(const QList<Token>& tokens, TokenType t) const;
     bool checkLeadingWhitespace(const Token&);
     bool checkLeadingTab(const Token&);
 
     void parseIncludeDecl();
-    void parseTypeDecl();
-    void parseFuncDecl();
+    void parseTypeDecl(const QList<Token>& attr);
+    void parseFuncDecl(const QList<Token>& attr);
     void parseNamespace();
-    void parseTypeAttr();
+    QList<Token> parseTypeAttrs();
     QList<QSharedPointer<TypeObject> > parseTypeObjects();
     TypeObject* parseTypeObject();
     QList<QSharedPointer<TypeParam> > parseTypeParams();
     TypeParam* parseTypeParam();
     FuncDef* parseFuncDef();
+    FuncDef* parseEmptyFuncDef();
     bool parseIndent(unsigned expect);
     Expr* parseExpr();
     Expr* parseBasicExpr();
